@@ -1,7 +1,8 @@
 # Arthera Quant Lab
 
 <p align="center">
-  <Gemini_Generated_Image_w7m746w7m746w7m7.png" />
+  <Gemini_Generated_I<img width="1408" height="736" alt="Gemini_Generated_Image_w7m746w7m746w7m7" src="https://github.com/user-attachments/assets/4d3ac02e-d253-44d8-b4e4-1823464df28b" />
+mage_w7m746w7m746w7m7.png" />
 </p>
 
 <h2 align="center">面向华语投资者的开源量化终端</h2>
@@ -33,17 +34,13 @@
 - **开放扩展**：FastAPI + React + Docker 结构，易于集成更多数据源或自研模型。
 
 ### 界面预览
-
-<div align="center">
-  <Screenshot 2025-12-12 at 5.58.10 pm" />
-  <Screenshot 2025-12-12 at 8.53.12 pm" />
-  <Screenshot 2025-12-12 at 6.14.25 pm" />
-  <Screenshot 2025-12-12 at 6.14.10 pm" />
-  <Screenshot 2025-12-12 at 5.58.33 pm" />
-  <Screenshot 2025-12-12 at 5.58.24 pm" />
-</div>
-
-> 如果需要展示更多截图，只需把 PNG 放入 `docs/media/` 并在 README 中引用相对路径即可。
+<img width="1512" height="827" alt="Screenshot 2025-12-12 at 5 58 10 pm" src="https://github.com/user-attachments/assets/bace2774-5d1a-42da-8f1a-d835b76dde51" />
+<img width="1512" height="819" alt="Screenshot 2025-12-12 at 8 53 12 pm" src="https://github.com/user-attachments/assets/2b63bc77-6874-4190-9a08-acab19190e60" />
+<img width="919" height="746" alt="Screenshot 2025-12-12 at 6 14 04 pm" src="https://github.com/user-attachments/assets/07d29bd2-99dc-441d-93b4-0052693e70cb" />
+<img width="908" height="743" alt="Screenshot 2025-12-12 at 6 14 10 pm" src="https://github.com/user-attachments/assets/bbaccaca-2383-40a8-980e-1dc1b00bd347" />
+<img width="920" height="707" alt="Screenshot 2025-12-12 at 6 14 15 pm" src="https://github.com/user-attachments/assets/eb7ceceb-a3e2-4c52-920c-463feec31963" />
+<img width="1512" height="826" alt="Screenshot 2025-12-12 at 5 58 24 pm" src="https://github.com/user-attachments/assets/bc15c52c-32f9-43a6-b35a-cc1009262923" />
+<img width="1512" height="827" alt="Screenshot 2025-12-12 at 5 58 33 pm" src="https://github.com/user-attachments/assets/c52fcd85-e794-4122-83b7-cd0078f25b92" />
 
 ## 功能 & 技术栈
 
