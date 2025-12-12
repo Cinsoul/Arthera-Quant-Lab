@@ -1,9 +1,7 @@
 # Arthera Quant Lab
 
-<p align="center">
-  <Gemini_Generated_I<img width="1408" height="736" alt="Gemini_Generated_Image_w7m746w7m746w7m7" src="https://github.com/user-attachments/assets/4d3ac02e-d253-44d8-b4e4-1823464df28b" />
-mage_w7m746w7m746w7m7.png" />
-</p>
+<img width="1408" height="736" alt="Gemini_Generated_Image_w7m746w7m746w7m7" src="https://github.com/user-attachments/assets/03cf5711-86ae-4efa-a88a-1440015131fa" />
+
 
 <h2 align="center">面向华语投资者的开源量化终端</h2>
 
