@@ -98,15 +98,6 @@ VITE_ENABLE_DEEPSEEK=true
 VITE_DEEPSEEK_API_KEY=sk-xxxx
 ```
 
-> 建议把 `.env`、实际数据文件、回测结果加入 `.gitignore`，仓库仅提交 `.env.example` 与 `config_templates/`，方便发布。
-
-## 安全与备份
-
-- 所有敏感配置均存储在 `backend/.secrets/`，不会写入 Git。  
-- Settings 面板提供“自动备份 + 加密”选项，默认每天备份一次。  
-- Risk 管理页可配置默认风险偏好、最大单仓比例、贝叶斯风控开关。  
-- DeepSeek / Finnhub / News API 等第三方密钥通过设置页注入，可随时测试连接。
-
 ## 联系我
 
 - X / Twitter：[@xindi_w](https://x.com/xindi_w)  
