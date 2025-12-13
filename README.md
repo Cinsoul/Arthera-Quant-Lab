@@ -97,6 +97,50 @@ Chart Workbench 图表工作台
 <img width="1512" height="826" alt="Screenshot 2025-12-12 at 5 58 24 pm" src="https://github.com/user-attachments/assets/9867d3aa-56b7-4447-a796-90c344b7c0b0" />
 <img width="1512" height="827" alt="Screenshot 2025-12-12 at 5 58 10 pm" src="https://github.com/user-attachments/assets/59dc66d0-412e-4772-8815-0ddbd57181d2" />
 
+
+## 功能 & 技术栈
+
+| 模块 | 能力 |
+| --- | --- |
+| 组合体检 | 实时盈亏、风控雷达、持仓 Top10、智能调仓 | 
+| 策略实验室 | 选股池构建、参数配置、Qlib/QuantEngine 回测、AI 研报导出 |
+| 选股 / 报告中心 | TuShare/AkShare 数据、DeepSeek AI 摘要、批量导出 PDF/JSON |
+| 系统设置 | API 密钥管理、AI 模型切换、风险控制、自动备份、通知中心 |
+
+**前端**：React 18 · TypeScript · Tailwind · Zustand  
+**后端**：FastAPI · Celery · PostgreSQL · Redis  
+**数据源**：TuShare · AkShare · QuantEngine · DeepSeek · Finnhub/News API（可选）  
+**部署**：Docker / docker-compose · `start_services.sh` 一键启动
+
+## 快速开始
+
+### 前置环境
+- Node.js 18+ / npm
+- Python 3.11+
+- PostgreSQL、Redis（可用 Docker 默认端口）
+- 推荐安装 `tuShare token`，但缺省即自动启用 Mock 数据
+
+### 安装步骤
+```bash
+git clone https://github.com/Cinsoul/Arthera-Quant-Lab.git
+cd Arthera-Quant-Lab
+cp .env.example .env    # 填写 SECRET_KEY / SETTINGS_ADMIN_TOKEN 等
+npm install
+cd backend/api && pip install -r requirements.txt && cd ../..
+./start_services.sh     # 启动前端 + FastAPI + QuantEngine + TuShare Proxy
+open http://localhost:3000
+```
+
+- 只启动前端：`npm run dev`
+- 单独调试后端：`cd backend/api && uvicorn main:app --reload --port 8002`
+
+### 设置说明
+1. `.env` 中至少填写 `SECRET_KEY`、`SETTINGS_ADMIN_TOKEN`，可选地写入 `TUSHARE_TOKEN`、`FINNHUB_API_KEY` 等。  
+2. 浏览器首次进入点击右上角「设置」，输入 `SETTINGS_ADMIN_TOKEN` 后即可保存 API Key。  
+3. `http://localhost:8002/health` 返回 200 代表 FastAPI 正常；若提示 `ERR_CONNECTION_REFUSED`，请确认 `start_services.sh` 中的服务已全部拉起。  
+4. `backend/tushare_proxy/server.py` 会把浏览器请求改为本地 8010 端口，避免 CORS/Token 泄露。
+
+
 技术栈 & 架构
 
 Frontend
@@ -143,47 +187,6 @@ Deployment
 └──────────────┘ └─────────────┘ └───────────────┘
 
 
-## 功能 & 技术栈
-
-| 模块 | 能力 |
-| --- | --- |
-| 组合体检 | 实时盈亏、风控雷达、持仓 Top10、智能调仓 | 
-| 策略实验室 | 选股池构建、参数配置、Qlib/QuantEngine 回测、AI 研报导出 |
-| 选股 / 报告中心 | TuShare/AkShare 数据、DeepSeek AI 摘要、批量导出 PDF/JSON |
-| 系统设置 | API 密钥管理、AI 模型切换、风险控制、自动备份、通知中心 |
-
-**前端**：React 18 · TypeScript · Tailwind · Zustand  
-**后端**：FastAPI · Celery · PostgreSQL · Redis  
-**数据源**：TuShare · AkShare · QuantEngine · DeepSeek · Finnhub/News API（可选）  
-**部署**：Docker / docker-compose · `start_services.sh` 一键启动
-
-## 快速开始
-
-### 前置环境
-- Node.js 18+ / npm
-- Python 3.11+
-- PostgreSQL、Redis（可用 Docker 默认端口）
-- 推荐安装 `tuShare token`，但缺省即自动启用 Mock 数据
-
-### 安装步骤
-```bash
-git clone https://github.com/Cinsoul/Arthera-Quant-Lab.git
-cd Arthera-Quant-Lab
-cp .env.example .env    # 填写 SECRET_KEY / SETTINGS_ADMIN_TOKEN 等
-npm install
-cd backend/api && pip install -r requirements.txt && cd ../..
-./start_services.sh     # 启动前端 + FastAPI + QuantEngine + TuShare Proxy
-open http://localhost:3000
-```
-
-- 只启动前端：`npm run dev`
-- 单独调试后端：`cd backend/api && uvicorn main:app --reload --port 8002`
-
-### 设置说明
-1. `.env` 中至少填写 `SECRET_KEY`、`SETTINGS_ADMIN_TOKEN`，可选地写入 `TUSHARE_TOKEN`、`FINNHUB_API_KEY` 等。  
-2. 浏览器首次进入点击右上角「设置」，输入 `SETTINGS_ADMIN_TOKEN` 后即可保存 API Key。  
-3. `http://localhost:8002/health` 返回 200 代表 FastAPI 正常；若提示 `ERR_CONNECTION_REFUSED`，请确认 `start_services.sh` 中的服务已全部拉起。  
-4. `backend/tushare_proxy/server.py` 会把浏览器请求改为本地 8010 端口，避免 CORS/Token 泄露。
 
 ## 环境变量速查
 
