@@ -137,21 +137,17 @@ open http://localhost:3000
 - 本地：裸机启动脚本 + .env 配置
 - 生产：推荐 Docker / Docker Compose + Nginx 反向代理
 
-┌─────────────────────────────────────────────────────────────┐
-│                        Frontend Layer                       │
-│   React 18 + Bloomberg UI + CommandBar + Workspace          │
-└──────────────────────┬──────────────────────────────────────┘
-                       │ REST / WebSocket
-┌──────────────────────▼──────────────────────────────────────┐
-│                     API Gateway (FastAPI)                   │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-        ┌──────────────┼───────────────┐
-        │              │               │
-┌───────▼──────┐ ┌─────▼───────┐ ┌─────▼─────────┐
-│ QuantEngine │ │ Data Layer  │ │ Task Queue    │
-│  Service    │ │ (AkShare…)  │ │ (Celery/Redis)│
-└──────────────┘ └─────────────┘ └───────────────┘
+flowchart TD
+  A[Frontend Layer<br/>React 18 · CommandBar · Workspace]
+  B[API Gateway (FastAPI)]
+  C[QuantEngine Service]
+  D[Data Layer (AkShare...)]
+  E[Task Queue (Celery/Redis)]
+
+  A -->|REST / WebSocket| B
+  B --> C
+  B --> D
+  B --> E
 
 
 ## 环境变量速查
