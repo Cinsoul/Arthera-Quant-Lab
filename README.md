@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/React-18%2B-61dafb?logo=react&logoColor=282c34" alt="React" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue" alt="License" /></a>
-  <a href="https://x.com/xindi_w"><img src="https://img.shields.io/badge/X-%E5%85%B3%E6%B3%A8-000000?&logoColor=white"  alt="X" /></a>
+  <a href="https://x.com/xindi_w"><img src="https://img.shields.io/badge/X-%E5%85%B3%E6%B3%A8-000000?logo=X&logoColor=white" /></a>
   <a href="https://www.linkedin.com/in/xindi-wang19990526/"><img src="https://img.shields.io/badge/LinkedIn-%E8%81%94%E7%B3%BB-0A66C2?logo=LinkedIn&logoColor=white" alt="LinkedIn" /></a>
 </p>
 
