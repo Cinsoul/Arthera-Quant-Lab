@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # 前端服务
+  frontend:
+    build: 
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - api-gateway
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+
+  # API网关
+  api-gateway:
+    build:
+      context: ./backend/api
+      dockerfile: ../../docker/api.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://quant_user:quant_pass@postgres:5432/arthera_quant
+      - REDIS_URL=redis://redis:6379
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - AKSHARE_TOKEN=${AKSHARE_TOKEN:-}
+      - QUANTENGINE_LICENSE=${QUANTENGINE_LICENSE:-}
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app/backend
+    restart: unless-stopped
+
+  # 数据库
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=arthera_quant
+      - POSTGRES_USER=quant_user
+      - POSTGRES_PASSWORD=quant_pass
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # Celery任务队列
+  celery-worker:
+    build:
+      context: ./backend/api
+      dockerfile: ../../docker/api.Dockerfile
+    command: celery -A main.celery worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://quant_user:quant_pass@postgres:5432/arthera_quant
+      - REDIS_URL=redis://redis:6379
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app/backend
+    restart: unless-stopped
+
+  # Celery监控
+  celery-flower:
+    build:
+      context: ./backend/api
+      dockerfile: ../../docker/api.Dockerfile
+    command: celery -A main.celery flower
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    driver: bridge

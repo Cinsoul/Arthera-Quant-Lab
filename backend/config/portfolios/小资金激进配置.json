@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "name": "小资金激进配置",
+    "created_at": "2025-12-10T14:45:00.873129",
+    "version": "1.0",
+    "description": "投资组合配置: 小资金激进配置"
+  },
+  "asset": {
+    "initial_capital": 100000.0,
+    "cash_reserve": 0.05,
+    "max_position_size": 0.3,
+    "min_position_size": 0.01,
+    "max_positions": 8,
+    "leverage": 1.0
+  },
+  "trading": {
+    "commission": 0.0003,
+    "slippage": 0.001,
+    "min_trade_amount": 1000.0,
+    "trade_timing": "close",
+    "allow_short": false,
+    "allow_margin": false
+  },
+  "risk": {
+    "stop_loss": null,
+    "take_profit": null,
+    "max_drawdown": 0.2,
+    "var_confidence": 0.95,
+    "concentration_limit": 0.4,
+    "correlation_limit": 0.8
+  },
+  "backtest": {
+    "start_date": "2023-01-01",
+    "end_date": "2024-12-31",
+    "benchmark": "000300",
+    "frequency": "daily",
+    "rebalance_frequency": "monthly",
+    "warm_up_period": 252
+  },
+  "stock_pools": [
+    "blue_chips"
+  ],
+  "custom_stocks": [
+    "300750",
+    "002594",
+    "688981"
+  ],
+  "strategies": []
+}

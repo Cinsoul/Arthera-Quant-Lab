@@ -1,0 +1,47 @@
+# Arthera Quant Lab - 修复版本依赖配置
+# 使用稳定且兼容的包版本，避免编译问题
+
+# Web框架
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# 数据库和缓存
+redis==5.0.1
+# 暂时移除数据库相关依赖，避免编译问题
+# asyncpg==0.29.0
+# sqlalchemy[asyncio]==2.0.23
+# alembic==1.13.0
+
+# 数据验证
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# 文件上传
+python-multipart==0.0.6
+
+# 认证（暂时移除加密依赖避免编译问题）
+# python-jose[cryptography]==3.3.0
+# passlib[bcrypt]==1.7.4
+
+# 异步任务
+# celery==5.3.4
+
+# WebSocket
+websockets==12.0
+
+# HTTP客户端
+aiohttp==3.9.1
+
+# 数据处理 - 使用预编译版本
+# pandas将单独安装
+numpy==1.25.2
+
+# 数据源 - AkShare
+akshare==1.11.80
+
+# 环境配置
+python-dotenv==1.0.0
+
+# 额外的稳定依赖
+requests==2.31.0
+python-json-logger==2.0.7

@@ -1,0 +1,8 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Arthera Quant Logo</title>
+  <desc id="desc">A minimalist upward triangle with a sun</desc>
+  <rect width="240" height="240" fill="#ffffff"/>
+  <circle cx="95" cy="68" r="48" fill="#070707"/>
+  <path d="M35 210 L35 220 L205 220 L205 40 Z" fill="#070707"/>
+  <rect x="150" y="80" width="6" height="110" fill="#ffffff" transform="rotate(-45 153 135)" opacity="0.85"/>
+</svg>
