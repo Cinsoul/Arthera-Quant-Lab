@@ -1,4 +1,0 @@
-akshare==1.11.80
-pandas==2.1.4
-numpy==1.25.2
-aiohttp==3.9.1
