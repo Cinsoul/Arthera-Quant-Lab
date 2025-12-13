@@ -1077,9 +1077,7 @@ class ChineseBloombergReportGenerator:
 
 async def main():
     """主程序入口"""
-    # DeepSeek API密钥
-    deepseek_api_key = "sk-d68fef576884487cb97ea830678ce869"
-    
+   
     # 初始化分析器
     analyzer = ChineseBloombergReportGenerator(deepseek_api_key)
     
