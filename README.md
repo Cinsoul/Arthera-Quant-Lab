@@ -97,7 +97,7 @@ Chart Workbench 图表工作台
 <img width="1512" height="826" alt="Screenshot 2025-12-12 at 5 58 24 pm" src="https://github.com/user-attachments/assets/9867d3aa-56b7-4447-a796-90c344b7c0b0" />
 <img width="1512" height="827" alt="Screenshot 2025-12-12 at 5 58 10 pm" src="https://github.com/user-attachments/assets/59dc66d0-412e-4772-8815-0ddbd57181d2" />
 
-### 技术栈 & 架构
+技术栈 & 架构
 
 Frontend
 
@@ -124,6 +124,7 @@ Deployment
 本地：裸机启动脚本 + .env 配置
 
 生产：推荐 Docker / Docker Compose + Nginx 反向代理
+
 
 ┌─────────────────────────────────────────────────────────────┐
 │                        Frontend Layer                       │
