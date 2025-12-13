@@ -33,61 +33,41 @@
 
 ## 产品模块一览
 
-平台整体按照一个投资者的真实工作流来设计，从选股 → 策略 → 回测 → 组合 → 报告形成闭环：
+- **平台整体按照一个投资者的真实工作流来设计，从选股 → 策略 → 回测 → 组合 → 报告形成闭环**：
 
-Overview 总览
+**Overview 总览**
+一 **屏看到：策略表现、组合收益 & 回撤、风险偏好、AI 总结**
+- **快捷入口：Strategy Lab / Portfolio / Reports**
 
-一屏看到：策略表现、组合收益 & 回撤、风险偏好、AI 总结
+**Strategy Lab 策略实验室**
+- **预设股票池 + 自定义条件选股**
+- **参数调优、样本区间设置、压力测试场景**
+- **一键把策略送往回测或组合**
 
-快捷入口：Strategy Lab / Portfolio / Reports
+**Strategy Compare 数据对比**
+- **多策略横向对比：年化收益、最大回撤、Sharpe、胜率等**
+- **支持按“收益 / 风险 / 交易特征”不同视角切换**
+- **AI 生成组合建议与策略搭配方案**
 
-Strategy Lab 策略实验室
+**Stock Picker 选股器**
+- **行业 / 因子 / 市值 / 流动性多维筛选**
+- **推荐股票池 & 自定义股票池管理**
+- **直接将筛选结果送入 Strategy Lab 或 Portfolio**
 
-预设股票池 + 自定义条件选股
+**Portfolio Checkup 组合体检**
+-**实盘/模拟组合导入，支持手工录入或 API 同步**
+-**组合健康度雷达图、净值回测、风险指标（VaR、Beta 等）**
+-**一键 rebalance 方案与持仓贡献分析**
 
-参数调优、样本区间设置、压力测试场景
+**Report Center 报告中心**
+-**回测报告 / 技术报告 / 组合报告统一管理**
+-**支持导出 PDF / PPT / JSON 原始数据（视实现而定）**
+-**自定义报告模版 & 定时任务（周报、月报）**
 
-一键把策略送往回测或组合
-
-Strategy Compare 数据对比
-
-多策略横向对比：年化收益、最大回撤、Sharpe、胜率等
-
-支持按“收益 / 风险 / 交易特征”不同视角切换
-
-AI 生成组合建议与策略搭配方案
-
-Stock Picker 选股器
-
-行业 / 因子 / 市值 / 流动性多维筛选
-
-推荐股票池 & 自定义股票池管理
-
-直接将筛选结果送入 Strategy Lab 或 Portfolio
-
-Portfolio Checkup 组合体检
-
-实盘/模拟组合导入，支持手工录入或 API 同步
-
-组合健康度雷达图、净值回测、风险指标（VaR、Beta 等）
-
-一键 rebalance 方案与持仓贡献分析
-
-Report Center 报告中心
-
-回测报告 / 技术报告 / 组合报告统一管理
-
-支持导出 PDF / PPT / JSON 原始数据（视实现而定）
-
-自定义报告模版 & 定时任务（周报、月报）
-
-Chart Workbench 图表工作台
-
-专业 K 线 + 量价图 + 指标叠加
-
-绘图工具 & 标注系统（支持交易计划 / 回顾）
-
-右侧与因子评分、量化信号、组合持仓联动
+**Chart Workbench 图表工作台**
+-**专业 K 线 + 量价图 + 指标叠加**
+-**绘图工具 & 标注系统（支持交易计划 / 回顾）**
+-**右侧与因子评分、量化信号、组合持仓联动**
 
 ### 界面预览
 <img width="920" height="707" alt="Screenshot 2025-12-12 at 6 14 15 pm" src="https://github.com/user-attachments/assets/d0fa392a-cdbe-4453-9b5a-4620176967d9" />
@@ -141,33 +121,21 @@ open http://localhost:3000
 4. `backend/tushare_proxy/server.py` 会把浏览器请求改为本地 8010 端口，避免 CORS/Token 泄露。
 
 
-🛠 技术栈 & 架构
+## 技术栈 & 架构
 
-Frontend
-
-React 18 + TypeScript
-
-Tailwind CSS + 自研 Bloomberg 风格设计系统
-
-Recharts / ECharts（图表）
-
-Command Bar（Ctrl + K）+ Workspace 布局
-
-Backend
-
-FastAPI 作为 API Gateway
-
-PostgreSQL 作为主数据存储
-
-Redis + Celery 处理任务队列与异步回测
-
-QuantEngine / Qlib Worker / TuShare & AkShare 代理服务
-
-Deployment
-
-本地：裸机启动脚本 + .env 配置
-
-生产：推荐 Docker / Docker Compose + Nginx 反向代理
+- Frontend
+- React 18 + TypeScript
+- Tailwind CSS + 自研 Bloomberg 风格设计系统
+- Recharts / ECharts（图表）
+- Command Bar（Ctrl + K）+ Workspace 布局
+- Backend
+- FastAPI 作为 API Gateway
+- PostgreSQL 作为主数据存储
+- Redis + Celery 处理任务队列与异步回测
+- QuantEngine / Qlib Worker / TuShare & AkShare 代理服务
+- Deployment
+- 本地：裸机启动脚本 + .env 配置
+- 生产：推荐 Docker / Docker Compose + Nginx 反向代理
 
 ┌─────────────────────────────────────────────────────────────┐
 │                        Frontend Layer                       │
