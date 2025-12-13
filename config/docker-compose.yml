@@ -24,7 +24,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://quant_user:quant_pass@postgres:5432/arthera_quant
+      - DATABASE_URL=${DATABASE_URL:-postgresql://quant_user:quant_pass@postgres:5432/arthera_quant}
       - REDIS_URL=redis://redis:6379
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
@@ -41,9 +41,9 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_DB=arthera_quant
-      - POSTGRES_USER=quant_user
-      - POSTGRES_PASSWORD=quant_pass
+      - POSTGRES_DB=${POSTGRES_DB:-arthera_quant}
+      - POSTGRES_USER=${POSTGRES_USER:-quant_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-quant_pass}
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
     ports:
       - "5432:5432"
@@ -69,7 +69,7 @@ services:
       dockerfile: ../../docker/api.Dockerfile
     command: celery -A main.celery worker --loglevel=info
     environment:
-      - DATABASE_URL=postgresql://quant_user:quant_pass@postgres:5432/arthera_quant
+      - DATABASE_URL=${DATABASE_URL:-postgresql://quant_user:quant_pass@postgres:5432/arthera_quant}
       - REDIS_URL=redis://redis:6379
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2

@@ -5,6 +5,11 @@
 .env
 .env.local
 .env.production
+.env.staging
+.env.development
+.secrets/
+api_config.json
+service_keys.json
 Keys.xcconfig
 GoogleService-Info.plist
 
@@ -78,3 +83,19 @@ Thumbs.db
 # Package files
 package-lock.json
 yarn.lock
+
+# API logs and debugging files
+api.log
+debug.log
+error.log
+access.log
+
+# Cache directories
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Local configuration overrides
+local_config.py
+local_settings.py
+config_local.json
