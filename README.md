@@ -1,9 +1,8 @@
 # Arthera Quant Lab
 
-<p align="center">
-  <Gemini_Generated_Image_w7m746w7m746w7m7.png" />
-</p>
+[Image](https://github.com/user-attachments/assets/2e67bbe6-ef62-46c3-a130-3edebc77260a)
 
+ 
 <h2 align="center">面向华语投资者的开源量化终端</h2>
 
 <p align="center">
@@ -32,16 +31,115 @@
 - **自托管安全**：配置加密、自动备份、Settings Admin Token 授权机制，支持完全离线演示。  
 - **开放扩展**：FastAPI + React + Docker 结构，易于集成更多数据源或自研模型。
 
-### 界面预览
+## 产品模块一览
 
-<div align="center">
-  <Screenshot 2025-12-12 at 5.58.10 pm" />
-  <Screenshot 2025-12-12 at 8.53.12 pm" />
-  <Screenshot 2025-12-12 at 6.14.25 pm" />
-  <Screenshot 2025-12-12 at 6.14.10 pm" />
-  <Screenshot 2025-12-12 at 5.58.33 pm" />
-  <Screenshot 2025-12-12 at 5.58.24 pm" />
-</div>
+平台整体按照一个投资者的真实工作流来设计，从选股 → 策略 → 回测 → 组合 → 报告形成闭环：
+
+Overview 总览
+
+一屏看到：策略表现、组合收益 & 回撤、风险偏好、AI 总结
+
+快捷入口：Strategy Lab / Portfolio / Reports
+
+Strategy Lab 策略实验室
+
+预设股票池 + 自定义条件选股
+
+参数调优、样本区间设置、压力测试场景
+
+一键把策略送往回测或组合
+
+Strategy Compare 数据对比
+
+多策略横向对比：年化收益、最大回撤、Sharpe、胜率等
+
+支持按“收益 / 风险 / 交易特征”不同视角切换
+
+AI 生成组合建议与策略搭配方案
+
+Stock Picker 选股器
+
+行业 / 因子 / 市值 / 流动性多维筛选
+
+推荐股票池 & 自定义股票池管理
+
+直接将筛选结果送入 Strategy Lab 或 Portfolio
+
+Portfolio Checkup 组合体检
+
+实盘/模拟组合导入，支持手工录入或 API 同步
+
+组合健康度雷达图、净值回测、风险指标（VaR、Beta 等）
+
+一键 rebalance 方案与持仓贡献分析
+
+Report Center 报告中心
+
+回测报告 / 技术报告 / 组合报告统一管理
+
+支持导出 PDF / PPT / JSON 原始数据（视实现而定）
+
+自定义报告模版 & 定时任务（周报、月报）
+
+Chart Workbench 图表工作台
+
+专业 K 线 + 量价图 + 指标叠加
+
+绘图工具 & 标注系统（支持交易计划 / 回顾）
+
+右侧与因子评分、量化信号、组合持仓联动
+
+### 界面预览
+<img width="920" height="707" alt="Screenshot 2025-12-12 at 6 14 15 pm" src="https://github.com/user-attachments/assets/d0fa392a-cdbe-4453-9b5a-4620176967d9" />
+<img width="919" height="746" alt="Screenshot 2025-12-12 at 6 14 04 pm" src="https://github.com/user-attachments/assets/496fcfa7-e101-422e-9f6e-d0ab0b1929c2" />
+<img width="908" height="743" alt="Screenshot 2025-12-12 at 6 14 10 pm" src="https://github.com/user-attachments/assets/8313e5b8-276d-4fe7-9c02-dc1769692734" />
+<img width="1512" height="827" alt="Screenshot 2025-12-12 at 5 58 33 pm" src="https://github.com/user-attachments/assets/65e3d413-f643-4386-aefc-cf549292f704" />
+<img width="1512" height="826" alt="Screenshot 2025-12-12 at 5 58 24 pm" src="https://github.com/user-attachments/assets/9867d3aa-56b7-4447-a796-90c344b7c0b0" />
+<img width="1512" height="827" alt="Screenshot 2025-12-12 at 5 58 10 pm" src="https://github.com/user-attachments/assets/59dc66d0-412e-4772-8815-0ddbd57181d2" />
+
+技术栈 & 架构
+
+Frontend
+
+React 18 + TypeScript
+
+Tailwind CSS + 自研 Bloomberg 风格设计系统
+
+Recharts / ECharts（图表）
+
+Command Bar（Ctrl + K）+ Workspace 布局
+
+Backend
+
+FastAPI 作为 API Gateway
+
+PostgreSQL 作为主数据存储
+
+Redis + Celery 处理任务队列与异步回测
+
+QuantEngine / Qlib Worker / TuShare & AkShare 代理服务
+
+Deployment
+
+本地：裸机启动脚本 + .env 配置
+
+生产：推荐 Docker / Docker Compose + Nginx 反向代理
+
+┌─────────────────────────────────────────────────────────────┐
+│                        Frontend Layer                       │
+│   React 18 + Bloomberg UI + CommandBar + Workspace         │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ REST / WebSocket
+┌──────────────────────▼──────────────────────────────────────┐
+│                     API Gateway (FastAPI)                   │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+        ┌──────────────┼───────────────┐
+        │              │               │
+┌───────▼──────┐ ┌─────▼───────┐ ┌─────▼─────────┐
+│ QuantEngine │ │ Data Layer  │ │ Task Queue    │
+│  Service    │ │ (AkShare…)  │ │ (Celery/Redis)│
+└──────────────┘ └─────────────┘ └───────────────┘
 
 ## 功能 & 技术栈
 
