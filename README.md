@@ -139,12 +139,12 @@ open http://localhost:3000
 
 <pre style="font-family: Menlo, Consolas, monospace; font-size: 14px;">
 ┌─────────────────────────────────────────────────────────────┐
-│                        Frontend Layer                       │
-│   React 18 + Bloomberg UI + CommandBar + Workspace         │
+│                     Frontend Layer                          │
+│              React 18 + CommandBar + Workspace              │
 └──────────────────────┬──────────────────────────────────────┘
                        │ REST / WebSocket
 ┌──────────────────────▼──────────────────────────────────────┐
-│                     API Gateway (FastAPI)                   │
+│               API Gateway (FastAPI)                         │
 └──────────────────────┬──────────────────────────────────────┘
                        │
         ┌──────────────┼───────────────┐
