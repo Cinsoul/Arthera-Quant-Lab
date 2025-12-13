@@ -150,12 +150,12 @@ class TushareDataService {
       
       // 如果没有配置token，使用默认token（仅用于演示）
       if (!this.config.token) {
-        this.config.token = 'c8f4301d4ff0230e4bb5c903319490aa81a83cee146b24a5add066ca';
+        this.config.token = 'c24242421424214214';
       }
     } catch (error) {
       console.warn('[Tushare] Failed to load config from settings:', error);
       // 使用默认token
-      this.config.token = 'c8f4301d4ff0230e4bb5c903319490aa81a83cee146b24a5add066ca';
+      this.config.token = 'c24242421424214214';
     }
   }
 
