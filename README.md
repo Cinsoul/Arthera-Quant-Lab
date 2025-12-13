@@ -139,7 +139,7 @@ open http://localhost:3000
 
 ┌─────────────────────────────────────────────────────────────┐
 │                        Frontend Layer                       │
-│   React 18 + Bloomberg UI + CommandBar + Workspace         │
+│   React 18 + Bloomberg UI + CommandBar + Workspace          │
 └──────────────────────┬──────────────────────────────────────┘
                        │ REST / WebSocket
 ┌──────────────────────▼──────────────────────────────────────┐
