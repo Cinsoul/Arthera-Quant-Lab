@@ -136,6 +136,8 @@ open http://localhost:3000
 - Deployment
 - 本地：裸机启动脚本 + .env 配置
 - 生产：推荐 Docker / Docker Compose + Nginx 反向代理
+
+<pre style="font-family: Menlo, Consolas, monospace; font-size: 14px;">
 ┌─────────────────────────────────────────────────────────────┐
 │                        Frontend Layer                       │
 │   React 18 + Bloomberg UI + CommandBar + Workspace         │
@@ -151,6 +153,7 @@ open http://localhost:3000
 │ QuantEngine │ │ Data Layer  │ │ Task Queue    │
 │  Service    │ │ (AkShare…)  │ │ (Celery/Redis)│
 └──────────────┘ └─────────────┘ └───────────────┘
+</pre>
 
 
 ## 环境变量速查
