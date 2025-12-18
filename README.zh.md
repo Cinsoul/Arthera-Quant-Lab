@@ -319,7 +319,7 @@ curl -X POST "http://localhost:8001/config/data-source" \
 ## 前端体验
 
 ### 界面功能
-- **Bloomberg风格设计**：深色主题，专业金融界面
+- **设计**：深色主题，专业金融界面
 - **实时数据展示**：股价、涨跌幅、成交量实时更新
 - **智能搜索**：支持中英文股票名称和代码搜索
 - **股票池管理**：可视化添加/移除股票到投资池
@@ -447,7 +447,6 @@ docker-compose -f docker-compose-test.yml up
 
 ## 🙏 致谢
 
-- Bloomberg终端为UI设计提供灵感
 - Yahoo Finance提供全球市场数据
 - AkShare提供中国A股数据
 - Tushare提供增强的中国市场数据
