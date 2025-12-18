@@ -1,15 +1,9 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Cinsoul/Arthera-Quant-Lab/main/docs/assets/arthera-logo.png" alt="Arthera Trading Engine" width="200" height="200">
-
-# 首个
-## 开源量化交易平台
-### 专为量化分析师设计
+![Image](https://github.com/user-attachments/assets/60ac0c1a-895f-4a8d-8c92-8ed742d9a15b)
 
 <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Alpha</button>
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">智能体</button>
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">进阶</button>
+  
 </div>
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
