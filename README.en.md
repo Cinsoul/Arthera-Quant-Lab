@@ -33,13 +33,17 @@ Welcome to join our Discord community to share feedback and issues you encounter
 
 ## Preview
 
-<img width="1057" height="673" alt="Screenshot 2025-12-18 at 12 49 21 pm" src="https://github.com/user-attachments/assets/bcf4ce5d-750a-4214-a35e-6ff96c3080a1" />
+<img width="1185" height="771" alt="Screenshot 2025-12-18 at 7 20 33 pm" src="https://github.com/user-attachments/assets/97d14be4-bc02-41a3-a25d-a98175214bfe" />
 
-<img width="1198" height="776" alt="Screenshot 2025-12-18 at 12 52 39 pm" src="https://github.com/user-attachments/assets/98c767c8-2eef-4c53-b636-590a9bf3cb00" />
+<img width="1183" height="768" alt="Screenshot 2025-12-18 at 7 20 40 pm" src="https://github.com/user-attachments/assets/404e8617-9f93-44a3-beb5-73a2329eea23" />
 
-<img width="1189" height="770" alt="Screenshot 2025-12-18 at 12 52 45 pm" src="https://github.com/user-attachments/assets/2f81c40d-71b7-4a12-ad9d-b7320d4bd556" />
+<img width="1195" height="775" alt="Screenshot 2025-12-18 at 7 20 47 pm" src="https://github.com/user-attachments/assets/f4a4645b-11b6-4186-b9af-01a2b6db5585" />
 
-<img width="1190" height="770" alt="Screenshot 2025-12-18 at 12 52 56 pm" src="https://github.com/user-attachments/assets/e8377687-65e2-4f63-acf2-d910612c86b8" />
+
+<img width="1189" height="766" alt="Screenshot 2025-12-18 at 7 21 04 pm" src="https://github.com/user-attachments/assets/938ae751-7989-4e1c-9385-ce0dbecc4ec4" />
+
+
+
 
 
 ## Key Features
@@ -53,7 +57,7 @@ Welcome to join our Discord community to share feedback and issues you encounter
 
 ## Architecture
 ```
-Bloomberg UI → FastAPI Gateway (8000)
+UI → FastAPI Gateway (8000)
                      ├─ YahooMarketProvider (global)
                      ├─ ChinaAStockProvider (AkShare + Tushare)
                      ├─ QuantEngine / Quant Lab / Paper OMS / Portfolio
