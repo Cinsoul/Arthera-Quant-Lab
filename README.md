@@ -1,5 +1,13 @@
+<div align="center">
 
-![Image](https://github.com/user-attachments/assets/e4983257-0a47-44b7-b854-08986b9eef20)
+
+![Image](https://github.com/user-attachments/assets/bc40f0ad-476c-413e-8cbd-ccb70ee6ec3d)
+
+
+<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+ 
+</div>
+
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![Discord](https://img.shields.io/discord/123456789?color=7289da&logo=discord&logoColor=white)](https://discord.gg/arthera)
