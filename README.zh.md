@@ -33,13 +33,13 @@ Arthera統一量化交易系統是一個社群驅動的多智能體量化交易�
 
 ## 產品預覽
 
-<img width="1057" height="673" alt="Screenshot 2025-12-18 at 12 49 21 pm" src="https://github.com/user-attachments/assets/f4ff5669-2142-452d-bd5a-b1eebc049213" />
+<img width="1190" height="776" alt="Screenshot 2025-12-18 at 7 20 01 pm" src="https://github.com/user-attachments/assets/4616973e-6dc1-4bda-bab3-d85c555cb75f" />
 
-<img width="1198" height="776" alt="Screenshot 2025-12-18 at 12 52 39 pm" src="https://github.com/user-attachments/assets/85d42be8-103c-4916-9ff4-c03e566c660b" />
+<img width="1186" height="720" alt="Screenshot 2025-12-18 at 7 20 15 pm" src="https://github.com/user-attachments/assets/f19604a1-d501-47e3-9aba-f443145a0dc0" />
 
-<img width="1189" height="770" alt="Screenshot 2025-12-18 at 12 52 45 pm" src="https://github.com/user-attachments/assets/0428b781-e258-4f93-b0e4-f5af7577d26b" />
+<img width="1188" height="774" alt="Screenshot 2025-12-18 at 7 20 26 pm" src="https://github.com/user-attachments/assets/a80357c1-c626-49e3-97f5-8a471f17eb50" />
 
-<img width="1190" height="770" alt="Screenshot 2025-12-18 at 12 52 56 pm" src="https://github.com/user-attachments/assets/982a3cfc-b0db-49c3-88c8-c0ac71857fd1" />
+<img width="1187" height="772" alt="Screenshot 2025-12-18 at 7 20 57 pm" src="https://github.com/user-attachments/assets/28c907a3-4d52-4ec9-b7cd-6da58d84b930" />
 
 
 
