@@ -1,10 +1,8 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Cinsoul/Arthera-Quant-Lab/main/docs/assets/arthera-logo.png" alt="Arthera Trading Engine" width="200" height="200">
 
-# 首個
-## 開源量化交易平台
-### 專為量化分析師設計
+![Image](https://github.com/user-attachments/assets/bc40f0ad-476c-413e-8cbd-ccb70ee6ec3d)
+
 
 <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
   <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Alpha</button>
