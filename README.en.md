@@ -1,10 +1,8 @@
 <div align="center">
 
-[Image](https://github.com/user-attachments/assets/7d122d88-9092-417a-a6b6-baae39a62c65)
 
+![Image](https://github.com/user-attachments/assets/58ef3f9a-60d7-4660-9e23-14eed7957975)
 
-
-</div>
   
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -12,7 +10,6 @@
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/xindi-wang19990526/)
 [![X](https://img.shields.io/badge/X-Follow-000000?logo=x)](https://x.com/xindi_w)
 [![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube)](https://youtube.com/arthera)
-
 [English](README.en.md) | [中文 (简体)](README.md) | [中文 (繁體)](README.zh.md)
 
 </div>
@@ -28,6 +25,17 @@ The system keeps all your sensitive information stored locally on your device, e
 Welcome to join our Discord community to share feedback and issues you encounter, and invite more developers to contribute 🔥🔥🔥
 
 > **Note:** Arthera team members will never proactively contact community participants. This project is for educational and research purposes.
+
+## Preview
+
+<img width="1057" height="673" alt="Screenshot 2025-12-18 at 12 49 21 pm" src="https://github.com/user-attachments/assets/bcf4ce5d-750a-4214-a35e-6ff96c3080a1" />
+
+<img width="1198" height="776" alt="Screenshot 2025-12-18 at 12 52 39 pm" src="https://github.com/user-attachments/assets/98c767c8-2eef-4c53-b636-590a9bf3cb00" />
+
+<img width="1189" height="770" alt="Screenshot 2025-12-18 at 12 52 45 pm" src="https://github.com/user-attachments/assets/2f81c40d-71b7-4a12-ad9d-b7320d4bd556" />
+
+<img width="1190" height="770" alt="Screenshot 2025-12-18 at 12 52 56 pm" src="https://github.com/user-attachments/assets/e8377687-65e2-4f63-acf2-d910612c86b8" />
+
 
 ## 🌟 Key Features
 - **Dual Market Feeds** – Yahoo Finance (global) and AkShare (A-shares) ship out of the box; drop in a `TUSHARE_TOKEN` to unlock Pro-level metadata via the new China provider.
