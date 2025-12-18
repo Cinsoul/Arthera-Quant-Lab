@@ -9,7 +9,6 @@
 [![Discord](https://img.shields.io/discord/123456789?color=7289da&logo=discord&logoColor=white)](https://discord.gg/arthera)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/xindi-wang19990526/)
 [![X](https://img.shields.io/badge/X-Follow-000000?logo=x)](https://x.com/xindi_w)
-[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube)](https://youtube.com/arthera)
 [English](README.en.md) | [中文 (简体)](README.md) | [中文 (繁體)](README.zh.md)
 
 </div>
