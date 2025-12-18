@@ -1,23 +1,48 @@
-# Arthera 统一量化交易系统
+<div align="center">
 
-> Bloomberg 风格的量化交易演示平台，内置全球 + A 股实时行情、AI 策略引擎与 iOS Connector。
->
-> - X (Twitter): [@xindi_w](https://x.com/xindi_w)
-> - LinkedIn: [Xindi Wang](https://www.linkedin.com/in/xindi-wang19990526/)
+<img src="https://raw.githubusercontent.com/Cinsoul/Arthera-Quant-Lab/main/docs/assets/arthera-logo.png" alt="Arthera Trading Engine" width="200" height="200">
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.8+-brightgreen.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
-![Docker](https://img.shields.io/badge/Docker-20.10+-blue.svg)
+# 首個
+## 開源量化交易平台
+### 專為量化分析師設計
 
-## 🌟 项目亮点
-- **双数据源聚合**：默认启用 Yahoo Finance + AkShare；配置 `TUSHARE_TOKEN` 后自动切换至 Tushare Pro，`/universe/search` 会对中美股票统一格式化输出。
-- **智能股票搜索**：Bloomberg 风格的 `TARGET STOCK POOL` 面板支持模糊检索、分页、行业与市值筛选，并实时展示价格、涨跌幅、交易所与行业标签。
-- **全链路策略中心**：QuantEngine、Quant Lab、Paper OMS、Risk Engine 与 Portfolio 服务通过 API Gateway 汇聚，支持信号生成、交易执行、风险审计与绩效回放。
-- **Bloomberg UI**：内置系统状态、交易统计、回撤图、行业配置、风险报表、订单与信号列表，可一键演示。
-- **iOS Connector**：端口 8002 暴露与 Swift SDK 对齐的 REST + WebSocket 接口，移动端可实时接收信号、下单并回测。
-- **动态数据配置**：`POST /config/data-source` 可在运行时注入/更新 Tushare Token，并立即反映到前端。
-- **实时数据集成**：支持Yahoo Finance、AkShare、Tushare Pro多数据源，自动缓存和故障转移。
+<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Alpha</button>
+  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">智能體</button>
+  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">進階</button>
+</div>
+
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+[![Discord](https://img.shields.io/discord/123456789?color=7289da&logo=discord&logoColor=white)](https://discord.gg/arthera)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/xindi-wang19990526/)
+[![X](https://img.shields.io/badge/X-Follow-000000?logo=x)](https://x.com/xindi_w)
+[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube)](https://youtube.com/arthera)
+
+[English](README.en.md) | [中文 (简体)](README.md) | [中文 (繁體)](README.zh.md)
+
+</div>
+
+## Arthera統一量化交易系統
+
+Arthera統一量化交易系統是一個社群驅動的多智能體量化交易應用平台。我們的使命是構建世界上最大的去中心化量化交易社群。
+
+它提供了一支頂級量化策略團隊，幫助您進行股票選擇、研究、追蹤甚至交易。
+
+系統將您的所有敏感資訊本地存儲在您的設備上，確保核心數據安全。
+
+歡迎加入我們的Discord社群，分享您遇到的回饋和問題，邀請更多開發者貢獻 🔥🔥🔥
+
+> **注意：** Arthera團隊成員絕不會主動聯繫社群參與者。此專案僅供教育和研究目的使用。
+
+## 🌟 專案亮點
+- **雙數據源聚合**：默認啟用 Yahoo Finance + AkShare；配置 `TUSHARE_TOKEN` 後自動切換至 Tushare Pro，`/universe/search` 會對中美股票統一格式化輸出。
+- **智能股票搜索**：Bloomberg 風格的 `TARGET STOCK POOL` 面板支持模糊檢索、分頁、行業與市值篩選，並實時展示價格、漲跌幅、交易所與行業標籤。
+- **全鏈路策略中心**：QuantEngine、Quant Lab、Paper OMS、Risk Engine 與 Portfolio 服務通過 API Gateway 匯聚，支持信號生成、交易執行、風險審計與績效回放。
+- **Bloomberg UI**：內置系統狀態、交易統計、回撤圖、行業配置、風險報表、訂單與信號列表，可一鍵演示。
+- **iOS Connector**：端口 8002 暴露與 Swift SDK 對齊的 REST + WebSocket 接口，移動端可實時接收信號、下單並回測。
+- **動態數據配置**：`POST /config/data-source` 可在運行時注入/更新 Tushare Token，並立即反映到前端。
+- **實時數據集成**：支持Yahoo Finance、AkShare、Tushare Pro多數據源，自動緩存和故障轉移。
 
 ## 🏗 架构
 ```
