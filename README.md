@@ -1,10 +1,5 @@
-<div align="center">
 
-<img src="https://raw.githubusercontent.com/Cinsoul/Arthera-Quant-Lab/main/docs/assets/arthera-logo.png" alt="Arthera Trading Engine" width="200" height="200">
-
-# 首个
-## 开源量化交易平台
-### 专为量化分析师设计
+![Image](https://github.com/user-attachments/assets/e4983257-0a47-44b7-b854-08986b9eef20)
 
 <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
   <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Alpha</button>
@@ -35,7 +30,14 @@ Arthera统一量化交易系统是一个社区驱动的多智能体量化交易�
 
 > **注意：** Arthera团队成员绝不会主动联系社区参与者。此项目仅供教育和研究目的使用。
 
-## 🎯 系统概述
+## 产品预览
+<img width="1057" height="673" alt="Screenshot 2025-12-18 at 12 49 21 pm" src="https://github.com/user-attachments/assets/da46e9d6-9e32-4725-b758-a5624e8f2862" />
+<img width="1198" height="776" alt="Screenshot 2025-12-18 at 12 52 39 pm" src="https://github.com/user-attachments/assets/c1ad9e8c-20a3-490a-b484-569b0c2c79cc" />
+<img width="1189" height="770" alt="Screenshot 2025-12-18 at 12 52 45 pm" src="https://github.com/user-attachments/assets/f6094dec-da68-4978-829c-8f26d09d8719" />
+<img width="1190" height="770" alt="Screenshot 2025-12-18 at 12 52 56 pm" src="https://github.com/user-attachments/assets/a85f5f42-c589-4b5a-970e-4b37b649c821" />
+
+## 系统概述
+
 
 基于现有88%完整的Arthera架构，通过统一API Gateway和iOS Connector，创建了一个可以：
 - ✅ 持续产生交易信号和订单
@@ -44,7 +46,7 @@ Arthera统一量化交易系统是一个社区驱动的多智能体量化交易�
 - ✅ iOS App无缝连接
 - ✅ 本地Docker部署，支持远程演示
 
-## 🏗️ 系统架构
+## 系统架构
 
 ```
 iOS App (现有完整量化服务)
@@ -58,7 +60,7 @@ iOS Connector (端口8002) → API Gateway (端口8000)
 └── ML模型训练工具             └── 投资组合路由
 ```
 
-## 🚀 快速启动
+## 快速启动
 
 ### 0. 环境初始化（首次运行）
 
@@ -68,7 +70,7 @@ cd /Users/mac/Desktop/Arthera/Arthea/TradingEngine
 vim .env                            # 配置真实行情平台（可选）
 ```
 
-> 🔐 **市场数据配置**
+> **市场数据配置**
 >
 > - 默认：不填任何变量即可使用内置 Yahoo Finance 提供的全球股票实时/历史数据。
 > - 可对接真实平台：设置 `UNIVERSE_SERVICE_URL` 与 `UNIVERSE_API_KEY`，API Gateway 会将股票搜索与池组件请求透明代理到您的平台。
@@ -94,7 +96,7 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-## 📊 服务访问
+## 服务访问
 
 启动成功后，以下服务将可用：
 
@@ -139,7 +141,7 @@ docker-compose logs -f
 await adapter.connectWebSocket()
 ```
 
-## 🔗 API端点详情
+## API端点详情
 
 ### iOS Connector专用端点 (端口8002)
 
@@ -184,11 +186,11 @@ await adapter.connectWebSocket()
 前端“目标股票池”模块会调用以上接口，投资经理可以在UI中直接筛选FAANG、AI基础设施、中国新能源等预设组合，并实时查看池内统计后再触发策略。
 部署到真实平台时，可通过设置 `UNIVERSE_SERVICE_URL` 将这些接口代理到 Polygon、Alpha Vantage、Tushare 等实时行情/筛选服务；若保持为空，系统默认走 Yahoo Finance 并自动对结果做缓存降频。
 
-> ℹ️ **实时A股数据**
+>  **实时A股数据**
 > - 已内置 `akshare` 抓取全市场行情，`/universe/search` 会根据关键词自动切换中/美股数据源。
 > - 通过 `POST /config/data-source` 配置 `tushare_token` 后，即可在搜索/股票池接口中获得行业、地域等高阶字段。
 
-## 💡 演示脚本
+## 演示脚本
 
 ### 1分钟投资者演示流程：
 
@@ -217,7 +219,7 @@ await adapter.connectWebSocket()
    - 胜率: 67%
    - 年化收益: 12%
 
-## 🎯 投资者展示重点
+## 投资者展示重点
 
 ### 交易活动数据（实时更新）
 ```json
@@ -238,7 +240,7 @@ await adapter.connectWebSocket()
 - ✅ **可信度最大化**: 完整审计链路，专业级风险监控
 - ✅ **移动端完整体验**: iOS原生量化交易功能
 
-## 🛠️ 系统管理
+## 系统管理
 
 ### 查看服务状态
 ```bash
@@ -311,7 +313,7 @@ docker-compose down --volumes --remove-orphans
 - 配置Redis缓存策略
 - 优化数据库连接池
 
-## 📈 下一步扩展
+## 下一步扩展
 
 1. **生产环境部署**
    - 添加HTTPS支持
