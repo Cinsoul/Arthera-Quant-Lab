@@ -54,7 +54,7 @@ Arthera統一量化交易系統是一個社群驅動的多智能體量化交易�
 
 ## 架构
 ```
-Bloomberg UI (static/index.html)
+UI (static/index.html)
         ↓ HTTP
 FastAPI API Gateway (8000)
 ├─ Market routes → QuantEngine / AkShare / Tushare
