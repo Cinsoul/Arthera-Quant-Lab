@@ -49,7 +49,7 @@ Arthera统一量化交易系统是一个社区驱动的多智能体量化交易�
 ```
 iOS App (现有完整量化服务)
     ↓ HTTP/WebSocket
-iOS Connector (端口8002) → API Gateway (端口8000)
+iOS Connector (端口8002) → API Gateway (端口8001)
     ↓                           ↓
 现有后端服务                     新增统一路由层
 ├── QuantEngine                 ├── 市场数据路由
@@ -57,6 +57,20 @@ iOS Connector (端口8002) → API Gateway (端口8000)
 ├── qlib框架                   ├── 信号生成路由
 └── ML模型训练工具             └── 投资组合路由
 ```
+
+## 📋 系统要求
+
+### 必需环境
+- **Python 3.8+**
+- **Docker Desktop 20.10+**
+- **Docker Compose 1.27+**
+- **4GB+ RAM** (推荐 8GB)
+- **5GB+ 可用磁盘空间**
+
+### 支持的操作系统
+- macOS 10.15+ (Intel/Apple Silicon)
+- Windows 10+ (WSL2)
+- Linux Ubuntu 18.04+/CentOS 7+
 
 ## 🚀 快速启动
 
@@ -99,18 +113,246 @@ docker-compose logs -f
 启动成功后，以下服务将可用：
 
 ### 核心API端点
-- **API Gateway**: http://localhost:8000
+- **API Gateway**: http://localhost:8001
 - **iOS Connector**: http://localhost:8002
-- **系统健康检查**: http://localhost:8000/health
+- **系统健康检查**: http://localhost:8001/health
 
 ### 演示面板
-- **系统状态**: http://localhost:8000/dashboard/system-status
-- **交易统计**: http://localhost:8000/dashboard/trading-stats
+- **系统状态**: http://localhost:8001/dashboard/system-status
+- **交易统计**: http://localhost:8001/dashboard/trading-stats
 
 ### iOS连接
-- **API Base URL**: `http://localhost:8000`
+- **API Base URL**: `http://localhost:8001`
 - **iOS专用端点**: `http://localhost:8002`  
 - **WebSocket**: `ws://localhost:8002/ios/ws`
+
+## 🔧 本地配置指南
+
+### 环境变量设置
+
+创建 `.env` 文件（如果使用bootstrap脚本会自动创建）：
+
+```bash
+# 数据源配置
+TUSHARE_TOKEN=your_tushare_token_here          # 可选：Tushare Pro Token
+UNIVERSE_SERVICE_URL=                          # 可选：外部数据服务URL
+UNIVERSE_API_KEY=                              # 可选：外部数据API密钥
+
+# 数据库配置
+POSTGRES_URL=postgresql://arthera:arthera123@localhost:5432/trading_engine
+REDIS_URL=redis://localhost:6379
+
+# 系统配置
+REQUEST_TIMEOUT=30                             # API请求超时时间（秒）
+POOLS_CONFIG_PATH=config/pools.json           # 股票池配置路径
+DEMO_MODE=true                                 # 演示模式开关
+
+# iOS集成配置
+IOS_WEBSOCKET_PORT=8005                        # iOS WebSocket端口
+```
+
+### 数据源配置
+
+#### 1. 免费数据源（默认）
+系统开箱即用，使用以下免费数据源：
+- **Yahoo Finance**：全球股票实时行情
+- **AkShare**：中国A股免费数据
+
+#### 2. Tushare Pro（推荐）
+获得更高质量的中国市场数据：
+
+1. 访问 [Tushare官网](https://tushare.pro) 注册账号
+2. 获取API Token
+3. 在 `.env` 文件中设置：
+   ```bash
+   TUSHARE_TOKEN=your_tushare_token_here
+   ```
+
+#### 3. 自定义数据源
+如果您有自己的数据服务：
+```bash
+UNIVERSE_SERVICE_URL=https://your-api.com
+UNIVERSE_API_KEY=your_api_key
+```
+
+### Docker配置
+
+#### 检查Docker环境
+```bash
+# 检查Docker版本
+docker --version
+docker-compose --version
+
+# 确保Docker Desktop正在运行
+docker info
+```
+
+#### 端口配置
+确保以下端口未被占用：
+- `8001` - 演示服务器（demo_server.py）
+- `8000` - API Gateway（Docker模式）
+- `8002` - iOS Connector
+- `5432` - PostgreSQL
+- `6379` - Redis
+
+#### 内存配置
+建议为Docker Desktop分配至少4GB内存：
+1. 打开Docker Desktop
+2. Settings → Resources → Memory
+3. 设置为4GB或更高
+
+### 故障排除
+
+#### 常见问题
+1. **端口冲突错误**
+   ```bash
+   # 检查端口占用
+   netstat -an | grep 8001
+   lsof -i :8001
+   
+   # 终止占用端口的进程
+   kill -9 <PID>
+   ```
+
+2. **Docker启动失败**
+   ```bash
+   # 清理Docker缓存
+   docker system prune -a
+   
+   # 重新构建镜像
+   docker-compose build --no-cache
+   ```
+
+3. **内存问题**
+   ```bash
+   # 检查Docker内存使用
+   docker stats
+   
+   # 增加Docker Desktop内存分配
+   # Settings → Resources → Memory → 调整到8GB
+   ```
+
+4. **API连接超时**
+   - 检查网络连接
+   - 调整 `REQUEST_TIMEOUT` 环境变量
+   - 确保防火墙允许相关端口
+
+#### 日志查看
+```bash
+# 查看所有服务日志
+docker-compose logs -f
+
+# 查看特定服务日志
+docker-compose logs -f api-gateway
+docker-compose logs -f ios-connector
+
+# 查看最近100行日志
+docker-compose logs --tail=100 api-gateway
+```
+
+## 🔧 环境变量参考
+| 变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `UNIVERSE_SERVICE_URL` / `UNIVERSE_API_KEY` | 代理到您自己的市场数据平台（可选） | - |
+| `TUSHARE_TOKEN` | 启用Tushare Pro增强中国搜索功能；留空时仅使用AkShare | - |
+| `POOLS_CONFIG_PATH` | 自定义股票池配置 | `config/pools.json` |
+| `REQUEST_TIMEOUT` | API请求超时时间（秒） | `30` |
+| `POSTGRES_URL` | PostgreSQL数据库连接字符串 | `postgresql://arthera:arthera123@localhost:5432/trading_engine` |
+| `REDIS_URL` | Redis连接字符串 | `redis://localhost:6379` |
+| `DEMO_MODE` | 演示模式开关 | `true` |
+
+## 📚 核心API
+
+### 核心端点
+| 路径 | 方法 | 功能 | 参数 |
+| --- | --- | --- | --- |
+| `/market-data/search/{query}` | GET | 智能股票搜索，支持中美股票自动检测 | `market`, `limit` |
+| `/market-data/popular` | GET | 热门股票及平均价格/变化统计 | - |
+| `/config/data-source` | POST/GET | Tushare token管理 | `tushare_token` |
+| `/signals/*` | POST/GET | 策略信号生成和历史记录 | `symbols`, `timeframe` |
+| `/orders/*` | POST/GET | 模拟交易提交和历史记录 | `symbol`, `side`, `quantity` |
+| `/dashboard/*` | GET | 系统状态、性能、风险报告 | - |
+| `/ios/*` | POST/WS | DeepSeek、贝叶斯、Kelly、回测、iOS WebSocket | 各种iOS端点 |
+
+### API使用示例
+
+#### 1. 股票搜索
+```bash
+# 搜索苹果股票
+curl "http://localhost:8001/market-data/search/AAPL?market=US"
+
+# 搜索中国股票
+curl "http://localhost:8001/market-data/search/平安?market=CN"
+
+# 全局搜索
+curl "http://localhost:8001/market-data/search/tesla?market=ALL"
+```
+
+#### 2. 生成交易信号
+```bash
+curl -X POST "http://localhost:8001/signals/generate" \
+     -H "Content-Type: application/json" \
+     -d '{"symbols": ["AAPL", "TSLA"], "timeframe": "1D"}'
+```
+
+#### 3. 提交订单
+```bash
+curl -X POST "http://localhost:8001/orders/submit" \
+     -H "Content-Type: application/json" \
+     -d '{"symbol": "AAPL", "side": "BUY", "quantity": 100, "order_type": "MARKET"}'
+```
+
+#### 4. 获取市场数据
+```bash
+# 获取单只股票数据
+curl "http://localhost:8001/market-data/stock/AAPL?market=US"
+
+# 获取市场指数
+curl "http://localhost:8001/market-data/indices"
+
+# 获取热门股票
+curl "http://localhost:8001/market-data/popular"
+```
+
+#### 5. 配置数据源
+```bash
+# 获取当前配置
+curl "http://localhost:8001/config/data-source"
+
+# 设置Tushare Token
+curl -X POST "http://localhost:8001/config/data-source" \
+     -H "Content-Type: application/json" \
+     -d '{"tushare_token": "your_token_here"}'
+```
+
+## 🖥 前端体验
+
+### 界面功能
+- **Bloomberg风格设计**：深色主题，专业金融界面
+- **实时数据显示**：实时股价、涨跌、成交量更新
+- **智能搜索**：支持中英文股票名称和代码搜索
+- **股票池管理**：可视化添加/移除股票到投资池
+- **策略监控**：实时策略状态和性能显示
+
+### 用户指南
+1. **股票搜索使用**：
+   - 在 `TARGET STOCK POOL` 面板选择市场（US/CN/GLOBAL）
+   - 输入股票代码或公司名称进行搜索
+   - 点击搜索结果卡片添加到股票池
+
+2. **数据源配置**：
+   - 点击右上角CONFIG按钮打开设置
+   - 在DATA SOURCE CONFIG部分输入Tushare Token
+   - 点击SAVE保存配置
+
+3. **交易信号生成**：
+   - 从股票池选择股票
+   - 点击生成信号按钮
+   - 查看信号置信度和建议操作
+
+4. **订单管理**：
+   - 基于信号建议执行买卖操作
+   - 查看订单历史和执行状态
 
 ## 📱 iOS集成
 
@@ -139,195 +381,80 @@ docker-compose logs -f
 await adapter.connectWebSocket()
 ```
 
-## 🔗 API端点详情
+### iOS连接器端点
+- `POST /ios/signals/deepseek/generate` - 生成AI驱动的交易信号
+- `POST /ios/bayesian/update-posterior` - 更新贝叶斯模型参数
+- `WS /ios/ws` - 实时WebSocket连接获取实时更新
+- `POST /ios/backtest` - 运行历史策略回测
 
-### iOS Connector专用端点 (端口8002)
+## 🚀 部署选项
 
-| 端点 | 方法 | 功能 | 对应iOS服务 |
-|------|------|------|------------|
-| `/ios/signals/deepseek/generate` | POST | 生成DeepSeek信号 | DeepSeekSignalGenerator |
-| `/ios/bayesian/update-posterior` | POST | 贝叶斯后验更新 | BayesianUncertaintyService |
-| `/ios/portfolio/optimize` | POST | 投资组合优化 | BayesianPortfolioOptimizer |
-| `/ios/position/kelly-size` | POST | Kelly仓位计算 | KellyPositionSizer |
-| `/ios/backtest/run` | POST | 策略回测 | PurgedKFoldBacktester |
-| `/ios/ws` | WebSocket | 实时数据流 | 所有量化服务 |
-
-### API Gateway统一端点 (端口8000)
-
-| 路由 | 目标服务 | 功能 |
-|------|----------|------|
-| `/market-data/*` | QuantEngine | 市场数据获取 |
-| `/strategies/*` | Arthera_Quant_Lab | 策略管理执行 |
-| `/signals/*` | 信号生成服务 | 交易信号生成 |
-| `/portfolio/*` | Portfolio服务 | 投资组合管理 |
-| `/orders/*` | Paper Trading | 模拟交易执行 |
-| `/dashboard/*` | 仪表板服务 | 投资者演示面板 |
-
-#### 仪表板分析扩展
-
-| 路由 | 数据来源 | 描述 |
-|------|----------|------|
-| `/dashboard/performance-series` | Portfolio Analytics | 返回累计收益对比基准的时间序列 |
-| `/dashboard/drawdown` | Portfolio Analytics | 最大回撤及回撤曲线 |
-| `/dashboard/allocations` | Portfolio Service | 分行业/资产配置权重 |
-| `/dashboard/risk-report` | Risk Engine | VaR/CVaR、压力测试、收益归因等核心风险指标 |
-| `/dashboard/overview` | API Gateway 聚合 | 单次请求返回所有仪表板数据（系统状态、交易统计、图表、风险报表）|
-
-#### 股票池/标的管理
-
-| 路由 | 功能 |
-|------|------|
-| `/universe/pools` | 列出预设股票池（名称、标签、区域、统计指标） |
-| `/universe/pools/{pool_id}` | 返回指定股票池的成分股、Beta/成交量/动量等指标，以及行业分布 |
-| `/universe/search` | 智能搜索股票/资产（代码、名称、交易所、价格、涨跌幅），供前端自动补全使用 |
-
-前端“目标股票池”模块会调用以上接口，投资经理可以在UI中直接筛选FAANG、AI基础设施、中国新能源等预设组合，并实时查看池内统计后再触发策略。
-部署到真实平台时，可通过设置 `UNIVERSE_SERVICE_URL` 将这些接口代理到 Polygon、Alpha Vantage、Tushare 等实时行情/筛选服务；若保持为空，系统默认走 Yahoo Finance 并自动对结果做缓存降频。
-
-> ℹ️ **实时A股数据**
-> - 已内置 `akshare` 抓取全市场行情，`/universe/search` 会根据关键词自动切换中/美股数据源。
-> - 通过 `POST /config/data-source` 配置 `tushare_token` 后，即可在搜索/股票池接口中获得行业、地域等高阶字段。
-
-## 💡 演示脚本
-
-### 1分钟投资者演示流程：
-
-1. **启动系统** (5秒)
-   ```bash
-   ./start-demo.sh
-   # 所有服务启动，显示绿色状态
-   ```
-
-2. **展示量化能力** (20秒)
-   - 8个策略同时运行
-   - 实时信号生成
-   - 自动风控检查
-   - 模拟订单执行
-   - 交易数据实时更新
-
-3. **iOS同步演示** (20秒)
-   - iPhone连接同一WiFi网络
-   - 展示Portfolio实时更新
-   - 信号推送到移动端
-   - P&L变化同步显示
-
-4. **性能指标** (15秒)
-   - Sharpe比率: 2.15
-   - 最大回撤: -8%
-   - 胜率: 67%
-   - 年化收益: 12%
-
-## 🎯 投资者展示重点
-
-### 交易活动数据（实时更新）
-```json
-{
-  "daily_stats": {
-    "orders_generated": 156,
-    "trades_executed": 142,
-    "total_volume": 2850000,
-    "success_rate": 91.03,
-    "strategies_active": 8
-  }
-}
-```
-
-### 关键技术亮点
-- ✅ **零冗余架构**: 充分利用现有88%代码，最小化新开发
-- ✅ **真实性保证**: 真实市场数据 + 真实ML模型 + 真实风控逻辑
-- ✅ **可信度最大化**: 完整审计链路，专业级风险监控
-- ✅ **移动端完整体验**: iOS原生量化交易功能
-
-## 🛠️ 系统管理
-
-### 查看服务状态
-```bash
-docker-compose ps
-```
-
-### 重启特定服务
-```bash
-docker-compose restart api-gateway
-docker-compose restart ios-connector
-```
-
-### 查看实时日志
-```bash
-# 所有服务
-docker-compose logs -f
-
-# 特定服务
-docker-compose logs -f api-gateway
-docker-compose logs -f ios-connector
-```
-
-### 停止系统
-```bash
-docker-compose down
-```
-
-### 完全清理
-```bash
-docker-compose down --volumes --remove-orphans
-```
-
-## 🔧 开发和扩展
-
-### 添加新的API端点
-1. 在 `services/api-gateway/main.py` 中添加路由
-2. 在 `services/ios-connector/main.py` 中添加iOS专用端点
-3. 更新 `ios-integration/` 中的Swift配置文件
-
-### 集成新的后端服务
-1. 在 `docker-compose.yml` 中添加服务定义
-2. 在API Gateway中添加路由规则
-3. 更新健康检查逻辑
-
-## 📋 故障排查
-
-### 常见问题
-
-1. **端口冲突**
-   ```bash
-   # 检查端口占用
-   lsof -i :8000
-   lsof -i :8002
-   ```
-
-2. **服务无法启动**
-   ```bash
-   # 查看详细错误日志
-   docker-compose logs service-name
-   ```
-
-3. **iOS连接失败**
-   - 确认iOS设备与服务器在同一网络
-   - 检查防火墙设置
-   - 验证API端点URL配置
+### 生产环境部署
+对于生产环境部署，建议考虑：
+1. **Docker Compose**: 使用提供的docker-compose.yml
+2. **Kubernetes**: 使用Kubernetes清单部署
+3. **云服务**: AWS ECS、Google Cloud Run、Azure容器实例
 
 ### 性能优化
+- **缓存**: 使用Redis缓存市场数据
+- **数据库**: PostgreSQL用于持久化存储
+- **负载均衡**: Nginx反向代理支持多实例
+- **监控**: 内置健康检查和指标
 
-- 调整Docker资源限制
-- 配置Redis缓存策略
-- 优化数据库连接池
+## 🛠 开发
 
-## 📈 下一步扩展
+### 项目结构
+```
+TradingEngine/
+├── demo_server.py              # 独立演示服务器
+├── index.html                  # 主要的Bloomberg风格界面
+├── services/
+│   ├── api-gateway/           # FastAPI网关服务
+│   └── ios-connector/         # iOS集成服务
+├── config/
+│   └── pools.json            # 股票池配置
+├── scripts/
+│   └── bootstrap.sh          # 环境设置脚本
+├── docker-compose.yml        # 完整Docker部署
+└── docker-compose-simple.yml # 简化Docker设置
+```
 
-1. **生产环境部署**
-   - 添加HTTPS支持
-   - 配置负载均衡
-   - 添加身份认证
+### 贡献代码
+1. Fork此仓库
+2. 创建功能分支
+3. 实现您的更改
+4. 为新功能添加测试
+5. 提交pull request
 
-2. **监控和报警**
-   - 集成Prometheus + Grafana
-   - 添加业务指标监控
-   - 配置报警规则
+### 测试
+```bash
+# 运行单元测试
+python -m pytest tests/
 
-3. **数据持久化**
-   - 配置数据备份策略
-   - 添加数据同步机制
-   - 实现灾难恢复
+# 测试API端点
+curl http://localhost:8001/health
 
----
+# 运行集成测试
+docker-compose -f docker-compose-test.yml up
+```
 
-**🎉 Arthera量化交易演示系统 - 展示专业级量化交易能力！**
+## 📄 许可证
+
+本项目采用MIT许可证 - 详情请查看LICENSE文件。
+
+## 🤝 联系我们
+- X: [@xindi_w](https://x.com/xindi_w)
+- LinkedIn: [https://www.linkedin.com/in/xindi-wang19990526/](https://www.linkedin.com/in/xindi-wang19990526/)
+
+欢迎交流数据集成、策略共同开发和多设备演示合作。
+
+## 🙏 致谢
+
+- Bloomberg终端为UI设计提供灵感
+- Yahoo Finance提供全球市场数据
+- AkShare提供中国A股数据
+- Tushare提供增强的中国市场数据
+- FastAPI社区提供优秀框架
+- Docker社区提供容器化支持
+
+
