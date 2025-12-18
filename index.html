@@ -2288,19 +2288,22 @@
                 // 市场选择器
                 const marketSelect = document.getElementById('market-select');
                 if (marketSelect) {
-                    marketSelect.addEventListener('change', async function(e) {
+                    marketSelect.addEventListener('change', function(e) {
                         const selectedMarket = e.target.value;
                         console.log(`📊 市场切换到: ${selectedMarket}`);
                         showToast(`切换到${selectedMarket === 'US' ? '美股' : 'A股'}市场，正在重新加载图表数据...`, 'info');
                         
-                        try {
-                            await loadInitialChartData();
-                            await loadMarketIndices();
-                            showToast(`✅ ${selectedMarket === 'US' ? '美股' : 'A股'}图表数据加载完成`, 'success');
-                        } catch (error) {
-                            console.error('市场切换失败:', error);
-                            showToast('⚠️ 图表数据加载失败', 'warning');
-                        }
+                        // 使用立即执行的异步函数避免消息通道错误
+                        (async () => {
+                            try {
+                                await loadInitialChartData();
+                                await loadMarketIndices();
+                                showToast(`✅ ${selectedMarket === 'US' ? '美股' : 'A股'}图表数据加载完成`, 'success');
+                            } catch (error) {
+                                console.error('市场切换失败:', error);
+                                showToast('⚠️ 图表数据加载失败', 'warning');
+                            }
+                        })();
                     });
                     console.log('✅ 市场选择器事件绑定成功');
                 } else {
@@ -4536,6 +4539,45 @@
             showToast(`已切换到${market === 'US' ? '美股' : market === 'CN' ? 'A股' : '混合'}市场股票池`, 'info');
         }
         
+        // ==================== 股票池统计更新 ====================
+        function updatePoolStats() {
+            try {
+                const symbolsInput = document.getElementById('target-symbols');
+                if (!symbolsInput || !symbolsInput.value) {
+                    console.log('📊 股票池为空，跳过统计更新');
+                    return;
+                }
+                
+                const symbols = symbolsInput.value.split(',').map(s => s.trim()).filter(s => s);
+                let usCount = 0;
+                let cnCount = 0;
+                
+                symbols.forEach(symbol => {
+                    if (symbol.includes('.SS') || symbol.includes('.SZ') || /^[0-9]{6}/.test(symbol)) {
+                        cnCount++;
+                    } else {
+                        usCount++;
+                    }
+                });
+                
+                // 更新统计显示
+                const totalElement = document.getElementById('total-count');
+                const usElement = document.getElementById('us-count');
+                const cnElement = document.getElementById('cn-count');
+                
+                if (totalElement) totalElement.textContent = symbols.length;
+                if (usElement) usElement.textContent = usCount;
+                if (cnElement) cnElement.textContent = cnCount;
+                
+                console.log(`📊 股票池统计已更新: 总计 ${symbols.length}, 美股 ${usCount}, A股 ${cnCount}`);
+            } catch (error) {
+                console.error('❌ 更新股票池统计时出错:', error);
+            }
+        }
+        
+        // 确保函数在全局作用域可访问
+        window.updatePoolStats = updatePoolStats;
+        
         // ==================== 股票搜索功能 ====================
         let searchTimeout = null;
         
@@ -6046,6 +6088,49 @@
                 }
             }, 1000);
         });
+        
+        // ================ 全局错误处理 ================
+        
+        // 处理未捕获的Promise拒绝
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('❌ 未处理的Promise拒绝:', event.reason);
+            
+            // 防止错误在控制台显示
+            if (event.reason && event.reason.message && 
+                (event.reason.message.includes('message channel closed') || 
+                 event.reason.message.includes('listener indicated'))) {
+                console.log('📝 已捕获并忽略消息通道错误');
+                event.preventDefault();
+                return;
+            }
+            
+            // 显示用户友好的错误消息
+            if (typeof showToast === 'function') {
+                showToast('系统遇到了一个问题，请刷新页面重试', 'error');
+            }
+            
+            // 可选：阻止默认的错误处理
+            // event.preventDefault();
+        });
+        
+        // 处理未捕获的JavaScript错误
+        window.addEventListener('error', function(event) {
+            console.error('❌ 未捕获的错误:', event.error);
+            
+            // 忽略特定的已知错误
+            if (event.message && 
+                (event.message.includes('updatePoolStats is not a function') ||
+                 event.message.includes('message channel closed'))) {
+                console.log('📝 已捕获并忽略已知错误');
+                return;
+            }
+            
+            if (typeof showToast === 'function') {
+                showToast('页面遇到了一个错误，请检查控制台日志', 'warning');
+            }
+        });
+        
+        console.log('✅ 全局错误处理已设置');
     </script>
 </body>
 </html>
