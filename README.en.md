@@ -1,23 +1,19 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Cinsoul/Arthera-Quant-Lab/main/docs/assets/arthera-logo.png" alt="Arthera Trading Engine" width="200" height="200">
 
-# THE FIRST
-## OPEN-SOURCE TRADING PLATFORM
-### FOR QUANTITATIVE ANALYSTS
+![Image](https://github.com/user-attachments/assets/bc40f0ad-476c-413e-8cbd-ccb70ee6ec3d)
+
 
 <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Alpha</button>
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Agents</button>
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Advance</button>
+ 
 </div>
 
+  
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![Discord](https://img.shields.io/discord/123456789?color=7289da&logo=discord&logoColor=white)](https://discord.gg/arthera)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/xindi-wang19990526/)
 [![X](https://img.shields.io/badge/X-Follow-000000?logo=x)](https://x.com/xindi_w)
-[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube)](https://youtube.com/arthera)
 
 [English](README.en.md) | [中文 (简体)](README.md) | [中文 (繁體)](README.zh.md)
 
@@ -35,7 +31,18 @@ Welcome to join our Discord community to share feedback and issues you encounter
 
 > **Note:** Arthera team members will never proactively contact community participants. This project is for educational and research purposes.
 
-## 🌟 Key Features
+## Preview
+
+<img width="1057" height="673" alt="Screenshot 2025-12-18 at 12 49 21 pm" src="https://github.com/user-attachments/assets/bcf4ce5d-750a-4214-a35e-6ff96c3080a1" />
+
+<img width="1198" height="776" alt="Screenshot 2025-12-18 at 12 52 39 pm" src="https://github.com/user-attachments/assets/98c767c8-2eef-4c53-b636-590a9bf3cb00" />
+
+<img width="1189" height="770" alt="Screenshot 2025-12-18 at 12 52 45 pm" src="https://github.com/user-attachments/assets/2f81c40d-71b7-4a12-ad9d-b7320d4bd556" />
+
+<img width="1190" height="770" alt="Screenshot 2025-12-18 at 12 52 56 pm" src="https://github.com/user-attachments/assets/e8377687-65e2-4f63-acf2-d910612c86b8" />
+
+
+## Key Features
 - **Dual Market Feeds** – Yahoo Finance (global) and AkShare (A-shares) ship out of the box; drop in a `TUSHARE_TOKEN` to unlock Pro-level metadata via the new China provider.
 - **Intelligent Stock Search** – The "Target Stock Pool" widget talks to `/market-data/search`, returning paginated CN/US results with live price, change %, exchange, sector, and market-cap badges.
 - **Full Strategy Pipeline** – QuantEngine, Quant Lab, Paper OMS, Risk Engine, and Portfolio analytics converge inside the FastAPI gateway for signal generation, order routing, and dashboard aggregation.
@@ -44,7 +51,7 @@ Welcome to join our Discord community to share feedback and issues you encounter
 - **Live Data Source Controls** – `POST /config/data-source` lets you rotate Tushare tokens at runtime; the front end updates status indicators automatically.
 - **Real-time Data Integration** – Supports Yahoo Finance, AkShare, Tushare Pro with automatic caching and failover.
 
-## 🏗 Architecture
+## Architecture
 ```
 Bloomberg UI → FastAPI Gateway (8000)
                      ├─ YahooMarketProvider (global)
@@ -53,7 +60,7 @@ Bloomberg UI → FastAPI Gateway (8000)
                      └─ iOS Connector (8002 REST + WS)
 ```
 
-## 📋 System Requirements
+## System Requirements
 
 ### Required Environment
 - **Python 3.8+**
@@ -67,7 +74,7 @@ Bloomberg UI → FastAPI Gateway (8000)
 - Windows 10+ (WSL2)
 - Linux Ubuntu 18.04+/CentOS 7+
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Option 1: One-Click Launch (Recommended)
 ```bash
@@ -229,7 +236,7 @@ docker-compose logs -f ios-connector
 docker-compose logs --tail=100 api-gateway
 ```
 
-## 🔧 Environment Variables Reference
+## Environment Variables Reference
 | Variable | Description | Default |
 | --- | --- | --- |
 | `UNIVERSE_SERVICE_URL` / `UNIVERSE_API_KEY` | Proxy to your own market-data platform (optional) | - |
@@ -240,7 +247,7 @@ docker-compose logs --tail=100 api-gateway
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
 | `DEMO_MODE` | Demo mode toggle | `true` |
 
-## 📚 Core APIs
+## Core APIs
 
 ### Core Endpoints
 | Path | Method | Purpose | Parameters |
@@ -304,10 +311,10 @@ curl -X POST "http://localhost:8001/config/data-source" \
      -d '{"tushare_token": "your_token_here"}'
 ```
 
-## 🖥 Front-end Experience
+## Front-end Experience
 
 ### Interface Features
-- **Bloomberg-style Design**: Dark theme, professional financial interface
+- **Design**: Dark theme, professional financial interface
 - **Real-time Data Display**: Live stock prices, changes, volume updates
 - **Smart Search**: Support for Chinese/English stock names and symbols
 - **Stock Pool Management**: Visual add/remove stocks to investment pools
@@ -333,7 +340,7 @@ curl -X POST "http://localhost:8001/config/data-source" \
    - Execute buy/sell operations based on signal suggestions
    - View order history and execution status
 
-## 📱 iOS Integration
+## iOS Integration
 
 ### Swift SDK Usage
 ```swift
@@ -358,7 +365,7 @@ let backtest = try await adapter.runBacktest(strategy: "momentum", symbols: ["AA
 - `WS /ios/ws` - Real-time WebSocket connection for live updates
 - `POST /ios/backtest` - Run historical strategy backtests
 
-## 🚀 Deployment Options
+## Deployment Options
 
 ### Production Deployment
 For production deployment, consider:
@@ -421,7 +428,6 @@ Open to collaborations on data integration, strategy co-development, and multi-d
 
 ## 🙏 Acknowledgments
 
-- Bloomberg Terminal for UI inspiration
 - Yahoo Finance for global market data
 - AkShare for China A-share data
 - Tushare for enhanced China market data

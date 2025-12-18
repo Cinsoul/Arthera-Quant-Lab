@@ -35,17 +35,22 @@ Arthera统一量化交易系统是一个社区驱动的多智能体量化交易�
 
 > **注意：** Arthera团队成员绝不会主动联系社区参与者。此项目仅供教育和研究目的使用。
 
-## 🎯 系统概述
+## 产品预览
+<img width="1057" height="673" alt="Screenshot 2025-12-18 at 12 49 21 pm" src="https://github.com/user-attachments/assets/da46e9d6-9e32-4725-b758-a5624e8f2862" />
+<img width="1198" height="776" alt="Screenshot 2025-12-18 at 12 52 39 pm" src="https://github.com/user-attachments/assets/c1ad9e8c-20a3-490a-b484-569b0c2c79cc" />
+<img width="1189" height="770" alt="Screenshot 2025-12-18 at 12 52 45 pm" src="https://github.com/user-attachments/assets/f6094dec-da68-4978-829c-8f26d09d8719" />
+<img width="1190" height="770" alt="Screenshot 2025-12-18 at 12 52 56 pm" src="https://github.com/user-attachments/assets/a85f5f42-c589-4b5a-970e-4b37b649c821" />
 
-基于现有88%完整的Arthera架构，通过统一API Gateway和iOS Connector，创建了一个可以：
-- ✅ 持续产生交易信号和订单
-- ✅ 完整的成交回报和审计链路  
-- ✅ 可视化的交易面板和性能分析
-- ✅ iOS App无缝连接
-- ✅ 本地Docker部署，支持远程演示
+## 🌟 核心特性
+- **双数据源聚合**：默认启用 Yahoo Finance + AkShare；配置 `TUSHARE_TOKEN` 后自动切换至 Tushare Pro，`/universe/search` 会对中美股票统一格式化输出。
+- **智能股票搜索**：Bloomberg 风格的 `TARGET STOCK POOL` 面板支持模糊检索、分页、行业与市值筛选，并实时展示价格、涨跌幅、交易所与行业标签。
+- **全链路策略中心**：QuantEngine、Quant Lab、Paper OMS、Risk Engine 与 Portfolio 服务通过 API Gateway 汇聚，支持信号生成、交易执行、风险审计与绩效回放。
+- **Bloomberg UI**：内置系统状态、交易统计、回撤图、行业配置、风险报表、订单与信号列表，可一键演示。
+- **iOS Connector**：端口 8002 暴露与 Swift SDK 对齐的 REST + WebSocket 接口，移动端可实时接收信号、下单并回测。
+- **动态数据配置**：`POST /config/data-source` 可在运行时注入/更新 Tushare Token，并立即反映到前端。
+- **实时数据集成**：支持Yahoo Finance、AkShare、Tushare Pro多数据源，自动缓存和故障转移。
 
-## 🏗️ 系统架构
-
+## 🏗 架构
 ```
 iOS App (现有完整量化服务)
     ↓ HTTP/WebSocket
@@ -72,41 +77,43 @@ iOS Connector (端口8002) → API Gateway (端口8001)
 - Windows 10+ (WSL2)
 - Linux Ubuntu 18.04+/CentOS 7+
 
-## 🚀 快速启动
+## ⚡ 快速启动
 
-### 0. 环境初始化（首次运行）
-
+### Option 1: 一键启动（推荐）
 ```bash
-cd /Users/mac/Desktop/Arthera/Arthea/TradingEngine
-./scripts/bootstrap.sh              # 拷贝 .env 并安装依赖
-vim .env                            # 配置真实行情平台（可选）
+# 1. 克隆项目
+git clone https://github.com/Cinsoul/Arthera-Quant-Lab.git
+cd Arthera-Quant-Lab
+
+# 2. 初始化环境
+./scripts/bootstrap.sh      # 创建虚拟环境并安装依赖
+
+# 3. (可选) 配置API密钥
+vim .env                    # 编辑环境变量
+
+# 4. 启动完整系统
+./start-demo.sh             # 启动所有Docker容器
 ```
 
-> 🔐 **市场数据配置**
->
-> - 默认：不填任何变量即可使用内置 Yahoo Finance 提供的全球股票实时/历史数据。
-> - 可对接真实平台：设置 `UNIVERSE_SERVICE_URL` 与 `UNIVERSE_API_KEY`，API Gateway 会将股票搜索与池组件请求透明代理到您的平台。
-> - A股实盘：内置 `akshare` 即可实时抓取行情，如需解锁行业/财务字段请设置 `TUSHARE_TOKEN`（Tushare Pro）。
-> - 进阶：`UNIVERSE_SEARCH_PATH`、`POOLS_CONFIG_PATH` 可自定义搜索路径与股票池配置文件。
-
-### 1. 一键演示启动
-
+### Option 2: 简化启动
 ```bash
-./start-demo.sh
+# 适用于快速演示，无需复杂配置
+./start-simple-demo.sh
 ```
 
-### 2. 手动启动
-
+### Option 3: 本地Python运行
 ```bash
-# 构建并启动所有服务
-docker-compose up -d
+# 1. 安装依赖
+pip install -r requirements.txt
 
-# 查看服务状态
-docker-compose ps
+# 2. 启动演示服务器
+python demo_server.py
 
-# 查看日志
-docker-compose logs -f
+# 3. 访问界面
+# 浏览器打开: http://localhost:8001
 ```
+
+然后打开 `http://localhost:8001` 浏览实时仪表板 (或 `docker-compose up -d` 手动控制)。
 
 ## 📊 服务访问
 
@@ -356,29 +363,21 @@ curl -X POST "http://localhost:8001/config/data-source" \
 
 ## 📱 iOS集成
 
-### 配置更新
-
-1. **API配置更新**
-   ```swift
-   // 在iOS项目中使用提供的配置文件
-   ArtheraAPIConfig.shared.switchEnvironment(to: .development)
-   ```
-
-2. **服务适配器使用**
-   ```swift
-   // 现有服务无缝切换到统一后端
-   let adapter = QuantitativeServiceAdapter.shared
-   let signal = try await adapter.generateDeepSeekSignal(
-       symbol: "AAPL",
-       marketData: marketData,
-       analysisConfig: config
-   )
-   ```
-
-### WebSocket实时连接
+### Swift SDK使用
 ```swift
-// 连接实时数据流
-await adapter.connectWebSocket()
+let adapter = QuantitativeServiceAdapter.shared
+
+// 生成交易信号
+let signal = try await adapter.generateDeepSeekSignal(symbol: "AAPL", marketData: feed)
+
+// 连接WebSocket获取实时更新
+await adapter.connectWebSocket() // 订阅实时推送
+
+// 提交订单
+let order = try await adapter.submitOrder(symbol: "AAPL", side: "BUY", quantity: 100)
+
+// 运行回测
+let backtest = try await adapter.runBacktest(strategy: "momentum", symbols: ["AAPL", "TSLA"])
 ```
 
 ### iOS连接器端点
@@ -456,5 +455,3 @@ docker-compose -f docker-compose-test.yml up
 - Tushare提供增强的中国市场数据
 - FastAPI社区提供优秀框架
 - Docker社区提供容器化支持
-
-
