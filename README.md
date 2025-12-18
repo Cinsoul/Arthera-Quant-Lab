@@ -1,6 +1,39 @@
-# Arthera统一量化交易系统
+<div align="center">
 
-本地可部署的量化交易演示系统，整合现有Arthera架构，为投资者展示完整的量化交易能力。
+<img src="https://raw.githubusercontent.com/Cinsoul/Arthera-Quant-Lab/main/docs/assets/arthera-logo.png" alt="Arthera Trading Engine" width="200" height="200">
+
+# 首个
+## 开源量化交易平台
+### 专为量化分析师设计
+
+<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Alpha</button>
+  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">智能体</button>
+  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">进阶</button>
+</div>
+
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+[![Discord](https://img.shields.io/discord/123456789?color=7289da&logo=discord&logoColor=white)](https://discord.gg/arthera)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/xindi-wang19990526/)
+[![Twitter](https://img.shields.io/badge/Twitter-Follow-1da1f2?logo=twitter)](https://x.com/xindi_w)
+[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube)](https://youtube.com/arthera)
+
+[English](README.en.md) | [中文 (简体)](README.md) | [中文 (繁體)](README.zh.md) | [日本語](README.ja.md)
+
+</div>
+
+## Arthera统一量化交易系统
+
+Arthera统一量化交易系统是一个社区驱动的多智能体量化交易应用平台。我们的使命是构建世界上最大的去中心化量化交易社区。
+
+它提供了一支顶级量化策略团队，帮助您进行股票选择、研究、跟踪甚至交易。
+
+系统将您的所有敏感信息本地存储在您的设备上，确保核心数据安全。
+
+欢迎加入我们的Discord社区，分享您遇到的反馈和问题，邀请更多开发者贡献 🔥🔥🔥
+
+> **注意：** Arthera团队成员绝不会主动联系社区参与者。此项目仅供教育和研究目的使用。
 
 ## 🎯 系统概述
 
