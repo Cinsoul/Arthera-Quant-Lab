@@ -1,0 +1,243 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: trading_postgres
+    environment:
+      POSTGRES_DB: trading_engine
+      POSTGRES_USER: trader
+      POSTGRES_PASSWORD: secure_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - trading_network
+
+  # Redis Cache & PubSub
+  redis:
+    image: redis:7-alpine
+    container_name: trading_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - trading_network
+
+  # Market Data Service
+  market-data:
+    build:
+      context: ./services/market-data
+      dockerfile: Dockerfile
+    container_name: trading_market_data
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - trading_network
+
+  # Strategy Runner
+  strategy-runner:
+    build:
+      context: ./services/strategy-runner
+      dockerfile: Dockerfile
+    container_name: trading_strategy_runner
+    ports:
+      - "8002:8000"
+    environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+      - MARKET_DATA_URL=http://market-data:8000
+    depends_on:
+      - postgres
+      - redis
+      - market-data
+    networks:
+      - trading_network
+
+  # Risk Engine
+  risk-engine:
+    build:
+      context: ./services/risk-engine
+      dockerfile: Dockerfile
+    container_name: trading_risk_engine
+    ports:
+      - "8003:8000"
+    environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - trading_network
+
+  # Paper OMS (Order Management System)
+  paper-oms:
+    build:
+      context: ./services/paper-oms
+      dockerfile: Dockerfile
+    container_name: trading_paper_oms
+    ports:
+      - "8004:8000"
+    environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+      - MARKET_DATA_URL=http://market-data:8000
+      - RISK_ENGINE_URL=http://risk-engine:8000
+    depends_on:
+      - postgres
+      - redis
+      - market-data
+      - risk-engine
+    networks:
+      - trading_network
+
+  # Portfolio & PnL Service
+  portfolio-pnl:
+    build:
+      context: ./services/portfolio-pnl
+      dockerfile: Dockerfile
+    container_name: trading_portfolio_pnl
+    ports:
+      - "8005:8000"
+    environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+      - PAPER_OMS_URL=http://paper-oms:8000
+    depends_on:
+      - postgres
+      - redis
+      - paper-oms
+    networks:
+      - trading_network
+
+  # API Gateway (Unified entry point)
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: trading_api_gateway
+    ports:
+      - "8000:8000"  # Main entry point for all services
+    environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+      - QUANT_ENGINE_URL=http://quant-engine:8000
+      - QUANT_LAB_URL=http://quant-lab:8000
+      - PAPER_TRADING_URL=http://paper-oms:8000
+      - PORTFOLIO_PNL_URL=http://portfolio-pnl:8000
+      - IOS_CONNECTOR_URL=http://ios-connector:8000
+    depends_on:
+      - postgres
+      - redis
+      - quant-engine
+      - quant-lab
+      - ios-connector
+    networks:
+      - trading_network
+
+  # iOS Connector Service
+  ios-connector:
+    build:
+      context: ./services/ios-connector
+      dockerfile: Dockerfile
+    container_name: trading_ios_connector
+    ports:
+      - "8002:8002"  # iOS-specific endpoints
+    environment:
+      - API_GATEWAY_URL=http://api-gateway:8000
+      - QUANT_ENGINE_URL=http://quant-engine:8000
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - trading_network
+
+  # QuantEngine Service (existing Arthera backend)
+  quant-engine:
+    build:
+      context: ../QuantEngine
+      dockerfile: Dockerfile
+    container_name: trading_quant_engine
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ../QuantEngine:/app
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - trading_network
+
+  # Quant Lab Service (existing Arthera_Quant_Lab)
+  quant-lab:
+    build:
+      context: ../Arthera_Quant_Lab/backend
+      dockerfile: Dockerfile
+    container_name: trading_quant_lab
+    ports:
+      - "8003:8000"
+    environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ../Arthera_Quant_Lab:/app
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - trading_network
+
+  # Grafana (Optional - for system monitoring)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: trading_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    networks:
+      - trading_network
+
+  # Prometheus (Optional - for metrics)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: trading_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - trading_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  grafana_data:
+  prometheus_data:
+
+networks:
+  trading_network:
+    driver: bridge

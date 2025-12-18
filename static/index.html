@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arthera量化交易系统 - 投资者演示平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .number-counter {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="gradient-bg text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-2xl font-bold">Arthera 量化交易</h1>
+                <span class="bg-green-500 text-xs px-2 py-1 rounded-full flex items-center">
+                    <span class="w-2 h-2 bg-white rounded-full mr-1 pulse-dot"></span>
+                    系统运行中
+                </span>
+            </div>
+            <div class="text-right">
+                <div class="text-sm opacity-90">投资者演示平台</div>
+                <div class="text-xs" id="current-time"></div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6">
+        <!-- 核心指标仪表板 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-md card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">今日交易量</p>
+                        <p class="text-3xl font-bold text-blue-600 number-counter" id="total-volume">-</p>
+                    </div>
+                    <div class="text-blue-500">
+                        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-green-600 text-sm" id="volume-change">-</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">活跃策略</p>
+                        <p class="text-3xl font-bold text-green-600 number-counter" id="active-strategies">-</p>
+                    </div>
+                    <div class="text-green-500">
+                        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-green-600 text-sm">全部运行中</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">今日信号</p>
+                        <p class="text-3xl font-bold text-purple-600 number-counter" id="signals-today">-</p>
+                    </div>
+                    <div class="text-purple-500">
+                        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-purple-600 text-sm" id="signal-strength">-</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">成功率</p>
+                        <p class="text-3xl font-bold text-orange-600 number-counter" id="success-rate">-</p>
+                    </div>
+                    <div class="text-orange-500">
+                        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-orange-600 text-sm">专业水准</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- 策略控制面板 -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">💡 策略运行控制</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">选择运行策略</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="strategy-checkbox" data-strategy="deepseek_alpha">
+                                <span class="ml-2">🧠 DeepSeek Alpha策略</span>
+                                <span class="ml-auto text-green-600 text-sm">Sharpe: 2.1</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="strategy-checkbox" data-strategy="bayesian_momentum">
+                                <span class="ml-2">📊 Bayesian动量策略</span>
+                                <span class="ml-auto text-green-600 text-sm">Sharpe: 1.9</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="strategy-checkbox" data-strategy="kelly_optimizer">
+                                <span class="ml-2">🎯 Kelly优化策略</span>
+                                <span class="ml-auto text-green-600 text-sm">Sharpe: 1.8</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="strategy-checkbox" data-strategy="risk_parity">
+                                <span class="ml-2">⚖️ 风险平价策略</span>
+                                <span class="ml-auto text-green-600 text-sm">Sharpe: 1.6</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">运行模式</label>
+                        <select id="run-mode" class="w-full p-2 border border-gray-300 rounded-md">
+                            <option value="live">实时交易模式</option>
+                            <option value="backtest">历史回测模式</option>
+                            <option value="demo">演示模式</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">目标股票池</label>
+                        <select id="pool-select" class="w-full p-2 border border-gray-300 rounded-md mb-3">
+                            <option value="">选择预设股票池...</option>
+                        </select>
+                        <div id="pool-chips" class="flex flex-wrap gap-2 mb-3 text-sm text-gray-700">
+                            <span class="text-gray-400">选择股票池后显示成分股</span>
+                        </div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">智能搜索股票</label>
+                        <div class="relative mb-3">
+                            <input type="text" id="symbol-search" placeholder="输入股票代码或名称，自动补全"
+                                   class="w-full p-2 border border-gray-300 rounded-md" autocomplete="off">
+                            <div id="search-results" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 hidden"></div>
+                        </div>
+                        <input type="text" id="target-symbols" value="AAPL,TSLA,NVDA,MSFT,GOOGL" 
+                               class="w-full p-2 border border-gray-300 rounded-md"
+                               placeholder="自定义股票代码，逗号分隔">
+                        <p class="text-xs text-gray-500 mt-1">可选择预设股票池、使用智能搜索或手动输入；系统将合并去重。</p>
+                        <div id="custom-chips" class="flex flex-wrap gap-2 mt-2 text-sm"></div>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <button id="start-trading" class="flex-1 bg-green-600 text-white p-3 rounded-md font-medium hover:bg-green-700 transition">
+                            🚀 开始运行
+                        </button>
+                        <button id="stop-trading" class="flex-1 bg-red-600 text-white p-3 rounded-md font-medium hover:bg-red-700 transition">
+                            ⏹️ 停止运行
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 实时交易数据 -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">📈 实时交易数据</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <canvas id="volume-chart" width="400" height="200"></canvas>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-600 number-counter" id="orders-today">-</p>
+                            <p class="text-sm text-gray-600">今日订单</p>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <p class="text-2xl font-bold text-green-600 number-counter" id="sharpe-ratio">-</p>
+                            <p class="text-sm text-gray-600">Sharpe比率</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最新信号和订单 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <!-- 最新信号 -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">🎯 最新交易信号</h2>
+                <div id="recent-signals" class="space-y-3">
+                    <div class="text-center text-gray-500 py-8">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 最新订单 -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">💼 最新成交订单</h2>
+                <div id="recent-orders" class="space-y-3">
+                    <div class="text-center text-gray-500 py-8">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 策略表现详情 -->
+        <div class="bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 class="text-xl font-bold mb-4">⚙️ 策略表现详情</h2>
+            <div id="strategy-performance">
+                <div class="text-center text-gray-500 py-8">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 高级图表 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">📊 累计收益 vs 基准</h2>
+                <div class="h-64">
+                    <canvas id="performance-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">📉 回撤曲线</h2>
+                <div class="h-64">
+                    <canvas id="drawdown-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">🧭 资产/行业分配</h2>
+                <div class="h-64">
+                    <canvas id="allocation-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 风险与报表 -->
+        <div class="bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 class="text-xl font-bold mb-4">🛡️ 风险与绩效报表</h2>
+            <div id="risk-report" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="text-center text-gray-500 py-8">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 股票池概览 -->
+        <div class="bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 class="text-xl font-bold mb-4">📂 股票池概览</h2>
+            <div id="pool-stats" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center text-gray-500 py-6">选择股票池以查看统计</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 状态提示 -->
+    <div id="status-toast" class="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg hidden">
+        <p id="toast-message">系统消息</p>
+    </div>
+
+    
+    <script>
+        const CLIENT_CONFIG = window.__TRADING_ENGINE_CONFIG__ || {};
+        const API_BASE_URL = CLIENT_CONFIG.apiBaseUrl || window.location.origin;
+        const DEFAULT_WS_PATH = CLIENT_CONFIG.wsPath || '/ws';
+        const ROUTES = {
+            signalsRecent: (limit = 10) => buildRoute('/signals/recent', { limit }),
+            ordersHistory: (limit = 10) => buildRoute('/orders/history', { limit }),
+            strategiesList: () => buildRoute('/strategies/list'),
+            generateSignals: () => buildRoute('/signals/generate'),
+            symbolPools: () => buildRoute('/universe/pools'),
+            poolDetails: (poolId) => buildRoute(`/universe/pools/${poolId}`),
+            symbolSearch: (query) => buildRoute('/universe/search', { query }),
+            dashboardOverview: () => buildRoute('/dashboard/overview')
+        };
+
+        const state = {
+            tradingActive: true,
+            signals: [],
+            orders: [],
+            strategies: [],
+            dashboard: {},
+            pools: [],
+            selectedPool: null,
+            poolDetails: null,
+            customSymbols: [],
+            customSymbolMeta: {},
+            searchResults: []
+        };
+
+        let volumeChart;
+        let performanceChart;
+        let drawdownChart;
+        let allocationChart;
+        let websocket;
+        let reconnectAttempts = 0;
+        let updateInterval;
+        let searchTimeout = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            bindEventListeners();
+            loadSymbolPools();
+            syncCustomSymbolsFromInput();
+            startDataUpdates();
+            connectWebSocket();
+            showToast('系统已连接，数据加载中...', 'success');
+        });
+
+        function buildRoute(path, params = {}) {
+            const url = new URL(path, API_BASE_URL);
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    url.searchParams.set(key, value);
+                }
+            });
+            return url.toString();
+        }
+
+        function startDataUpdates() {
+            updateCurrentTime();
+            refreshAll();
+            updateInterval = setInterval(() => {
+                refreshAll();
+                updateCurrentTime();
+            }, 5000);
+        }
+
+        function refreshAll() {
+            updateOverview();
+            updateSignals();
+            updateOrders();
+            updateStrategies();
+        }
+
+        function initializeCharts() {
+            initVolumeChart();
+            initPerformanceChart();
+            initDrawdownChart();
+            initAllocationChart();
+        }
+
+        function initVolumeChart() {
+            const ctx = document.getElementById('volume-chart').getContext('2d');
+            volumeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '成交量',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => '$' + Number(value || 0).toLocaleString()
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function initPerformanceChart() {
+            const ctx = document.getElementById('performance-chart').getContext('2d');
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: '组合收益',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16,185,129,0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: '基准收益',
+                            data: [],
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99,102,241,0.1)',
+                            tension: 0.3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: value => (value * 100).toFixed(1) + '%'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initDrawdownChart() {
+            const ctx = document.getElementById('drawdown-chart').getContext('2d');
+            drawdownChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '回撤',
+                        data: [],
+                        backgroundColor: '#f97316'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: value => (value * 100).toFixed(1) + '%'
+                            }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function initAllocationChart() {
+            const ctx = document.getElementById('allocation-chart').getContext('2d');
+            allocationChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '配置',
+                        data: [],
+                        backgroundColor: ['#1d4ed8', '#10b981', '#f59e0b', '#6366f1', '#ef4444', '#a855f7']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        async function fetchJSON(url, options = {}) {
+            const controller = new AbortController();
+            const timeout = options.timeout ?? 10000;
+            const fetchOptions = { ...options, signal: controller.signal };
+            delete fetchOptions.timeout;
+            const timer = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(url, fetchOptions);
+                if (!response.ok) {
+                    throw new Error(`Request failed: ${response.status}`);
+                }
+                return await response.json();
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        async function updateOverview() {
+            try {
+                const overview = await fetchJSON(ROUTES.dashboardOverview());
+                state.dashboard = overview;
+                applyDashboardData(overview.system_status, overview.trading_stats);
+                updatePerformanceChart(overview.performance_series);
+                updateDrawdownChart(overview.drawdown);
+                updateAllocationChart(overview.allocations);
+                renderRiskReport(overview.risk_report);
+            } catch (error) {
+                console.error('更新仪表板失败:', error);
+                showToast('仪表板刷新失败', 'error');
+            }
+        }
+
+        function applyDashboardData(statusData, statsData) {
+            if (statusData) {
+                document.getElementById('total-volume').textContent = '$' + Number(statusData.total_volume || 0).toLocaleString();
+                document.getElementById('active-strategies').textContent = statusData.strategies_running ?? '-';
+                document.getElementById('signals-today').textContent = statusData.signals_today ?? '-';
+                document.getElementById('success-rate').textContent = `${Number(statusData.success_rate || 0).toFixed(1)}%`;
+                updateVolumeChart(statusData.total_volume || 0);
+            }
+
+            const stats = statsData?.daily_stats;
+            if (stats) {
+                document.getElementById('orders-today').textContent = stats.trades_executed ?? '-';
+            }
+
+            const performance = statsData?.performance;
+            if (performance) {
+                document.getElementById('sharpe-ratio').textContent = performance.sharpe_ratio ?? '-';
+            }
+        }
+
+        function updateVolumeChart(volume) {
+            const timestamp = new Date().toLocaleTimeString();
+            const maxPoints = 30;
+
+            if (volumeChart.data.labels.length >= maxPoints) {
+                volumeChart.data.labels.shift();
+                volumeChart.data.datasets[0].data.shift();
+            }
+
+            volumeChart.data.labels.push(timestamp);
+            volumeChart.data.datasets[0].data.push(Number(volume || 0));
+            volumeChart.update('none');
+        }
+
+        function updatePerformanceChart(data) {
+            if (!performanceChart) return;
+            const portfolioSeries = data.portfolio || [];
+            const benchmarkSeries = data.benchmark || [];
+            const labels = portfolioSeries.map(point => new Date(point.timestamp).toLocaleDateString());
+
+            performanceChart.data.labels = labels;
+            performanceChart.data.datasets[0].data = portfolioSeries.map(point => (point.value || 1) - 1);
+            performanceChart.data.datasets[1].data = benchmarkSeries.map(point => (point.value || 1) - 1);
+            performanceChart.update('none');
+        }
+
+        function updateDrawdownChart(data) {
+            if (!drawdownChart) return;
+            const series = data.series || [];
+            drawdownChart.data.labels = series.map(point => new Date(point.timestamp).toLocaleDateString());
+            drawdownChart.data.datasets[0].data = series.map(point => point.value || 0);
+            drawdownChart.update('none');
+        }
+
+        function updateAllocationChart(data) {
+            if (!allocationChart) return;
+            const sectors = data.by_sector || [];
+            allocationChart.data.labels = sectors.map(item => item.label || '');
+            allocationChart.data.datasets[0].data = sectors.map(item => Number(item.value || 0));
+            allocationChart.update('none');
+        }
+
+        async function loadSymbolPools() {
+            try {
+                const data = await fetchJSON(ROUTES.symbolPools());
+                state.pools = data.pools || [];
+                renderPoolOptions();
+            } catch (error) {
+                console.error('加载股票池失败:', error);
+            }
+        }
+
+        function renderPoolOptions() {
+            const select = document.getElementById('pool-select');
+            select.innerHTML = '<option value="">选择预设股票池...</option>';
+            state.pools.forEach(pool => {
+                const option = document.createElement('option');
+                option.value = pool.id;
+                option.textContent = `${pool.name} (${pool.symbol_count || 0})`;
+                select.appendChild(option);
+            });
+        }
+
+        async function handlePoolSelection(event) {
+            const poolId = event.target.value;
+            state.selectedPool = poolId || null;
+            if (!poolId) {
+                state.poolDetails = null;
+                renderPoolChips([]);
+                renderPoolStats(null);
+                return;
+            }
+            try {
+                const details = await fetchJSON(ROUTES.poolDetails(poolId));
+                state.poolDetails = details;
+                const entries = details.components && details.components.length ? details.components : (details.symbols || []);
+                renderPoolChips(entries);
+                renderPoolStats(details);
+            } catch (error) {
+                console.error('获取股票池详情失败:', error);
+            }
+        }
+
+        function renderPoolChips(symbolsOrComponents) {
+            const container = document.getElementById('pool-chips');
+            container.innerHTML = '';
+            if (!symbolsOrComponents || !symbolsOrComponents.length) {
+                container.innerHTML = '<span class="text-gray-400">选择股票池后显示成分股</span>';
+                return;
+            }
+
+            symbolsOrComponents.slice(0, 12).forEach(item => {
+                const symbol = typeof item === 'string' ? item : item.symbol;
+                const name = typeof item === 'string' ? '' : (item.name || '');
+                const price = typeof item === 'string' ? '' : (item.last_price ? `$${Number(item.last_price).toFixed(2)}` : '');
+                const detail = name || price ? `<span class="text-xs text-gray-500">${name} ${price}</span>` : '';
+                const entry = document.createElement('div');
+                entry.className = 'px-3 py-2 bg-indigo-50 text-indigo-800 rounded-lg text-xs flex flex-col';
+                entry.innerHTML = `<span class="font-semibold">${symbol}</span>${detail}`;
+                container.appendChild(entry);
+            });
+
+            if (symbolsOrComponents.length > 12) {
+                const extra = document.createElement('span');
+                extra.className = 'text-xs text-gray-500';
+                extra.textContent = `+${symbolsOrComponents.length - 12} ...`;
+                container.appendChild(extra);
+            }
+        }
+
+        function renderPoolStats(details) {
+            const container = document.getElementById('pool-stats');
+            if (!details) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-6">选择股票池以查看统计</div>';
+                return;
+            }
+
+            const stats = details.stats || {};
+            const sectors = details.sector_distribution || [];
+
+            const metricsHtml = `
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="text-sm text-gray-500">平均Beta</div>
+                    <div class="text-2xl font-bold text-gray-800">${(stats.avg_beta ?? '-')}</div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="text-sm text-gray-500">平均成交量</div>
+                    <div class="text-2xl font-bold text-gray-800">${stats.avg_volume ? (stats.avg_volume / 1_000_000).toFixed(1) + 'M' : '-'}</div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="text-sm text-gray-500">近3个月动量</div>
+                    <div class="text-2xl font-bold ${Number(stats.momentum_3m || 0) >= 0 ? 'text-green-600' : 'text-red-600'}">
+                        ${(Number(stats.momentum_3m || 0) * 100).toFixed(1)}%
+                    </div>
+                </div>
+            `;
+
+            const sectorHtml = sectors.length ? `
+                <div class="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                    ${sectors.map(item => `
+                        <div class="p-3 border border-gray-100 rounded-lg text-center">
+                            <div class="text-sm text-gray-500">${item.label}</div>
+                            <div class="text-lg font-semibold">${(Number(item.value || 0) * 100).toFixed(1)}%</div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '';
+
+            const components = details.components || [];
+            const componentsHtml = components.length ? `
+                <div class="md:col-span-3 mt-4">
+                    <h4 class="text-sm text-gray-500 mb-2">代表成分股</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${components.slice(0, 4).map(item => `
+                            <div class="p-3 border border-gray-100 rounded-lg">
+                                <div class="flex justify-between text-sm font-semibold">${item.symbol}<span>${item.last_price ? '$' + Number(item.last_price).toFixed(2) : ''}</span></div>
+                                <div class="text-xs text-gray-500">${item.name || ''}</div>
+                                <div class="text-xs text-gray-400">${item.sector || ''}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            container.innerHTML = metricsHtml + sectorHtml + componentsHtml;
+        }
+
+        function handleSearchInput(event) {
+            const term = event.target.value.trim();
+            clearTimeout(searchTimeout);
+            if (term.length < 2) {
+                hideSearchResults();
+                return;
+            }
+            searchTimeout = setTimeout(() => performSymbolSearch(term), 250);
+        }
+
+        async function performSymbolSearch(term) {
+            try {
+                const data = await fetchJSON(ROUTES.symbolSearch(term));
+                state.searchResults = data.results || [];
+                renderSearchResults(term);
+            } catch (error) {
+                console.error('搜索股票失败:', error);
+                hideSearchResults();
+            }
+        }
+
+        function renderSearchResults(term) {
+            const dropdown = document.getElementById('search-results');
+            if (!state.searchResults.length) {
+                dropdown.innerHTML = `<div class="p-3 text-sm text-gray-500">未找到与 "${term}" 匹配的股票</div>`;
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            dropdown.innerHTML = state.searchResults.slice(0, 8).map(result => {
+                const price = result.last_price ? `$${Number(result.last_price).toFixed(2)}` : '-';
+                const change = result.change_pct ? (result.change_pct * 100).toFixed(2) + '%' : '-';
+                const changeColor = result.change_pct >= 0 ? 'text-green-600' : 'text-red-600';
+                return `
+                    <div class="px-3 py-2 hover:bg-gray-100 cursor-pointer" data-symbol="${result.symbol}">
+                        <div class="flex justify-between">
+                            <span class="font-semibold">${result.symbol}</span>
+                            <span class="text-sm ${changeColor}">${change}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 flex justify-between">
+                            <span>${result.name || ''} · ${result.exchange || ''}</span>
+                            <span>${price}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            dropdown.querySelectorAll('[data-symbol]').forEach(item => {
+                item.addEventListener('click', () => {
+                    const symbol = item.getAttribute('data-symbol');
+                    const meta = state.searchResults.find(entry => entry.symbol === symbol);
+                    addCustomSymbol(meta || symbol);
+                    document.getElementById('symbol-search').value = '';
+                    hideSearchResults();
+                });
+            });
+
+            dropdown.classList.remove('hidden');
+        }
+
+        function hideSearchResults() {
+            const dropdown = document.getElementById('search-results');
+            dropdown.classList.add('hidden');
+            dropdown.innerHTML = '';
+        }
+
+        function syncCustomSymbolsFromInput() {
+            const input = document.getElementById('target-symbols');
+            const symbols = input.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+            state.customSymbols = Array.from(new Set(symbols));
+            Object.keys(state.customSymbolMeta).forEach(symbol => {
+                if (!state.customSymbols.includes(symbol)) {
+                    delete state.customSymbolMeta[symbol];
+                }
+            });
+            renderCustomChips();
+        }
+
+        function addCustomSymbol(symbolOrDetails) {
+            if (!symbolOrDetails) return;
+            const normalized = (typeof symbolOrDetails === 'string' ? symbolOrDetails : symbolOrDetails.symbol || '').trim().toUpperCase();
+            if (!normalized) return;
+            if (!state.customSymbols.includes(normalized)) {
+                state.customSymbols.push(normalized);
+            }
+            if (typeof symbolOrDetails === 'object' && symbolOrDetails.symbol) {
+                state.customSymbolMeta[normalized] = symbolOrDetails;
+            }
+            updateCustomSymbolInput();
+        }
+
+        function removeCustomSymbol(symbol) {
+            state.customSymbols = state.customSymbols.filter(item => item !== symbol);
+            delete state.customSymbolMeta[symbol];
+            updateCustomSymbolInput();
+        }
+
+        function updateCustomSymbolInput() {
+            const input = document.getElementById('target-symbols');
+            input.value = state.customSymbols.join(',');
+            renderCustomChips();
+        }
+
+        function renderCustomChips() {
+            const container = document.getElementById('custom-chips');
+            if (!state.customSymbols.length) {
+                container.innerHTML = '<span class="text-gray-400 text-xs">暂无自定义股票</span>';
+                return;
+            }
+            container.innerHTML = state.customSymbols.map(symbol => {
+                const meta = state.customSymbolMeta[symbol];
+                const name = meta?.name || '';
+                const price = meta?.last_price ? `$${Number(meta.last_price).toFixed(2)}` : '';
+                return `
+                    <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium flex items-center">
+                        <span>
+                            <span class="font-semibold">${symbol}</span>
+                            ${name || price ? `<span class="ml-1 text-gray-600">${name} ${price}</span>` : ''}
+                        </span>
+                        <button class="ml-2 text-blue-500 hover:text-blue-700" data-remove-symbol="${symbol}">×</button>
+                    </span>
+                `;
+            }).join('');
+
+            container.querySelectorAll('[data-remove-symbol]').forEach(btn => {
+                btn.addEventListener('click', () => removeCustomSymbol(btn.getAttribute('data-remove-symbol')));
+            });
+        }
+
+        async function updateSignals() {
+            try {
+                const data = await fetchJSON(ROUTES.signalsRecent());
+                state.signals = data.signals || [];
+                renderSignals(state.signals);
+            } catch (error) {
+                console.error('更新信号失败:', error);
+            }
+        }
+
+        function renderSignals(signals) {
+            const container = document.getElementById('recent-signals');
+            container.innerHTML = '';
+
+            if (!signals.length) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-4">暂无信号数据</div>';
+                return;
+            }
+
+            signals.forEach(signal => {
+                const actionColor = {
+                    'BUY': 'text-green-600',
+                    'SELL': 'text-red-600',
+                    'HOLD': 'text-yellow-600'
+                }[signal.action] || 'text-gray-600';
+
+                const signalDiv = document.createElement('div');
+                signalDiv.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+                signalDiv.innerHTML = `
+                    <div>
+                        <span class="font-bold">${signal.symbol || '-'}</span>
+                        <span class="${actionColor} ml-2">${signal.action || 'HOLD'}</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-medium">置信度: ${(Number(signal.confidence || 0) * 100).toFixed(1)}%</div>
+                        <div class="text-xs text-gray-500">${signal.strategy || 'N/A'}</div>
+                    </div>
+                `;
+                container.appendChild(signalDiv);
+            });
+        }
+
+        async function updateOrders() {
+            try {
+                const data = await fetchJSON(ROUTES.ordersHistory());
+                state.orders = data.orders || [];
+                renderOrders(state.orders);
+            } catch (error) {
+                console.error('更新订单失败:', error);
+            }
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('recent-orders');
+            container.innerHTML = '';
+
+            if (!orders.length) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-4">暂无订单数据</div>';
+                return;
+            }
+
+            orders.forEach(order => {
+                const sideColor = order.side === 'BUY' ? 'text-green-600' : 'text-red-600';
+                const orderDiv = document.createElement('div');
+                orderDiv.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+                orderDiv.innerHTML = `
+                    <div>
+                        <span class="font-bold">${order.symbol || '-'}</span>
+                        <span class="${sideColor} ml-2">${order.side || '-'}</span>
+                        <span class="text-gray-600 ml-2">${order.quantity || 0}股</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-medium">$${order.fill_price ?? '-'} </div>
+                        <div class="text-xs text-gray-500">${order.status || ''}</div>
+                    </div>
+                `;
+                container.appendChild(orderDiv);
+            });
+        }
+
+        async function updateStrategies() {
+            try {
+                const data = await fetchJSON(ROUTES.strategiesList());
+                state.strategies = data.strategies || [];
+                renderStrategies(state.strategies);
+            } catch (error) {
+                console.error('更新策略失败:', error);
+            }
+        }
+
+        function renderStrategies(strategies) {
+            const container = document.getElementById('strategy-performance');
+            container.innerHTML = '';
+
+            if (!strategies.length) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-4">暂无策略数据</div>';
+                return;
+            }
+
+            strategies.forEach(strategy => {
+                const returnColor = Number(strategy.daily_return || 0) >= 0 ? 'text-green-600' : 'text-red-600';
+                const strategyDiv = document.createElement('div');
+                strategyDiv.className = 'grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg mb-3';
+                strategyDiv.innerHTML = `
+                    <div>
+                        <div class="font-bold">${strategy.name || '-'} </div>
+                        <div class="text-sm text-gray-600">状态: ${strategy.status || '未知'}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold ${returnColor}">${(Number(strategy.daily_return || 0) * 100).toFixed(2)}%</div>
+                        <div class="text-xs text-gray-500">日收益率</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-blue-600">${strategy.sharpe_ratio ?? '-'}</div>
+                        <div class="text-xs text-gray-500">Sharpe比率</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-purple-600">${strategy.positions ?? 0}</div>
+                        <div class="text-xs text-gray-500">持仓数</div>
+                    </div>
+                `;
+                container.appendChild(strategyDiv);
+            });
+        }
+
+        function bindEventListeners() {
+            document.getElementById('start-trading').addEventListener('click', startTrading);
+            document.getElementById('stop-trading').addEventListener('click', stopTrading);
+            document.getElementById('pool-select').addEventListener('change', handlePoolSelection);
+            document.getElementById('symbol-search').addEventListener('input', handleSearchInput);
+            document.getElementById('target-symbols').addEventListener('input', syncCustomSymbolsFromInput);
+            document.addEventListener('click', (event) => {
+                const searchWrapper = document.getElementById('symbol-search').parentElement;
+                if (searchWrapper && !searchWrapper.contains(event.target)) {
+                    hideSearchResults();
+                }
+            });
+        }
+
+        async function startTrading() {
+            const selectedStrategies = Array.from(document.querySelectorAll('.strategy-checkbox:checked'))
+                .map(cb => cb.dataset.strategy);
+            syncCustomSymbolsFromInput();
+            const manualSymbols = state.customSymbols;
+            const poolSymbols = state.poolDetails?.symbols || [];
+            const symbols = Array.from(new Set([...poolSymbols, ...manualSymbols]));
+            const mode = document.getElementById('run-mode').value;
+
+            try {
+                await fetchJSON(ROUTES.generateSignals(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ strategies: selectedStrategies, symbols, mode })
+                });
+                showToast('策略运行已触发', 'success');
+            } catch (error) {
+                console.error('启动策略失败:', error);
+                showToast('启动策略失败', 'error');
+            }
+        }
+
+        function stopTrading() {
+            state.tradingActive = false;
+            showToast('交易已暂停', 'warning');
+        }
+
+        function connectWebSocket() {
+            const wsUrl = CLIENT_CONFIG.wsUrl || buildWebSocketUrl();
+            websocket = new WebSocket(wsUrl);
+
+            websocket.onopen = () => {
+                reconnectAttempts = 0;
+                websocket.send(JSON.stringify({
+                    type: 'subscribe',
+                    channels: ['system_update', 'new_signals', 'new_order', 'order_execution']
+                }));
+                showToast('实时数据连接已建立', 'success');
+            };
+
+            websocket.onmessage = event => {
+                try {
+                    const message = JSON.parse(event.data);
+                    handleWebSocketMessage(message);
+                } catch (error) {
+                    console.error('WebSocket消息解析失败:', error);
+                }
+            };
+
+            websocket.onerror = error => {
+                console.error('WebSocket错误:', error);
+                showToast('实时数据连接异常', 'error');
+            };
+
+            websocket.onclose = () => {
+                scheduleReconnect();
+            };
+        }
+
+        function buildWebSocketUrl() {
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            return `${protocol}://${window.location.host}${DEFAULT_WS_PATH}`;
+        }
+
+        function scheduleReconnect() {
+            reconnectAttempts += 1;
+            const delay = Math.min(30000, 2000 * reconnectAttempts);
+            showToast('实时数据连接断开，正在重试...', 'warning');
+            setTimeout(connectWebSocket, delay);
+        }
+
+        function handleWebSocketMessage(message) {
+            switch (message.type) {
+                case 'welcome':
+                    console.log('WebSocket连接成功');
+                    break;
+                case 'system_update':
+                    applyDashboardData(message.data || {});
+                    break;
+                case 'new_signals':
+                    updateSignalsFromWebSocket(message.data);
+                    break;
+                case 'order_execution':
+                case 'new_order':
+                    updateOrdersFromWebSocket(message.data);
+                    break;
+                default:
+                    console.log('收到未知消息:', message);
+            }
+        }
+
+        function updateSignalsFromWebSocket(data) {
+            const incoming = Array.isArray(data) ? data : [data];
+            state.signals = [...incoming, ...state.signals].slice(0, 10);
+            renderSignals(state.signals);
+            showToast(`收到${incoming.length}个新交易信号`, 'info');
+        }
+
+        function updateOrdersFromWebSocket(order) {
+            if (!order) return;
+            state.orders = [order, ...state.orders].slice(0, 10);
+            renderOrders(state.orders);
+            showToast(`新订单: ${order.symbol || ''} ${order.side || ''}`, 'info');
+        }
+
+        function renderRiskReport(report) {
+            const container = document.getElementById('risk-report');
+            if (!report) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-4">暂无数据</div>';
+                return;
+            }
+
+            const metrics = report.risk_metrics || {};
+            const stressTests = report.stress_tests || [];
+            const pnlAttribution = report.pnl_attribution || [];
+
+            const metricsList = Object.entries(metrics).map(([key, value]) => {
+                const label = key.replace(/_/g, ' ');
+                const formatted = typeof value === 'number' ? (Math.abs(value) < 1 ? (value * 100).toFixed(2) + '%' : value.toFixed(2)) : value;
+                return `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <span class="text-gray-600">${label}</span>
+                    <span class="font-semibold">${formatted}</span>
+                </div>`;
+            }).join('');
+
+            const stressList = stressTests.map(item => `
+                <div class="flex items-center justify-between text-sm">
+                    <span>${item.scenario}</span>
+                    <span class="font-medium ${item.impact < 0 ? 'text-red-600' : 'text-green-600'}">${(item.impact * 100).toFixed(2)}%</span>
+                </div>
+            `).join('');
+
+            const pnlList = pnlAttribution.map(item => `
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>${item.category}</span>
+                        <span class="font-medium">${(item.value * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="h-2 rounded-full bg-indigo-500" style="width: ${(item.value * 100).toFixed(1)}%"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <h3 class="font-semibold text-gray-700">风险指标</h3>
+                    ${metricsList || '<div class="text-sm text-gray-500">暂无风险指标</div>'}
+                </div>
+                <div class="space-y-3">
+                    <h3 class="font-semibold text-gray-700">压力测试</h3>
+                    ${stressList || '<div class="text-sm text-gray-500">暂无压力测试</div>'}
+                    <h3 class="font-semibold text-gray-700 mt-4">收益归因</h3>
+                    <div class="space-y-3">${pnlList || '<div class="text-sm text-gray-500">暂无归因数据</div>'}</div>
+                </div>
+            `;
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('status-toast');
+            const messageEl = document.getElementById('toast-message');
+            messageEl.textContent = message;
+            toast.className = 'fixed bottom-4 right-4 p-4 rounded-lg shadow-lg text-white';
+
+            const colorMap = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                warning: 'bg-yellow-600',
+                info: 'bg-blue-600'
+            };
+            toast.classList.add(colorMap[type] || 'bg-blue-600');
+            toast.classList.remove('hidden');
+
+            setTimeout(() => {
+                toast.className = 'fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg hidden';
+            }, 3000);
+        }
+    </script>
+
+</body>
+</html>

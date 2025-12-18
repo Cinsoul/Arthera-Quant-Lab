@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: arthera_postgres
+    environment:
+      POSTGRES_DB: trading_engine
+      POSTGRES_USER: arthera
+      POSTGRES_PASSWORD: arthera123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - arthera_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: arthera_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - arthera_network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: arthera_api_gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://arthera:arthera123@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+      - QUANT_ENGINE_URL=http://mock-backend:8001
+      - QUANT_LAB_URL=http://mock-backend:8002
+      - PAPER_TRADING_URL=http://mock-backend:8003
+    depends_on:
+      - postgres
+      - redis
+      - mock-backend
+    networks:
+      - arthera_network
+
+  # iOS Connector
+  ios-connector:
+    build:
+      context: ./services/ios-connector
+      dockerfile: Dockerfile
+    container_name: arthera_ios_connector
+    ports:
+      - "8002:8002"
+    environment:
+      - API_GATEWAY_URL=http://api-gateway:8000
+      - QUANT_ENGINE_URL=http://mock-backend:8001
+    depends_on:
+      - postgres
+      - redis
+      - api-gateway
+    networks:
+      - arthera_network
+
+  # Mock Backend (模拟现有后端服务)
+  mock-backend:
+    image: python:3.11-slim
+    container_name: arthera_mock_backend
+    ports:
+      - "8001:8001"
+      - "8003:8002"
+      - "8004:8003"
+    command: >
+      bash -c "
+        pip install fastapi uvicorn &&
+        cat > /tmp/mock_server.py << 'EOF'
+        from fastapi import FastAPI
+        import uvicorn
+        from datetime import datetime
+        import asyncio
+        
+        app = FastAPI(title='Arthera Mock Backend')
+        
+        @app.get('/health')
+        async def health():
+            return {'status': 'healthy', 'service': 'mock-backend', 'timestamp': datetime.now().isoformat()}
+        
+        @app.get('/api/data/stock/{symbol}')
+        async def get_stock_data(symbol: str):
+            return {
+                'symbol': symbol,
+                'price': 150.25,
+                'change': 2.15,
+                'volume': 1000000,
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        @app.post('/api/signals/generate')
+        async def generate_signals(request: dict):
+            return {
+                'signals': [
+                    {'symbol': 'AAPL', 'action': 'BUY', 'confidence': 0.85, 'price': 150.25},
+                    {'symbol': 'TSLA', 'action': 'SELL', 'confidence': 0.72, 'price': 245.80}
+                ],
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        @app.get('/strategies/list')
+        async def list_strategies():
+            return {
+                'strategies': [
+                    {'id': 'deep_seek_alpha', 'name': 'DeepSeek Alpha', 'status': 'active'},
+                    {'id': 'bayesian_momentum', 'name': 'Bayesian Momentum', 'status': 'active'},
+                    {'id': 'kelly_optimizer', 'name': 'Kelly Portfolio', 'status': 'active'}
+                ]
+            }
+        
+        if __name__ == '__main__':
+            uvicorn.run(app, host='0.0.0.0', port=8001)
+        EOF
+        python /tmp/mock_server.py
+      "
+    networks:
+      - arthera_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  arthera_network:
+    driver: bridge

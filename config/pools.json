@@ -1,0 +1,26 @@
+[
+  {
+    "id": "faang_growth",
+    "name": "FAANG成长池",
+    "description": "美股科技龙头，适合高增长策略",
+    "tags": ["tech", "growth", "large-cap"],
+    "region": "US",
+    "symbols": ["META", "AAPL", "AMZN", "NFLX", "GOOGL"]
+  },
+  {
+    "id": "cn_new_energy",
+    "name": "中国新能源",
+    "description": "新能源车与储能产业链",
+    "tags": ["ev", "green"],
+    "region": "CN",
+    "symbols": ["002594.SZ", "300750.SZ", "601012.SH", "300014.SZ", "600438.SH", "002812.SZ", "688599.SH", "300274.SZ"]
+  },
+  {
+    "id": "ai_infrastructure",
+    "name": "AI基础设施",
+    "description": "GPU、半导体、云计算关键供应商",
+    "tags": ["ai", "semiconductor"],
+    "region": "Global",
+    "symbols": ["NVDA", "AMD", "TSM", "ASML", "AVGO", "MSFT", "CRM", "ORCL", "NOW"]
+  }
+]
