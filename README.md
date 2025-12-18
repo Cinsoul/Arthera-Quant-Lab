@@ -1,18 +1,12 @@
 
 ![Image](https://github.com/user-attachments/assets/e4983257-0a47-44b7-b854-08986b9eef20)
 
-<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Alpha</button>
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">智能体</button>
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">进阶</button>
-</div>
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![Discord](https://img.shields.io/discord/123456789?color=7289da&logo=discord&logoColor=white)](https://discord.gg/arthera)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/xindi-wang19990526/)
 [![X](https://img.shields.io/badge/X-Follow-000000?logo=x)](https://x.com/xindi_w)
-[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube)](https://youtube.com/arthera)
 
 [English](README.en.md) | [中文 (简体)](README.md) | [中文 (繁體)](README.zh.md)
 
