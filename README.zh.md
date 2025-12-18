@@ -13,7 +13,6 @@
 [![Discord](https://img.shields.io/discord/123456789?color=7289da&logo=discord&logoColor=white)](https://discord.gg/arthera)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/xindi-wang19990526/)
 [![X](https://img.shields.io/badge/X-Follow-000000?logo=x)](https://x.com/xindi_w)
-[![YouTube](https://img.shields.io/badge/YouTube-Watch-red?logo=youtube)](https://youtube.com/arthera)
 
 [English](README.en.md) | [中文 (简体)](README.md) | [中文 (繁體)](README.zh.md)
 
@@ -31,7 +30,20 @@ Arthera統一量化交易系統是一個社群驅動的多智能體量化交易�
 
 > **注意：** Arthera團隊成員絕不會主動聯繫社群參與者。此專案僅供教育和研究目的使用。
 
-## 🌟 專案亮點
+
+## 產品預覽
+
+<img width="1057" height="673" alt="Screenshot 2025-12-18 at 12 49 21 pm" src="https://github.com/user-attachments/assets/f4ff5669-2142-452d-bd5a-b1eebc049213" />
+
+<img width="1198" height="776" alt="Screenshot 2025-12-18 at 12 52 39 pm" src="https://github.com/user-attachments/assets/85d42be8-103c-4916-9ff4-c03e566c660b" />
+
+<img width="1189" height="770" alt="Screenshot 2025-12-18 at 12 52 45 pm" src="https://github.com/user-attachments/assets/0428b781-e258-4f93-b0e4-f5af7577d26b" />
+
+<img width="1190" height="770" alt="Screenshot 2025-12-18 at 12 52 56 pm" src="https://github.com/user-attachments/assets/982a3cfc-b0db-49c3-88c8-c0ac71857fd1" />
+
+
+
+## 專案亮點
 - **雙數據源聚合**：默認啟用 Yahoo Finance + AkShare；配置 `TUSHARE_TOKEN` 後自動切換至 Tushare Pro，`/universe/search` 會對中美股票統一格式化輸出。
 - **智能股票搜索**：Bloomberg 風格的 `TARGET STOCK POOL` 面板支持模糊檢索、分頁、行業與市值篩選，並實時展示價格、漲跌幅、交易所與行業標籤。
 - **全鏈路策略中心**：QuantEngine、Quant Lab、Paper OMS、Risk Engine 與 Portfolio 服務通過 API Gateway 匯聚，支持信號生成、交易執行、風險審計與績效回放。
@@ -40,7 +52,7 @@ Arthera統一量化交易系統是一個社群驅動的多智能體量化交易�
 - **動態數據配置**：`POST /config/data-source` 可在運行時注入/更新 Tushare Token，並立即反映到前端。
 - **實時數據集成**：支持Yahoo Finance、AkShare、Tushare Pro多數據源，自動緩存和故障轉移。
 
-## 🏗 架构
+## 架构
 ```
 Bloomberg UI (static/index.html)
         ↓ HTTP
@@ -52,7 +64,7 @@ FastAPI API Gateway (8000)
 └─ iOS Connector relay (8002 WebSocket + REST)
 ```
 
-## 📋 系统要求
+## 系统要求
 
 ### 必需环境
 - **Python 3.8+**
@@ -66,7 +78,7 @@ FastAPI API Gateway (8000)
 - Windows 10+ (WSL2)
 - Linux Ubuntu 18.04+/CentOS 7+
 
-## ⚡ 快速开始
+##  快速开始
 
 ### 方式一：一键启动（推荐）
 ```bash
@@ -228,7 +240,7 @@ docker-compose logs -f ios-connector
 docker-compose logs --tail=100 api-gateway
 ```
 
-## 🔧 环境变量参考
+## 环境变量参考
 | 变量 | 说明 | 默认值 |
 | --- | --- | --- |
 | `UNIVERSE_SERVICE_URL` | 自建行情/股票池平台的代理地址（可选） | - |
@@ -240,7 +252,7 @@ docker-compose logs --tail=100 api-gateway
 | `REDIS_URL` | Redis连接字符串 | `redis://localhost:6379` |
 | `DEMO_MODE` | 演示模式开关 | `true` |
 
-## 📚 关键 API
+## 关键 API
 
 ### 核心接口
 | 路径 | 方法 | 功能 | 参数 |
@@ -304,7 +316,7 @@ curl -X POST "http://localhost:8001/config/data-source" \
      -d '{"tushare_token": "your_token_here"}'
 ```
 
-## 🖥️ 前端体验
+## 前端体验
 
 ### 界面功能
 - **Bloomberg风格设计**：深色主题，专业金融界面
@@ -358,7 +370,7 @@ let backtest = try await adapter.runBacktest(strategy: "momentum", symbols: ["AA
 - `WS /ios/ws` - 实时WebSocket连接获取实时更新
 - `POST /ios/backtest` - 运行历史策略回测
 
-## 🚀 部署选项
+## 部署选项
 
 ### 生产环境部署
 生产环境部署建议：
@@ -372,7 +384,7 @@ let backtest = try await adapter.runBacktest(strategy: "momentum", symbols: ["AA
 - **负载均衡**: Nginx反向代理支持多实例
 - **监控**: 内置健康检查和指标
 
-## 🛠 开发指南
+## 开发指南
 
 ### 项目结构
 ```
@@ -409,7 +421,7 @@ curl http://localhost:8001/health
 docker-compose -f docker-compose-test.yml up
 ```
 
-## 📊 性能基准
+## 性能基准
 
 ### 系统性能
 - **并发处理**: 支持1000+并发连接
@@ -423,7 +435,7 @@ docker-compose -f docker-compose-test.yml up
 - **存储**: 10GB+可用空间
 - **网络**: 稳定的互联网连接
 
-## 📄 许可证
+## 许可证
 
 本项目采用MIT许可证 - 详情请查看LICENSE文件。
 
