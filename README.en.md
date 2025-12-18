@@ -1,7 +1,12 @@
 <div align="center">
 
 
-![Image](https://github.com/user-attachments/assets/58ef3f9a-60d7-4660-9e23-14eed7957975)
+![Image](https://github.com/user-attachments/assets/bc40f0ad-476c-413e-8cbd-ccb70ee6ec3d)
+
+
+<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+ 
+</div>
 
   
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
@@ -9,6 +14,7 @@
 [![Discord](https://img.shields.io/discord/123456789?color=7289da&logo=discord&logoColor=white)](https://discord.gg/arthera)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/xindi-wang19990526/)
 [![X](https://img.shields.io/badge/X-Follow-000000?logo=x)](https://x.com/xindi_w)
+
 [English](README.en.md) | [中文 (简体)](README.md) | [中文 (繁體)](README.zh.md)
 
 </div>
@@ -36,7 +42,7 @@ Welcome to join our Discord community to share feedback and issues you encounter
 <img width="1190" height="770" alt="Screenshot 2025-12-18 at 12 52 56 pm" src="https://github.com/user-attachments/assets/e8377687-65e2-4f63-acf2-d910612c86b8" />
 
 
-## 🌟 Key Features
+## Key Features
 - **Dual Market Feeds** – Yahoo Finance (global) and AkShare (A-shares) ship out of the box; drop in a `TUSHARE_TOKEN` to unlock Pro-level metadata via the new China provider.
 - **Intelligent Stock Search** – The "Target Stock Pool" widget talks to `/market-data/search`, returning paginated CN/US results with live price, change %, exchange, sector, and market-cap badges.
 - **Full Strategy Pipeline** – QuantEngine, Quant Lab, Paper OMS, Risk Engine, and Portfolio analytics converge inside the FastAPI gateway for signal generation, order routing, and dashboard aggregation.
@@ -45,7 +51,7 @@ Welcome to join our Discord community to share feedback and issues you encounter
 - **Live Data Source Controls** – `POST /config/data-source` lets you rotate Tushare tokens at runtime; the front end updates status indicators automatically.
 - **Real-time Data Integration** – Supports Yahoo Finance, AkShare, Tushare Pro with automatic caching and failover.
 
-## 🏗 Architecture
+## Architecture
 ```
 Bloomberg UI → FastAPI Gateway (8000)
                      ├─ YahooMarketProvider (global)
@@ -54,7 +60,7 @@ Bloomberg UI → FastAPI Gateway (8000)
                      └─ iOS Connector (8002 REST + WS)
 ```
 
-## 📋 System Requirements
+## System Requirements
 
 ### Required Environment
 - **Python 3.8+**
@@ -68,7 +74,7 @@ Bloomberg UI → FastAPI Gateway (8000)
 - Windows 10+ (WSL2)
 - Linux Ubuntu 18.04+/CentOS 7+
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Option 1: One-Click Launch (Recommended)
 ```bash
@@ -230,7 +236,7 @@ docker-compose logs -f ios-connector
 docker-compose logs --tail=100 api-gateway
 ```
 
-## 🔧 Environment Variables Reference
+## Environment Variables Reference
 | Variable | Description | Default |
 | --- | --- | --- |
 | `UNIVERSE_SERVICE_URL` / `UNIVERSE_API_KEY` | Proxy to your own market-data platform (optional) | - |
@@ -241,7 +247,7 @@ docker-compose logs --tail=100 api-gateway
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
 | `DEMO_MODE` | Demo mode toggle | `true` |
 
-## 📚 Core APIs
+## Core APIs
 
 ### Core Endpoints
 | Path | Method | Purpose | Parameters |
@@ -305,10 +311,10 @@ curl -X POST "http://localhost:8001/config/data-source" \
      -d '{"tushare_token": "your_token_here"}'
 ```
 
-## 🖥 Front-end Experience
+## Front-end Experience
 
 ### Interface Features
-- **Bloomberg-style Design**: Dark theme, professional financial interface
+- **Design**: Dark theme, professional financial interface
 - **Real-time Data Display**: Live stock prices, changes, volume updates
 - **Smart Search**: Support for Chinese/English stock names and symbols
 - **Stock Pool Management**: Visual add/remove stocks to investment pools
@@ -334,7 +340,7 @@ curl -X POST "http://localhost:8001/config/data-source" \
    - Execute buy/sell operations based on signal suggestions
    - View order history and execution status
 
-## 📱 iOS Integration
+## iOS Integration
 
 ### Swift SDK Usage
 ```swift
@@ -359,7 +365,7 @@ let backtest = try await adapter.runBacktest(strategy: "momentum", symbols: ["AA
 - `WS /ios/ws` - Real-time WebSocket connection for live updates
 - `POST /ios/backtest` - Run historical strategy backtests
 
-## 🚀 Deployment Options
+## Deployment Options
 
 ### Production Deployment
 For production deployment, consider:
@@ -422,7 +428,6 @@ Open to collaborations on data integration, strategy co-development, and multi-d
 
 ## 🙏 Acknowledgments
 
-- Bloomberg Terminal for UI inspiration
 - Yahoo Finance for global market data
 - AkShare for China A-share data
 - Tushare for enhanced China market data
