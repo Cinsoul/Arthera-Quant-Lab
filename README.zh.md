@@ -5,9 +5,7 @@
 
 
 <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">Alpha</button>
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">智能體</button>
-  <button style="padding: 10px 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px;">進階</button>
+ 
 </div>
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
