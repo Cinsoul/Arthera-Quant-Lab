@@ -23,7 +23,8 @@ import logging
 from typing import Any, Dict, List, Optional, Set
 from datetime import datetime, timedelta
 from pathlib import Path
-from statistics import mean
+from statistics import mean, pstdev
+import math
 from pydantic import BaseModel
 import os
 import time
@@ -64,6 +65,8 @@ class ServiceConfig:
     # Database
     POSTGRES_URL = os.getenv("DATABASE_URL", "postgresql://arthera:arthera123@localhost:5432/trading_engine")
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+
+    ENABLE_FALLBACKS = os.getenv("ENABLE_DASHBOARD_FALLBACKS", "0") == "1"
 
 # Request/Response Models
 class HealthResponse(BaseModel):
@@ -145,6 +148,30 @@ _search_cache: Dict[str, Dict[str, Any]] = {}
 _cache_expiry: Dict[str, float] = {}
 CACHE_TTL = 300  # 5 minutes cache for search results
 
+MARKET_REGION_MAP = {
+    "US": "US",
+    "CN": "CN",
+    "HK": "HK",
+    "JP": "JP",
+    "EU": "EU",
+}
+
+POPULAR_MARKET_SYMBOLS: Dict[str, List[str]] = {
+    "US": ["AAPL", "MSFT", "NVDA", "META", "TSLA"],
+    "CN": ["600519.SS", "000001.SZ", "300750.SZ", "601318.SS"],
+    "HK": ["0700.HK", "9988.HK", "3690.HK"],
+    "JP": ["7203.T", "6758.T", "9432.T"],
+}
+
+GLOBAL_INDEX_SYMBOLS: Dict[str, Dict[str, str]] = {
+    "NASDAQ": {"symbol": "QQQ", "market": "US"},
+    "S&P 500": {"symbol": "SPY", "market": "US"},
+    "DOW": {"symbol": "DIA", "market": "US"},
+    "上证指数": {"symbol": "000001.SS", "market": "CN"},
+    "深证成指": {"symbol": "399001.SZ", "market": "CN"},
+    "恒生指数": {"symbol": "2800.HK", "market": "HK"},
+}
+
 
 async def service_request(method: str, url: str, *, fallback=None, **kwargs):
     """Helper that proxies requests to downstream services with unified logging."""
@@ -163,6 +190,247 @@ async def service_request(method: str, url: str, *, fallback=None, **kwargs):
         if fallback is not None:
             return fallback
         raise HTTPException(status_code=503, detail=f"Service unavailable: {url}")
+
+
+def fallback_payload(payload: Any) -> Optional[Any]:
+    """Return payload only when fallbacks are explicitly enabled."""
+    return payload if ServiceConfig.ENABLE_FALLBACKS else None
+
+
+async def fetch_price_history(symbol: str, *, limit: int = 200, interval: str = "1d") -> List[Dict[str, Any]]:
+    if http_client is None:
+        raise HTTPException(status_code=503, detail="HTTP client not initialised")
+    params = {
+        "range": "2y",
+        "interval": interval,
+        "includePrePost": "false"
+    }
+    response = await http_client.get(
+        YahooMarketProvider.CHART_URL.format(symbol=symbol),
+        params=params,
+        headers={"User-Agent": "ArtheraDashboard/1.0"}
+    )
+    response.raise_for_status()
+    payload = response.json().get("chart", {})
+    results = payload.get("result") or []
+    if not results:
+        raise HTTPException(status_code=404, detail="无法获取该股票的价格历史")
+    entry = results[0]
+    timestamps = entry.get("timestamp") or []
+    quotes = entry.get("indicators", {}).get("quote", [{}])[0]
+    closes = quotes.get("close", [])
+
+    series: List[Dict[str, Any]] = []
+    for ts, close in zip(timestamps, closes):
+        if close is None or ts is None:
+            continue
+        series.append({
+            "timestamp": datetime.utcfromtimestamp(ts).isoformat() + "Z",
+            "close": close
+        })
+
+    if not series:
+        raise HTTPException(status_code=502, detail="价格历史数据为空")
+    return series[-limit:]
+
+
+def _calculate_sma(values: List[float], period: int) -> float:
+    window = values[-period:]
+    return sum(window) / len(window)
+
+
+def _ema_series(values: List[float], period: int) -> List[float]:
+    multiplier = 2 / (period + 1)
+    ema_values: List[float] = []
+    ema_value = values[0]
+    for price in values:
+        ema_value = (price - ema_value) * multiplier + ema_value
+        ema_values.append(ema_value)
+    return ema_values
+
+
+def _calculate_ema(values: List[float], period: int) -> float:
+    return _ema_series(values, period)[-1]
+
+
+def _calculate_rsi(values: List[float], period: int) -> float:
+    gains: List[float] = []
+    losses: List[float] = []
+    for prev, curr in zip(values[:-1], values[1:]):
+        change = curr - prev
+        gains.append(max(change, 0))
+        losses.append(abs(min(change, 0)))
+    avg_gain = sum(gains[-period:]) / period if gains[-period:] else 0
+    avg_loss = sum(losses[-period:]) / period if losses[-period:] else 0
+    if avg_loss == 0:
+        return 100.0
+    rs = avg_gain / avg_loss
+    return 100 - (100 / (1 + rs))
+
+
+def _calculate_bollinger(values: List[float], period: int) -> Dict[str, float]:
+    window = values[-period:]
+    middle = sum(window) / len(window)
+    std_dev = pstdev(window) if len(window) > 1 else 0
+    return {
+        "middle": middle,
+        "upper": middle + 2 * std_dev,
+        "lower": middle - 2 * std_dev,
+        "stdDev": std_dev
+    }
+
+
+def _calculate_macd(values: List[float]) -> Dict[str, float]:
+    if len(values) < 35:
+        raise HTTPException(status_code=400, detail="MACD计算需要更多数据")
+    ema12_series = _ema_series(values, 12)
+    ema26_series = _ema_series(values, 26)
+    macd_series = [a - b for a, b in zip(ema12_series[-len(ema26_series):], ema26_series)]
+    signal_series = _ema_series(macd_series, 9)
+    macd_line = macd_series[-1]
+    signal_line = signal_series[-1]
+    histogram = macd_line - signal_line
+    return {
+        "macd": macd_line,
+        "signal": signal_line,
+        "histogram": histogram
+    }
+
+
+def _daily_returns(values: List[float]) -> List[float]:
+    returns: List[float] = []
+    for prev, curr in zip(values[:-1], values[1:]):
+        if prev in (None, 0) or curr is None:
+            continue
+        returns.append((curr / prev) - 1)
+    return returns
+
+
+def _percentile(values: List[float], percentile: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    k = max(0, min(len(ordered) - 1, int(len(ordered) * percentile)))
+    return ordered[k]
+
+
+def _max_drawdown(returns: List[float]) -> float:
+    peak = 1.0
+    trough = 1.0
+    max_dd = 0.0
+    cumulative = 1.0
+    for r in returns:
+        cumulative *= (1 + r)
+        if cumulative > peak:
+            peak = cumulative
+            trough = cumulative
+        if cumulative < trough:
+            trough = cumulative
+            drawdown = (trough / peak) - 1
+            if drawdown < max_dd:
+                max_dd = drawdown
+    return max_dd
+
+
+async def _fetch_series_for_symbols(symbols: List[str], limit: int = 160) -> Dict[str, List[float]]:
+    results: Dict[str, List[float]] = {}
+    tasks = [fetch_price_history(symbol, limit=limit) for symbol in symbols]
+    histories = await asyncio.gather(*tasks, return_exceptions=True)
+    for symbol, history in zip(symbols, histories):
+        if isinstance(history, Exception):
+            logger.warning("Failed to fetch history for %s: %s", symbol, history)
+            continue
+        closes = [entry["close"] for entry in history if entry.get("close")]
+        if len(closes) >= 5:
+            results[symbol] = closes
+    return results
+
+
+def _benchmark_symbol_for_market(market: Optional[str]) -> str:
+    if not market:
+        return "^GSPC"
+    market = market.upper()
+    if market == "CN":
+        return "000001.SS"
+    if market == "HK":
+        return "^HSI"
+    if market == "JP":
+        return "^N225"
+    return "^GSPC"
+
+
+async def _generate_risk_report(symbols: List[str], market: Optional[str] = None) -> Dict[str, Any]:
+    if not symbols:
+        symbols = ["AAPL", "MSFT", "NVDA", "TSLA"]
+    benchmark = _benchmark_symbol_for_market(market)
+    unique_symbols = list(dict.fromkeys(symbols + [benchmark]))
+    series_map = await _fetch_series_for_symbols(unique_symbols)
+    if benchmark not in series_map:
+        raise HTTPException(status_code=502, detail="无法获取基准市场数据")
+
+    benchmark_returns = _daily_returns(series_map[benchmark])
+    portfolio_returns: List[float] = []
+    for symbol in symbols:
+        closes = series_map.get(symbol)
+        if not closes:
+            continue
+        portfolio_returns.append(_daily_returns(closes))
+
+    if not portfolio_returns:
+        raise HTTPException(status_code=502, detail="无法获取足够的股票数据计算风险")
+
+    # Average equal-weight returns
+    min_length = min(len(r) for r in portfolio_returns)
+    trimmed_returns = [r[-min_length:] for r in portfolio_returns]
+    portfolio_series = [sum(values) / len(values) for values in zip(*trimmed_returns)]
+
+    var_95 = _percentile(portfolio_series, 0.05)
+    max_dd = _max_drawdown(portfolio_series)
+    volatility = pstdev(portfolio_series) * math.sqrt(252) if len(portfolio_series) > 2 else 0.0
+
+    bench_trim = benchmark_returns[-min_length:]
+    if len(bench_trim) == len(portfolio_series):
+        bench_mean = sum(bench_trim) / len(bench_trim)
+        port_mean = sum(portfolio_series) / len(portfolio_series)
+        cov = sum((p - port_mean) * (b - bench_mean) for p, b in zip(portfolio_series, bench_trim)) / len(portfolio_series)
+        bench_var = pstdev(bench_trim) ** 2 if len(bench_trim) > 1 else 0.0
+        beta = cov / bench_var if bench_var else 0.0
+        corr = cov / (pstdev(portfolio_series) * pstdev(bench_trim)) if pstdev(portfolio_series) and pstdev(bench_trim) else 0.0
+    else:
+        beta = 0.0
+        corr = 0.0
+
+    alpha = port_mean - (beta * bench_mean)
+    tracking_error = math.sqrt(sum((p - b) ** 2 for p, b in zip(portfolio_series, bench_trim)) / len(portfolio_series)) if len(portfolio_series) == len(bench_trim) else 0.0
+
+    series_points: List[Dict[str, Any]] = []
+    window = min(10, len(portfolio_series))
+    for idx in range(-window, 0):
+        local_returns = portfolio_series[: idx] if idx != 0 else portfolio_series
+        segment = local_returns[-60:] if len(local_returns) > 60 else local_returns
+        if not segment:
+            continue
+        series_points.append({
+            "label": f"T{idx}",
+            "var_95": abs(_percentile(segment, 0.05) * 100),
+            "max_drawdown": abs(_max_drawdown(segment) * 100),
+            "volatility": abs(pstdev(segment) * math.sqrt(252) * 100)
+        })
+
+    return {
+        "risk_metrics": {
+            "value_at_risk_95": float(var_95),
+            "max_drawdown": float(max_dd),
+            "volatility": float(volatility),
+            "beta": float(beta),
+            "alpha": float(alpha),
+            "tracking_error": float(tracking_error),
+            "correlation": float(corr)
+        },
+        "series": series_points,
+        "symbols": symbols,
+        "benchmark": benchmark
+    }
 
 
 def _generate_time_series(points: int = 12, start_value: float = 1.0, step: float = 0.01) -> List[Dict[str, float]]:
@@ -293,6 +561,13 @@ def looks_like_china_query(query: str) -> bool:
     if lowered.isdigit() and len(lowered) >= 3:
         return True
     return any('\u4e00' <= ch <= '\u9fff' for ch in query)
+
+
+def resolve_region_from_market(market: Optional[str]) -> Optional[str]:
+    if not market:
+        return None
+    normalized = market.upper()
+    return MARKET_REGION_MAP.get(normalized, normalized)
 
 
 def format_market_cap_label(value: Optional[float], currency: str) -> str:
@@ -461,10 +736,243 @@ async def get_stock_data(symbol: str, period: str = "1D", interval: str = "1m"):
         params={"period": period, "interval": interval}
     )
 
+
+@app.get("/market-data/stock/{symbol}")
+async def get_stock_overview(symbol: str, market: Optional[str] = None):
+    """统一的股票概览接口，供前端仪表板直接消费"""
+    region = resolve_region_from_market(market)
+    quote = await fetch_symbol_metadata(symbol, region=region)
+    normalized = normalize_quote_payload(quote)
+    if not normalized:
+        raise HTTPException(status_code=404, detail=f"未找到股票 {symbol}")
+
+    data_source = normalized.get("data_source") or quote.get("data_source") or "unknown"
+    is_real_time = bool(quote.get("is_real_time", data_source != "simulated"))
+    reliability = "verified" if is_real_time else "fallback"
+
+    snapshot = {
+        "symbol": normalized.get("symbol") or symbol.upper(),
+        "name": normalized.get("name") or normalized.get("displayName") or symbol.upper(),
+        "price": normalized.get("price"),
+        "last_price": normalized.get("last_price"),
+        "change": normalized.get("change"),
+        "change_percent": normalized.get("change"),
+        "volume": normalized.get("volume"),
+        "currency": normalized.get("currency"),
+        "market_cap": normalized.get("market_cap"),
+        "marketCapLabel": normalized.get("marketCap"),
+        "data_source": data_source,
+        "market": (market.upper() if market else normalized.get("region")) or "GLOBAL",
+        "is_real_time": is_real_time,
+        "updated_at": datetime.now().isoformat(),
+        "metadata": {
+            "exchange": normalized.get("exchange"),
+            "region": normalized.get("region"),
+            "sector": normalized.get("sector"),
+            "industry": normalized.get("industry"),
+            "source_reliability": reliability
+        }
+    }
+    return snapshot
+
+
 @app.get("/market-data/alpha158/{symbol}")
 async def get_alpha158_factors(symbol: str):
     """获取Alpha158因子 - 路由到QuantEngine"""
     return await service_request("GET", f"{ServiceConfig.MARKET_DATA_URL}/api/alpha158/{symbol}")
+
+
+@app.get("/analysis/indicators/{symbol}")
+async def get_indicator_analysis(symbol: str, indicator: str = "sma", period: int = 20, points: int = 120, market: Optional[str] = None):
+    """计算技术指标，供配置界面实时使用"""
+    if period < 2:
+        raise HTTPException(status_code=400, detail="period 必须大于1")
+    indicator_key = indicator.lower()
+    min_points = max(points, period + 20)
+    series = await fetch_price_history(symbol, limit=min_points)
+    closes = [item["close"] for item in series]
+    if len(closes) < period:
+        raise HTTPException(status_code=400, detail="可用数据不足以计算该指标")
+
+    if indicator_key == "sma":
+        result_value = {"sma": _calculate_sma(closes, period)}
+    elif indicator_key == "ema":
+        result_value = {"ema": _calculate_ema(closes, period)}
+    elif indicator_key == "rsi":
+        lookback = max(period, 14)
+        result_value = {"rsi": _calculate_rsi(closes[-(lookback + 1):], lookback)}
+    elif indicator_key == "bollinger":
+        result_value = _calculate_bollinger(closes, period)
+    elif indicator_key == "macd":
+        result_value = _calculate_macd(closes)
+    else:
+        raise HTTPException(status_code=400, detail=f"不支持的指标类型: {indicator}")
+
+    trimmed_series = series[-min(points, len(series)) :]
+
+    return {
+        "symbol": symbol.upper(),
+        "indicator": indicator_key,
+        "period": period,
+        "points_analyzed": len(series),
+        "latest_price": closes[-1],
+        "result": result_value,
+        "series": trimmed_series,
+        "calculated_at": datetime.now().isoformat()
+    }
+
+
+@app.get("/analysis/correlation")
+async def get_correlation_analysis(symbols: str = "AAPL,MSFT,GOOGL", benchmark: Optional[str] = None, market: Optional[str] = None, lookback: int = 120):
+    requested_symbols = [sym.strip() for sym in symbols.split(',') if sym.strip()]
+    if not requested_symbols:
+        requested_symbols = ["AAPL", "MSFT", "GOOGL"]
+    benchmark_symbol = benchmark or _benchmark_symbol_for_market(market)
+    symbol_set = list(dict.fromkeys(requested_symbols + [benchmark_symbol]))
+    series_map = await _fetch_series_for_symbols(symbol_set, limit=max(lookback, 120))
+    if benchmark_symbol not in series_map:
+        raise HTTPException(status_code=502, detail="无法获取基准市场数据")
+
+    benchmark_returns = _daily_returns(series_map[benchmark_symbol])
+    if len(benchmark_returns) < 5:
+        raise HTTPException(status_code=502, detail="基准数据不足")
+
+    points: List[Dict[str, Any]] = []
+    for symbol in requested_symbols:
+        closes = series_map.get(symbol)
+        if not closes:
+            continue
+        symbol_returns = _daily_returns(closes)
+        min_len = min(len(symbol_returns), len(benchmark_returns))
+        if min_len < 5:
+            continue
+        s_trim = symbol_returns[-min_len:]
+        b_trim = benchmark_returns[-min_len:]
+        s_mean = sum(s_trim) / len(s_trim)
+        b_mean = sum(b_trim) / len(b_trim)
+        cov = sum((s - s_mean) * (b - b_mean) for s, b in zip(s_trim, b_trim)) / len(s_trim)
+        b_var = pstdev(b_trim) ** 2 if len(b_trim) > 1 else 0.0
+        corr = cov / (pstdev(s_trim) * pstdev(b_trim)) if pstdev(s_trim) and pstdev(b_trim) else 0.0
+        beta = cov / b_var if b_var else 0.0
+        alpha = s_mean - beta * b_mean
+        points.append({
+            "symbol": symbol.upper(),
+            "market_return": b_trim[-1] * 100,
+            "strategy_return": s_trim[-1] * 100,
+            "correlation": corr,
+            "beta": beta,
+            "alpha": alpha
+        })
+
+    if not points:
+        raise HTTPException(status_code=502, detail="无法计算相关性数据")
+
+    return {
+        "benchmark": benchmark_symbol,
+        "points": points,
+        "calculated_at": datetime.now().isoformat()
+    }
+
+
+
+@app.get("/market-data/popular")
+async def get_popular_market_data(market: Optional[str] = None):
+    """获取热门股票，用于前端市场热度和图表展示"""
+    markets: List[str]
+    if market:
+        normalized = market.upper()
+        if normalized not in POPULAR_MARKET_SYMBOLS:
+            raise HTTPException(status_code=404, detail=f"市场 {market} 暂不支持热门列表")
+        markets = [normalized]
+    else:
+        markets = list(POPULAR_MARKET_SYMBOLS.keys())
+
+    popular_entries: List[Dict[str, Any]] = []
+    market_breakdown: Dict[str, List[Dict[str, Any]]] = {}
+
+    for market_code in markets:
+        symbols = POPULAR_MARKET_SYMBOLS.get(market_code, [])
+        if not symbols:
+            continue
+        tasks = [fetch_symbol_metadata(symbol, region=resolve_region_from_market(market_code)) for symbol in symbols]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        entries: List[Dict[str, Any]] = []
+        for symbol, result in zip(symbols, results):
+            if isinstance(result, Exception):
+                logger.warning("Failed to fetch popular symbol %s: %s", symbol, result)
+                continue
+            normalized = normalize_quote_payload(result)
+            if not normalized:
+                continue
+            entries.append({
+                "symbol": normalized.get("symbol"),
+                "name": normalized.get("displayName") or normalized.get("name") or symbol,
+                "price": normalized.get("price"),
+                "change": normalized.get("change"),
+                "change_percent": normalized.get("change"),
+                "volume": normalized.get("volume"),
+                "currency": normalized.get("currency"),
+                "market": market_code,
+                "market_cap": normalized.get("market_cap"),
+                "marketCapLabel": normalized.get("marketCap"),
+                "data_source": normalized.get("data_source"),
+                "sector": normalized.get("sector"),
+                "industry": normalized.get("industry")
+            })
+        if entries:
+            market_breakdown[market_code] = entries
+            popular_entries.extend(entries)
+
+    if not popular_entries:
+        raise HTTPException(status_code=502, detail="无法获取热门股票数据")
+
+    popular_entries.sort(key=lambda item: abs(item.get("change") or 0), reverse=True)
+
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "popular_stocks": popular_entries,
+        "markets": market_breakdown
+    }
+
+
+@app.get("/market-data/indices")
+async def get_market_indices_snapshot():
+    """获取多个市场指数的快照数据"""
+    labels = list(GLOBAL_INDEX_SYMBOLS.items())
+    tasks = [
+        fetch_symbol_metadata(meta[1]["symbol"], region=resolve_region_from_market(meta[1].get("market")))
+        for meta in labels
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    indices: Dict[str, Dict[str, Any]] = {}
+    for (display_name, meta), result in zip(labels, results):
+        if isinstance(result, Exception):
+            logger.warning("Failed to fetch index %s: %s", display_name, result)
+            continue
+        normalized = normalize_quote_payload(result)
+        if not normalized:
+            continue
+        indices[display_name] = {
+            "symbol": normalized.get("symbol"),
+            "name": normalized.get("displayName") or display_name,
+            "price": normalized.get("price"),
+            "change": normalized.get("change"),
+            "change_percent": normalized.get("change"),
+            "currency": normalized.get("currency"),
+            "market": meta.get("market"),
+            "data_source": normalized.get("data_source"),
+            "market_cap": normalized.get("market_cap"),
+            "last_price": normalized.get("last_price"),
+        }
+
+    if not indices:
+        raise HTTPException(status_code=502, detail="无法获取市场指数数据")
+
+    return {
+        "indices": indices,
+        "timestamp": datetime.now().isoformat()
+    }
 
 # ==================== STRATEGY ROUTES ====================
 
@@ -483,9 +991,20 @@ async def run_strategy(request: dict):
     )
 
 @app.get("/strategies/backtest/{strategy_id}")
-async def get_backtest_results(strategy_id: str):
+async def get_backtest_results(strategy_id: str, capital: Optional[float] = None, symbols: Optional[str] = None, period: Optional[str] = None):
     """获取回测结果 - 路由到QuantEngine"""
-    return await service_request("GET", f"{ServiceConfig.QUANT_ENGINE_URL}/api/backtest/{strategy_id}")
+    params: Dict[str, Any] = {}
+    if capital is not None:
+        params["capital"] = capital
+    if symbols:
+        params["symbols"] = symbols
+    if period:
+        params["period"] = period
+    return await service_request(
+        "GET",
+        f"{ServiceConfig.QUANT_ENGINE_URL}/api/backtest/{strategy_id}",
+        params=params if params else None
+    )
 
 # ==================== SIGNALS ROUTES ====================
 
@@ -537,7 +1056,7 @@ async def validate_order(order: OrderRequest):
 @app.get("/portfolio/{account_id}")
 async def get_portfolio(account_id: str):
     """获取投资组合 - 直连现有Portfolio服务"""
-    fallback = {
+    fallback = fallback_payload({
         "account_id": account_id,
         "total_value": 100000.0,
         "positions": [],
@@ -545,7 +1064,7 @@ async def get_portfolio(account_id: str):
         "unrealized_pnl": 2500.0,
         "realized_pnl": 1200.0,
         "last_updated": datetime.now().isoformat()
-    }
+    })
     return await service_request(
         "GET",
         f"{ServiceConfig.PORTFOLIO_SERVICE_URL}/accounts/{account_id}",
@@ -560,7 +1079,7 @@ async def update_portfolio(request: dict):
         "POST",
         f"{ServiceConfig.PORTFOLIO_SERVICE_URL}/accounts/update",
         json=request,
-        fallback={"status": "queued", "received": datetime.now().isoformat()}
+        fallback=fallback_payload({"status": "queued", "received": datetime.now().isoformat()})
     )
 
     await manager.send_to_ios({
@@ -948,7 +1467,7 @@ async def submit_order(order: OrderRequest):
         "POST",
         f"{ServiceConfig.PAPER_TRADING_URL}/orders/submit",
         json=order.dict(),
-        fallback={
+        fallback=fallback_payload({
             "order_id": f"ORDER_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             "symbol": order.symbol,
             "side": order.side,
@@ -957,7 +1476,7 @@ async def submit_order(order: OrderRequest):
             "fill_price": order.price or 0.0,
             "fill_time": None,
             "commission": 0.0
-        }
+        })
     )
 
     await manager.broadcast({
@@ -975,13 +1494,13 @@ async def get_order_history(limit: int = 100):
         "GET",
         f"{ServiceConfig.PAPER_TRADING_URL}/orders/history",
         params={"limit": limit},
-        fallback={"orders": [], "total": 0, "limit": limit}
+        fallback=fallback_payload({"orders": [], "total": 0, "limit": limit})
     )
 
 # ==================== DASHBOARD ROUTES ====================
 
 @app.get("/dashboard/system-status")
-async def get_system_status():
+async def get_system_status(capital: Optional[float] = None, market: Optional[str] = None, symbols: Optional[str] = None, risk_level: Optional[str] = None):
     """系统状态面板"""
     services_status: Dict[str, bool] = {}
 
@@ -989,7 +1508,7 @@ async def get_system_status():
         payload = await service_request(
             "GET",
             f"{base_url}/health",
-            fallback={"status": "offline"}
+            fallback=fallback_payload({"status": "offline"})
         )
         services_status[name] = str(payload.get("status", "")).lower() in {
             "healthy",
@@ -1010,24 +1529,17 @@ async def get_system_status():
     orders_summary = await service_request(
         "GET",
         f"{ServiceConfig.PAPER_TRADING_URL}/orders/summary",
-        params={"window": "1d"},
-        fallback={
-            "orders_today": 142,
-            "total_volume": 2850000,
-            "success_rate": 0.9103
-        }
+        params={"window": "1d"}
     )
 
     signals_summary = await service_request(
         "GET",
-        f"{ServiceConfig.QUANT_ENGINE_URL}/api/signals/summary",
-        fallback={"signals_today": 156}
+        f"{ServiceConfig.QUANT_ENGINE_URL}/api/signals/summary"
     )
 
     strategy_metrics = await service_request(
         "GET",
-        f"{ServiceConfig.STRATEGY_RUNNER_URL}/strategies/metrics",
-        fallback={"strategies_running": 8}
+        f"{ServiceConfig.STRATEGY_RUNNER_URL}/strategies/metrics"
     )
 
     return {
@@ -1039,40 +1551,32 @@ async def get_system_status():
         "success_rate": round(orders_summary.get("success_rate", 0) * 100, 2),
         "uptime": f"{int(sum(services_status.values()) / max(len(services_status),1) * 100)}%",
         "last_updated": datetime.now().isoformat(),
-        "services": services_status
+        "services": services_status,
+        "parameters": {
+            "capital": capital,
+            "market": market,
+            "symbols": symbols,
+            "risk_level": risk_level
+        }
     }
 
 @app.get("/dashboard/trading-stats")
-async def get_trading_stats():
+async def get_trading_stats(capital: Optional[float] = None, market: Optional[str] = None, symbols: Optional[str] = None, risk_level: Optional[str] = None):
     """交易统计面板"""
     orders_stats = await service_request(
         "GET",
         f"{ServiceConfig.PAPER_TRADING_URL}/orders/metrics",
-        params={"window": "1d"},
-        fallback={
-            "orders_generated": 156,
-            "trades_executed": 142,
-            "total_volume": 2850000,
-            "success_rate": 0.9103,
-            "avg_slippage": 0.0012
-        }
+        params={"window": "1d"}
     )
 
     perf_stats = await service_request(
         "GET",
-        f"{ServiceConfig.PORTFOLIO_SERVICE_URL}/performance/summary",
-        fallback={
-            "sharpe_ratio": 2.15,
-            "max_drawdown": -0.08,
-            "win_rate": 0.67,
-            "profit_factor": 1.85
-        }
+        f"{ServiceConfig.PORTFOLIO_SERVICE_URL}/performance/summary"
     )
 
     strategy_stats = await service_request(
         "GET",
-        f"{ServiceConfig.STRATEGY_RUNNER_URL}/strategies/metrics",
-        fallback={"strategies_active": 8}
+        f"{ServiceConfig.STRATEGY_RUNNER_URL}/strategies/metrics"
     )
 
     return {
@@ -1082,103 +1586,80 @@ async def get_trading_stats():
             "success_rate": round(orders_stats.get("success_rate", 0) * 100, 2)
         },
         "performance": perf_stats,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "parameters": {
+            "capital": capital,
+            "market": market,
+            "symbols": symbols,
+            "risk_level": risk_level
+        }
     }
 
 
 @app.get("/dashboard/performance-series")
 async def get_performance_series():
     """时间序列 - 累计收益 vs 基准"""
-    fallback = {
-        "portfolio": _generate_time_series(points=12, start_value=1.0, step=0.01),
-        "benchmark": _generate_time_series(points=12, start_value=1.0, step=0.008)
-    }
     return await service_request(
         "GET",
-        f"{ServiceConfig.ANALYTICS_SERVICE_URL}/performance/series",
-        fallback=fallback
+        f"{ServiceConfig.ANALYTICS_SERVICE_URL}/performance/series"
     )
 
 
 @app.get("/dashboard/drawdown")
 async def get_drawdown_series():
     """获取回撤曲线"""
-    fallback_series = [
-        {"timestamp": (datetime.now() - timedelta(days=idx)).isoformat(), "value": round(-0.02 * idx / 5, 4)}
-        for idx in range(6)
-    ]
     return await service_request(
         "GET",
-        f"{ServiceConfig.ANALYTICS_SERVICE_URL}/performance/drawdown",
-        fallback={
-            "max_drawdown": min(item["value"] for item in fallback_series),
-            "series": fallback_series
-        }
+        f"{ServiceConfig.ANALYTICS_SERVICE_URL}/performance/drawdown"
     )
 
 
 @app.get("/dashboard/allocations")
 async def get_allocations():
     """资产/行业权重"""
-    fallback = {
-        "by_sector": [
-            {"label": "科技", "value": 0.28},
-            {"label": "消费", "value": 0.18},
-            {"label": "工业", "value": 0.14},
-            {"label": "医疗", "value": 0.16},
-            {"label": "金融", "value": 0.12},
-            {"label": "其他", "value": 0.12}
-        ],
-        "last_updated": datetime.now().isoformat()
-    }
     return await service_request(
         "GET",
-        f"{ServiceConfig.PORTFOLIO_SERVICE_URL}/allocations",
-        fallback=fallback
+        f"{ServiceConfig.PORTFOLIO_SERVICE_URL}/allocations"
     )
 
 
 @app.get("/dashboard/risk-report")
-async def get_risk_report():
+async def get_risk_report(symbols: Optional[str] = None, market: Optional[str] = None, capital: Optional[float] = None):
     """风险/绩效报表"""
-    fallback = {
-        "risk_metrics": {
-            "value_at_risk_95": -0.035,
-            "conditional_var_95": -0.055,
-            "max_drawdown": -0.08,
-            "gross_exposure": 1.9,
-            "net_exposure": 0.65,
-            "leverage": 1.2
-        },
-        "stress_tests": [
-            {"scenario": "利率+100bps", "impact": -0.012},
-            {"scenario": "美元升值2%", "impact": -0.006},
-            {"scenario": "油价上涨10%", "impact": 0.004}
-        ],
-        "pnl_attribution": [
-            {"category": "资产配置", "value": 0.62},
-            {"category": "标的选择", "value": 0.31},
-            {"category": "交易/成本", "value": 0.07}
-        ],
-        "updated_at": datetime.now().isoformat()
-    }
-    return await service_request(
-        "GET",
-        f"{ServiceConfig.RISK_ENGINE_URL}/risk/report",
-        fallback=fallback
-    )
+    params: Optional[Dict[str, Any]] = None
+    if any([symbols, market, capital]):
+        params = {}
+        if symbols:
+            params["symbols"] = symbols
+        if market:
+            params["market"] = market
+        if capital is not None:
+            params["capital"] = capital
+
+    try:
+        return await service_request(
+            "GET",
+            f"{ServiceConfig.RISK_ENGINE_URL}/risk/report",
+            params=params
+        )
+    except HTTPException as exc:
+        if exc.status_code not in {502, 503, 500, 404}:
+            raise
+        requested_symbols = [sym.strip() for sym in (symbols.split(',') if symbols else []) if sym.strip()]
+        logger.warning("Using fallback risk report: %s", exc)
+        return await _generate_risk_report(requested_symbols, market)
 
 
 @app.get("/dashboard/overview")
-async def get_dashboard_overview():
+async def get_dashboard_overview(capital: Optional[float] = None, market: Optional[str] = None, symbols: Optional[str] = None, risk_level: Optional[str] = None):
     """聚合所有仪表板数据，单次请求返回全部信息"""
     system_status, trading_stats, performance_series, drawdown, allocations, risk_report = await asyncio.gather(
-        get_system_status(),
-        get_trading_stats(),
+        get_system_status(capital=capital, market=market, symbols=symbols, risk_level=risk_level),
+        get_trading_stats(capital=capital, market=market, symbols=symbols, risk_level=risk_level),
         get_performance_series(),
         get_drawdown_series(),
         get_allocations(),
-        get_risk_report()
+        get_risk_report(symbols=symbols, market=market, capital=capital)
     )
 
     return {
@@ -1188,7 +1669,13 @@ async def get_dashboard_overview():
         "drawdown": drawdown,
         "allocations": allocations,
         "risk_report": risk_report,
-        "generated_at": datetime.now().isoformat()
+        "generated_at": datetime.now().isoformat(),
+        "parameters": {
+            "capital": capital,
+            "market": market,
+            "symbols": symbols,
+            "risk_level": risk_level
+        }
     }
 
 # ==================== WEBSOCKET ROUTES ====================
