@@ -1,0 +1,364 @@
+name: 🚀 Arthera Trading Engine CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deploy_environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ==================== Code Quality & Security ====================
+  quality-check:
+    name: 🔍 Code Quality & Security
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📦 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: 📋 Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 black isort bandit safety
+
+    - name: 🎯 Code Formatting Check
+      run: |
+        black --check --diff .
+        isort --check-only --diff .
+
+    - name: 🔬 Linting
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+    - name: 🛡️ Security Scan
+      run: |
+        bandit -r . -f json -o bandit-report.json || true
+        safety check --json --output safety-report.json || true
+
+    - name: 📊 Upload Security Reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  # ==================== Unit Tests ====================
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    needs: quality-check
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_trading_engine
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: 📦 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: 📋 Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio
+
+    - name: 🏃 Run Tests
+      env:
+        POSTGRES_URL: postgresql://postgres:test_password@localhost:5432/test_trading_engine
+        REDIS_URL: redis://localhost:6379
+        DEMO_MODE: true
+      run: |
+        pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+
+    - name: 📊 Upload Coverage Reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  # ==================== Docker Build ====================
+  build:
+    name: 🐳 Build Docker Images
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+    - name: 📦 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🐳 Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: 🔐 Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 🏷️ Extract Metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: 🔨 Build and Push Demo Server
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+    - name: 🔨 Build and Push API Gateway
+      uses: docker/build-push-action@v5
+      with:
+        context: ./services/api-gateway
+        file: ./services/api-gateway/Dockerfile
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api-gateway:${{ steps.meta.outputs.version }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: 🔨 Build and Push iOS Connector
+      uses: docker/build-push-action@v5
+      with:
+        context: ./services/ios-connector
+        file: ./services/ios-connector/Dockerfile
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/ios-connector:${{ steps.meta.outputs.version }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # ==================== Security Scan ====================
+  security-scan:
+    name: 🛡️ Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: 🔍 Run Trivy Vulnerability Scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ needs.build.outputs.image-tag }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: 📊 Upload Trivy Scan Results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # ==================== Staging Deployment ====================
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, security-scan]
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    environment:
+      name: staging
+      url: https://staging.arthera.app
+
+    steps:
+    - name: 📦 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Environment
+      run: |
+        echo "DOCKER_IMAGE=${{ needs.build.outputs.image-tag }}" >> $GITHUB_ENV
+        echo "DEPLOYMENT_ENV=staging" >> $GITHUB_ENV
+
+    - name: 🐳 Deploy with Docker Compose
+      run: |
+        # Create staging environment file
+        cp .env.example .env.staging
+        echo "ENVIRONMENT=staging" >> .env.staging
+        echo "DEMO_MODE=true" >> .env.staging
+        
+        # Deploy using docker-compose
+        docker-compose -f docker-compose.yml --env-file .env.staging up -d
+
+    - name: 🏥 Health Check
+      run: |
+        # Wait for services to be ready
+        sleep 30
+        
+        # Check service health
+        curl -f http://localhost:8000/health || exit 1
+        curl -f http://localhost:8001/health || exit 1
+        curl -f http://localhost:8002/health || exit 1
+
+    - name: 📧 Notify Success
+      if: success()
+      run: |
+        echo "✅ Staging deployment successful!"
+        echo "🌐 Demo: http://localhost:8001"
+        echo "🔧 API: http://localhost:8000"
+        echo "📱 iOS: http://localhost:8002"
+
+  # ==================== Production Deployment ====================
+  deploy-production:
+    name: 🌟 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://arthera.app
+
+    steps:
+    - name: 📦 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Production Environment
+      run: |
+        echo "DOCKER_IMAGE=${{ needs.build.outputs.image-tag }}" >> $GITHUB_ENV
+        echo "DEPLOYMENT_ENV=production" >> $GITHUB_ENV
+
+    - name: 🌟 Deploy to Production
+      run: |
+        # Create production environment file
+        cp .env.example .env.production
+        echo "ENVIRONMENT=production" >> .env.production
+        echo "DEMO_MODE=false" >> .env.production
+        
+        # Production deployment
+        ./deploy.sh --production
+
+    - name: 🏥 Production Health Check
+      run: |
+        sleep 60  # Wait longer for production
+        
+        # Comprehensive health checks
+        curl -f https://api.arthera.app/health || exit 1
+        curl -f https://arthera.app/health || exit 1
+
+    - name: 📊 Performance Test
+      run: |
+        # Basic performance test
+        curl -w "Response Time: %{time_total}s\n" -o /dev/null -s https://arthera.app
+
+    - name: 📧 Notify Production Success
+      if: success()
+      run: |
+        echo "🎉 Production deployment successful!"
+        echo "🌐 Live at: https://arthera.app"
+        echo "🔧 API at: https://api.arthera.app"
+
+  # ==================== Release Creation ====================
+  create-release:
+    name: 📦 Create Release
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - name: 📦 Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 🏷️ Generate Release Notes
+      id: release-notes
+      run: |
+        # Generate release notes from commits
+        echo "## 🚀 What's New" > release-notes.md
+        echo "" >> release-notes.md
+        git log --oneline --since="$(git describe --tags --abbrev=0 2>/dev/null || echo '1 week ago')" >> release-notes.md
+
+    - name: 📦 Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Arthera Trading Engine v${{ github.run_number }}
+        body_path: release-notes.md
+        draft: false
+        prerelease: false
+
+# ==================== Workflow Notifications ====================
+  notify:
+    name: 📢 Send Notifications
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production, create-release]
+    if: always()
+
+    steps:
+    - name: 📧 Success Notification
+      if: success()
+      run: |
+        echo "🎉 Arthera Trading Engine deployment pipeline completed successfully!"
+        echo "📊 All services are running with real-time data integration"
+        echo "🔗 GitHub Repository: ${{ github.repository }}"
+
+    - name: ❌ Failure Notification
+      if: failure()
+      run: |
+        echo "❌ Deployment pipeline failed"
+        echo "🔍 Check the logs for details"
+        echo "🔗 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
