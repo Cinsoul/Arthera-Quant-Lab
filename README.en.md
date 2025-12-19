@@ -47,13 +47,17 @@ Welcome to join our Discord community to share feedback and issues you encounter
 
 
 ## Key Features
-- **Dual Market Feeds** – Yahoo Finance (global) and AkShare (A-shares) ship out of the box; drop in a `TUSHARE_TOKEN` to unlock Pro-level metadata via the new China provider.
-- **Intelligent Stock Search** – The "Target Stock Pool" widget talks to `/market-data/search`, returning paginated CN/US results with live price, change %, exchange, sector, and market-cap badges.
-- **Full Strategy Pipeline** – QuantEngine, Quant Lab, Paper OMS, Risk Engine, and Portfolio analytics converge inside the FastAPI gateway for signal generation, order routing, and dashboard aggregation.
-- **Bloomberg-style UI** – Real-time cards for performance, drawdowns, allocations, risk metrics, orders, and AI recommendations; one script spins up the entire experience.
-- **iOS Connector** – REST + WebSocket endpoints (port 8002) mirror the Swift SDK contracts so mobile clients receive pushes, run backtests, and submit orders instantly.
-- **Live Data Source Controls** – `POST /config/data-source` lets you rotate Tushare tokens at runtime; the front end updates status indicators automatically.
-- **Real-time Data Integration** – Supports Yahoo Finance, AkShare, Tushare Pro with automatic caching and failover.
+- **AI-Powered Quantitative Strategies** – Integrated DeepSeek AI models for intelligent trading signal generation, supporting multiple quant strategies (Bayesian Momentum, Kelly Optimization, Risk Parity)
+- **Professional Trading Interface** – Bloomberg-style dark theme UI with real-time position display, P&L tracking, risk metrics, and trading signals
+- **Multi-language Support** – Complete Chinese/English interface switching for global user experience
+- **Smart Position Management** – Position Manager provides real-time portfolio monitoring, P&L analysis, one-click portfolio clearing, and data export capabilities
+- **Dual Market Data Feeds** – Yahoo Finance (global) and AkShare (A-shares) out of the box; Tushare Pro integration for enhanced China market data
+- **Intelligent Stock Search** – Fuzzy search for CN/US stocks with real-time pricing, sector filtering, and market cap categorization
+- **Full Strategy Pipeline** – Integrated QuantEngine, risk engine, and portfolio services supporting strategy backtesting and live execution
+- **iOS Mobile Integration** – Swift SDK support with WebSocket real-time data streaming for seamless mobile trading experience
+- **Machine Learning Models** – LightGBM trained models for price prediction supporting both A-share and US markets
+- **Secure Configuration Management** – Encrypted API key storage with local data protection for sensitive information
+- **Real-time Risk Monitoring** – Professional risk metrics including VaR calculations, Sharpe ratio, and maximum drawdown tracking
 
 ## Architecture
 ```
@@ -117,6 +121,14 @@ python demo_server.py
 Then open `http://localhost:8001` to explore the live dashboard (or `docker-compose up -d` for manual control).
 
 ## 🔧 Local Configuration Guide
+
+### Security Configuration
+
+⚠️ **Important Security Reminders**:
+- **Never** hardcode API keys or sensitive information in your code
+- Use `.env` files to store sensitive configurations and ensure they are added to `.gitignore`
+- Use strong passwords and encryption keys in production environments
+- Regularly rotate API keys and database passwords
 
 ### Environment Variables Setup
 

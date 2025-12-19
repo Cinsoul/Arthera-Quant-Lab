@@ -43,13 +43,17 @@ Arthera统一量化交易系统是一个社区驱动的多智能体量化交易�
 
 
 ## 核心特性
-- **双数据源聚合**：默认启用 Yahoo Finance + AkShare；配置 `TUSHARE_TOKEN` 后自动切换至 Tushare Pro，`/universe/search` 会对中美股票统一格式化输出。
-- **智能股票搜索**：`TARGET STOCK POOL` 面板支持模糊检索、分页、行业与市值筛选，并实时展示价格、涨跌幅、交易所与行业标签。
-- **全链路策略中心**：QuantEngine、Quant Lab、Paper OMS、Risk Engine 与 Portfolio 服务通过 API Gateway 汇聚，支持信号生成、交易执行、风险审计与绩效回放。
-- **Bloomberg UI**：内置系统状态、交易统计、回撤图、行业配置、风险报表、订单与信号列表，可一键演示。
-- **iOS Connector**：端口 8002 暴露与 Swift SDK 对齐的 REST + WebSocket 接口，移动端可实时接收信号、下单并回测。
-- **动态数据配置**：`POST /config/data-source` 可在运行时注入/更新 Tushare Token，并立即反映到前端。
-- **实时数据集成**：支持Yahoo Finance、AkShare、Tushare Pro多数据源，自动缓存和故障转移。
+- **AI驱动量化策略**：集成DeepSeek AI模型进行智能交易信号生成，支持多种量化策略（贝叶斯动量、凯利优化、风险平价）
+- **专业级交易界面**：Bloomberg风格的深色主题界面，实时显示持仓、盈亏、风险指标和交易信号
+- **多语言支持**：完整的中英文界面切换，支持全球化用户体验
+- **智能仓位管理**：Position Manager提供实时持仓监控、盈亏分析、一键清仓和数据导出功能
+- **双数据源聚合**：默认启用 Yahoo Finance + AkShare；配置 `TUSHARE_TOKEN` 后自动切换至 Tushare Pro
+- **智能股票搜索**：支持中美股票模糊检索、实时价格展示、行业与市值筛选
+- **全链路策略中心**：集成QuantEngine、风险引擎、投资组合服务，支持策略回测和实时执行
+- **iOS移动端集成**：Swift SDK支持，WebSocket实时数据推送，移动端交易体验
+- **机器学习模型**：LightGBM训练模型进行价格预测，支持A股和美股市场
+- **安全配置管理**：API密钥加密存储，敏感数据本地化保护
+- **实时风险监控**：VaR计算、夏普比率、最大回撤等专业风险指标
 
 ## 架构
 ```
@@ -135,6 +139,14 @@ python demo_server.py
 - **WebSocket**: `ws://localhost:8002/ios/ws`
 
 ## 本地配置指南
+
+### 安全配置
+
+⚠️ **重要安全提醒**：
+- **永远不要**在代码中硬编码API密钥或敏感信息
+- 使用 `.env` 文件存储敏感配置，确保该文件被添加到 `.gitignore`
+- 生产环境中使用强密码和加密密钥
+- 定期更换API密钥和数据库密码
 
 ### 环境变量设置
 

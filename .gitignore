@@ -1,0 +1,178 @@
+# ================================
+# SECURITY CRITICAL - API KEYS
+# ================================
+# NEVER commit these files to version control!
+.env
+.env.*
+.environment
+*.env
+Keys.xcconfig
+*/Keys.xcconfig
+**/*.xcconfig
+config/encrypted_keys.json
+config/api_keys.json
+config/secrets.json
+secrets/
+credentials/
+private_keys/
+api_keys/
+tokens/
+
+# Financial Data - NEVER commit sensitive trading data
+portfolio_data/real/
+trading_logs/live/
+user_data/
+account_data/
+real_positions.json
+live_trades.json
+
+# Personal Configuration Files
+config/personal/
+config/user_specific/
+my_config.json
+personal_settings.json
+
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ================================
+# Virtual Environments
+# ================================
+venv/
+ENV/
+env/
+.venv/
+.ENV/
+.env/
+
+# ================================
+# Databases
+# ================================
+*.db
+*.sqlite
+*.sqlite3
+data/postgres/
+data/redis/
+
+# ================================
+# Logs
+# ================================
+logs/
+*.log
+server.log
+server_new.log
+
+# ================================
+# Docker
+# ================================
+.docker/
+
+# ================================
+# IDEs
+# ================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ================================
+# OS Files
+# ================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ================================
+# Temporary Files
+# ================================
+temp/
+tmp/
+*.tmp
+*.temp
+
+# ================================
+# Machine Learning Models
+# ================================
+trained_models/
+*.pkl
+*.joblib
+*.h5
+*.pt
+
+# ================================
+# Backup Files
+# ================================
+*.bak
+*.backup
+*.old
+
+# ================================
+# Trading Data (if sensitive)
+# ================================
+backtest_results/private/
+portfolio_data/real/
+trading_logs/live/
+
+# Additional Security Patterns
+# ================================
+**/api_key*
+**/secret*
+**/token*
+**/password*
+**/*_private*
+**/*_confidential*
+
+# Deployment and Production Files
+# ================================
+production_config/
+staging_config/
+deployment_keys/
+server_configs/production/
+.env.production.local
+
+# Development Tools with Sensitive Data
+# ================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# OS and Editor Temporary Files
+# ================================
+*~
+.#*
+\#*#
+.*.swp
+.*.swo
