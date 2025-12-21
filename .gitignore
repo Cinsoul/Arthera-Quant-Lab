@@ -12,6 +12,12 @@ Keys.xcconfig
 config/encrypted_keys.json
 config/api_keys.json
 config/secrets.json
+
+# 服务配置文件 - 保留模板，排除实际凭证
+config/services_config.json.production
+config/*_credentials.json
+config/*_keys.json
+config/*_tokens.json
 secrets/
 credentials/
 private_keys/

@@ -1,0 +1,440 @@
+{
+  "data_sources": {
+    "yahoo_finance": {
+      "enabled": true,
+      "priority": 1,
+      "api_config": {
+        "base_url": "https://finance.yahoo.com",
+        "rate_limit_per_minute": 60,
+        "rate_limit_per_hour": 2000,
+        "timeout_seconds": 30,
+        "retry_attempts": 3,
+        "backoff_multiplier": 2,
+        "max_backoff_seconds": 300
+      },
+      "supported_markets": ["US", "CA", "EU", "AU"],
+      "features": {
+        "real_time_quotes": true,
+        "historical_data": true,
+        "fundamental_data": true,
+        "options_data": true,
+        "crypto_data": true
+      }
+    },
+    "tushare": {
+      "enabled": false,
+      "priority": 2,
+      "api_config": {
+        "base_url": "http://api.tushare.pro",
+        "token_required": true,
+        "rate_limit_per_minute": 120,
+        "rate_limit_per_day": 10000,
+        "timeout_seconds": 30,
+        "retry_attempts": 3
+      },
+      "supported_markets": ["CN"],
+      "features": {
+        "real_time_quotes": true,
+        "historical_data": true,
+        "fundamental_data": true,
+        "financial_statements": true,
+        "index_data": true,
+        "fund_data": true
+      },
+      "credentials": {
+        "token": null,
+        "token_configured": false
+      }
+    },
+    "akshare": {
+      "enabled": true,
+      "priority": 3,
+      "api_config": {
+        "rate_limit_per_minute": 30,
+        "rate_limit_per_hour": 1000,
+        "timeout_seconds": 30,
+        "retry_attempts": 3,
+        "base_delay_seconds": 2
+      },
+      "supported_markets": ["CN"],
+      "features": {
+        "real_time_quotes": true,
+        "historical_data": true,
+        "financial_statements": true,
+        "news_data": true,
+        "macro_data": true
+      }
+    },
+    "alpha_vantage": {
+      "enabled": false,
+      "priority": 4,
+      "api_config": {
+        "base_url": "https://www.alphavantage.co/query",
+        "api_key_required": true,
+        "rate_limit_per_minute": 5,
+        "rate_limit_per_day": 500,
+        "timeout_seconds": 30
+      },
+      "supported_markets": ["US", "EU", "CN", "IN"],
+      "features": {
+        "real_time_quotes": true,
+        "historical_data": true,
+        "technical_indicators": true,
+        "fundamental_data": true,
+        "forex_data": true,
+        "crypto_data": true
+      },
+      "credentials": {
+        "api_key": null,
+        "api_key_configured": false
+      }
+    },
+    "quandl": {
+      "enabled": false,
+      "priority": 5,
+      "api_config": {
+        "base_url": "https://www.quandl.com/api/v3",
+        "api_key_required": true,
+        "rate_limit_per_day": 50000,
+        "timeout_seconds": 30
+      },
+      "features": {
+        "economic_data": true,
+        "alternative_data": true,
+        "historical_data": true
+      },
+      "credentials": {
+        "api_key": null,
+        "api_key_configured": false
+      }
+    }
+  },
+  "trading_platforms": {
+    "alpaca": {
+      "enabled": false,
+      "type": "equity",
+      "api_config": {
+        "base_url": "https://paper-api.alpaca.markets",
+        "live_base_url": "https://api.alpaca.markets",
+        "use_paper_trading": true,
+        "rate_limit_per_minute": 200,
+        "timeout_seconds": 30
+      },
+      "supported_markets": ["US"],
+      "supported_asset_classes": ["equity", "crypto"],
+      "features": {
+        "paper_trading": true,
+        "real_time_data": true,
+        "order_management": true,
+        "portfolio_management": true
+      },
+      "credentials": {
+        "api_key": null,
+        "secret_key": null,
+        "configured": false
+      }
+    },
+    "interactive_brokers": {
+      "enabled": false,
+      "type": "multi_asset",
+      "api_config": {
+        "gateway_url": "localhost:4001",
+        "client_id": 1,
+        "timeout_seconds": 30
+      },
+      "supported_markets": ["US", "EU", "CN", "JP", "AU"],
+      "supported_asset_classes": ["equity", "options", "futures", "forex", "bonds"],
+      "features": {
+        "advanced_orders": true,
+        "algo_trading": true,
+        "market_data": true,
+        "portfolio_margin": true
+      },
+      "credentials": {
+        "username": null,
+        "password": null,
+        "configured": false
+      }
+    },
+    "td_ameritrade": {
+      "enabled": false,
+      "type": "equity",
+      "api_config": {
+        "base_url": "https://api.tdameritrade.com",
+        "oauth_required": true,
+        "rate_limit_per_second": 2,
+        "timeout_seconds": 30
+      },
+      "supported_markets": ["US"],
+      "supported_asset_classes": ["equity", "options", "etf", "mutual_funds"],
+      "credentials": {
+        "client_id": null,
+        "refresh_token": null,
+        "configured": false
+      }
+    }
+  },
+  "crypto_exchanges": {
+    "binance": {
+      "enabled": true,
+      "priority": 1,
+      "api_config": {
+        "base_url": "https://api.binance.com",
+        "testnet_url": "https://testnet.binance.vision",
+        "use_testnet": true,
+        "rate_limit_per_second": 10,
+        "timeout_seconds": 30,
+        "retry_attempts": 3
+      },
+      "supported_markets": ["spot", "futures", "margin"],
+      "features": {
+        "spot_trading": true,
+        "futures_trading": false,
+        "margin_trading": false,
+        "staking": false
+      },
+      "credentials": {
+        "api_key": null,
+        "secret_key": null,
+        "configured": false
+      }
+    },
+    "okx": {
+      "enabled": true,
+      "priority": 2,
+      "api_config": {
+        "base_url": "https://www.okx.com",
+        "testnet_url": "https://www.okx.com",
+        "use_testnet": true,
+        "rate_limit_per_second": 20,
+        "timeout_seconds": 30
+      },
+      "credentials": {
+        "api_key": null,
+        "secret_key": null,
+        "passphrase": null,
+        "configured": false
+      }
+    },
+    "coinbase": {
+      "enabled": false,
+      "priority": 3,
+      "api_config": {
+        "base_url": "https://api.exchange.coinbase.com",
+        "sandbox_url": "https://api-public.sandbox.exchange.coinbase.com",
+        "use_sandbox": true,
+        "rate_limit_per_second": 10
+      },
+      "credentials": {
+        "api_key": null,
+        "secret_key": null,
+        "passphrase": null,
+        "configured": false
+      }
+    }
+  },
+  "ai_services": {
+    "openai": {
+      "enabled": false,
+      "api_config": {
+        "base_url": "https://api.openai.com/v1",
+        "model": "gpt-4",
+        "max_tokens": 4000,
+        "temperature": 0.7,
+        "rate_limit_per_minute": 60,
+        "timeout_seconds": 60
+      },
+      "features": {
+        "text_analysis": true,
+        "sentiment_analysis": true,
+        "news_summarization": true,
+        "market_commentary": true
+      },
+      "credentials": {
+        "api_key": null,
+        "configured": false
+      }
+    },
+    "anthropic": {
+      "enabled": false,
+      "api_config": {
+        "base_url": "https://api.anthropic.com",
+        "model": "claude-3-sonnet-20240229",
+        "max_tokens": 4000,
+        "rate_limit_per_minute": 60
+      },
+      "credentials": {
+        "api_key": null,
+        "configured": false
+      }
+    },
+    "deepseek": {
+      "enabled": false,
+      "api_config": {
+        "base_url": "https://api.deepseek.com",
+        "model": "deepseek-chat",
+        "max_tokens": 4000,
+        "temperature": 0.7
+      },
+      "credentials": {
+        "api_key": null,
+        "configured": false
+      }
+    }
+  },
+  "notification_services": {
+    "email": {
+      "enabled": false,
+      "smtp_config": {
+        "host": "smtp.gmail.com",
+        "port": 587,
+        "use_tls": true,
+        "timeout_seconds": 30
+      },
+      "credentials": {
+        "username": null,
+        "password": null,
+        "configured": false
+      }
+    },
+    "slack": {
+      "enabled": false,
+      "api_config": {
+        "webhook_url": null,
+        "channels": ["#trading-alerts", "#critical-alerts"],
+        "timeout_seconds": 10
+      },
+      "credentials": {
+        "webhook_url": null,
+        "configured": false
+      }
+    },
+    "discord": {
+      "enabled": false,
+      "api_config": {
+        "webhook_url": null,
+        "timeout_seconds": 10
+      },
+      "credentials": {
+        "webhook_url": null,
+        "configured": false
+      }
+    },
+    "telegram": {
+      "enabled": false,
+      "api_config": {
+        "base_url": "https://api.telegram.org/bot",
+        "parse_mode": "HTML",
+        "timeout_seconds": 10
+      },
+      "credentials": {
+        "bot_token": null,
+        "chat_id": null,
+        "configured": false
+      }
+    }
+  },
+  "database_services": {
+    "postgresql": {
+      "enabled": true,
+      "connection": {
+        "host": "localhost",
+        "port": 5432,
+        "database": "arthera_trading",
+        "pool_size": 10,
+        "max_overflow": 20,
+        "timeout_seconds": 30
+      },
+      "credentials": {
+        "username": "postgres",
+        "password": null,
+        "configured": false
+      }
+    },
+    "redis": {
+      "enabled": true,
+      "connection": {
+        "host": "localhost",
+        "port": 6379,
+        "database": 0,
+        "socket_timeout_seconds": 30,
+        "connection_pool_size": 10
+      },
+      "credentials": {
+        "password": null,
+        "configured": false
+      }
+    },
+    "mongodb": {
+      "enabled": false,
+      "connection": {
+        "host": "localhost",
+        "port": 27017,
+        "database": "arthera_trading",
+        "timeout_seconds": 30
+      },
+      "credentials": {
+        "username": null,
+        "password": null,
+        "configured": false
+      }
+    }
+  },
+  "monitoring_services": {
+    "prometheus": {
+      "enabled": true,
+      "config": {
+        "host": "localhost",
+        "port": 9090,
+        "scrape_interval_seconds": 15,
+        "retention_days": 30
+      }
+    },
+    "grafana": {
+      "enabled": true,
+      "config": {
+        "host": "localhost",
+        "port": 3000,
+        "default_dashboard": "trading-system-overview"
+      },
+      "credentials": {
+        "admin_username": "admin",
+        "admin_password": null,
+        "configured": false
+      }
+    },
+    "alertmanager": {
+      "enabled": true,
+      "config": {
+        "host": "localhost",
+        "port": 9093,
+        "webhook_url": "http://localhost:9093/api/v1/alerts"
+      }
+    }
+  },
+  "global_settings": {
+    "environment": "development",
+    "debug_mode": true,
+    "log_level": "INFO",
+    "default_timezone": "UTC",
+    "api_timeout_seconds": 30,
+    "max_concurrent_requests": 50,
+    "rate_limiting": {
+      "enabled": true,
+      "requests_per_minute": 100,
+      "burst_size": 50
+    },
+    "security": {
+      "api_key_rotation_days": 90,
+      "session_timeout_minutes": 30,
+      "max_login_attempts": 5,
+      "password_min_length": 8
+    },
+    "performance": {
+      "cache_ttl_seconds": 300,
+      "connection_pool_size": 20,
+      "query_timeout_seconds": 30,
+      "max_memory_usage_mb": 2048
+    }
+  }
+}
