@@ -655,7 +655,7 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 <div class="text-center" data-index="NASDAQ">
-                    <div class="text-xs font-mono text-white opacity-70">NASDAQ</div>
+                    <div class="text-xs font-mono text-white opacity-70" data-i18n="nasdaq">NASDAQ</div>
                     <div class="text-lg font-mono text-white index-price">--</div>
                     <div class="text-sm font-mono text-gray-400 index-change">--</div>
                 </div>
@@ -665,7 +665,7 @@
                     <div class="text-sm font-mono text-gray-400 index-change">--</div>
                 </div>
                 <div class="text-center" data-index="DOW">
-                    <div class="text-xs font-mono text-white opacity-70">DOW</div>
+                    <div class="text-xs font-mono text-white opacity-70" data-i18n="dow">DOW</div>
                     <div class="text-lg font-mono text-white index-price">--</div>
                     <div class="text-sm font-mono text-gray-400 index-change">--</div>
                 </div>
@@ -1216,28 +1216,28 @@
                                 
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-xs font-mono text-white mb-2">REFRESH INTERVAL</label>
+                                        <label class="block text-xs font-mono text-white mb-2" data-i18n="refresh-interval">REFRESH INTERVAL</label>
                                         <select id="refresh-interval" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
-                                            <option value="5">5 SEC</option>
-                                            <option value="10">10 SEC</option>
-                                            <option value="30" selected>30 SEC</option>
-                                            <option value="60">60 SEC</option>
+                                            <option value="5" data-i18n="5-sec">5 SEC</option>
+                                            <option value="10" data-i18n="10-sec">10 SEC</option>
+                                            <option value="30" selected data-i18n="30-sec">30 SEC</option>
+                                            <option value="60" data-i18n="60-sec">60 SEC</option>
                                         </select>
                                     </div>
                                     
                                     <div class="space-y-2">
                                         <label class="flex items-center justify-between py-2 border-b border-gray-600 hover:bg-white hover:text-black px-2 cursor-pointer">
-                                            <span class="text-xs font-mono">AUTO REFRESH</span>
+                                            <span class="text-xs font-mono" data-i18n="auto-refresh">AUTO REFRESH</span>
                                             <input type="checkbox" id="auto-refresh" checked class="bg-black border-white">
                                         </label>
                                         
                                         <label class="flex items-center justify-between py-2 border-b border-gray-600 hover:bg-white hover:text-black px-2 cursor-pointer">
-                                            <span class="text-xs font-mono">SOUND ALERTS</span>
+                                            <span class="text-xs font-mono" data-i18n="sound-alerts">SOUND ALERTS</span>
                                             <input type="checkbox" id="sound-alerts" class="bg-black border-white">
                                         </label>
                                         
                                         <label class="flex items-center justify-between py-2 border-b border-gray-600 hover:bg-white hover:text-black px-2 cursor-pointer">
-                                            <span class="text-xs font-mono">NOTIFICATIONS</span>
+                                            <span class="text-xs font-mono" data-i18n="notifications">NOTIFICATIONS</span>
                                             <input type="checkbox" id="notifications" class="bg-black border-white">
                                         </label>
                                     </div>
@@ -1246,31 +1246,31 @@
                             
                             <!-- Display Settings -->
                             <div class="border border-white p-4">
-                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">DISPLAY SETTINGS</div>
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2" data-i18n="display-settings">DISPLAY SETTINGS</div>
                                 
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-xs font-mono text-white mb-2">LANGUAGE / 语言</label>
+                                        <label class="block text-xs font-mono text-white mb-2" data-i18n="language-setting">LANGUAGE / 语言</label>
                                         <select id="language-select" onchange="window.switchLanguage(this.value)" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                             <option value="zh">中文 (Chinese)</option>
-                                            <option value="en">English</option>
+                                            <option value="en" data-i18n="english">English</option>
                                         </select>
                                     </div>
                                     
                                     <div>
-                                        <label class="block text-xs font-mono text-white mb-2">TIME FORMAT</label>
+                                        <label class="block text-xs font-mono text-white mb-2" data-i18n="time-format">TIME FORMAT</label>
                                         <select id="time-format" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
-                                            <option value="24h">24H FORMAT</option>
-                                            <option value="12h">12H FORMAT</option>
+                                            <option value="24h" data-i18n="24h-format">24H FORMAT</option>
+                                            <option value="12h" data-i18n="12h-format">12H FORMAT</option>
                                         </select>
                                     </div>
                                     
                                     <div>
-                                        <label class="block text-xs font-mono text-white mb-2">DECIMAL PLACES</label>
+                                        <label class="block text-xs font-mono text-white mb-2" data-i18n="decimal-places">DECIMAL PLACES</label>
                                         <select id="decimal-places" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
-                                            <option value="2">2 PLACES</option>
-                                            <option value="3">3 PLACES</option>
-                                            <option value="4">4 PLACES</option>
+                                            <option value="2" data-i18n="2-places">2 PLACES</option>
+                                            <option value="3" data-i18n="3-places">3 PLACES</option>
+                                            <option value="4" data-i18n="4-places">4 PLACES</option>
                                         </select>
                                     </div>
                                 </div>
@@ -1353,13 +1353,13 @@
                                                 autocomplete="new-password"
                                                 class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                             <button type="button" onclick="toggleApiKeyVisibility()" class="absolute right-2 top-2 text-white hover:text-gray-300">
-                                                <span id="api-key-toggle-icon" class="text-xs">SHOW</span>
+                                                <span id="api-key-toggle-icon" class="text-xs" data-i18n="show">SHOW</span>
                                             </button>
                                         </div>
                                         <div class="flex justify-between mt-2">
-                                            <p class="text-xs text-gray-400">ENCRYPTED LOCAL STORAGE</p>
+                                            <p class="text-xs text-gray-400" data-i18n="encrypted-local-storage">ENCRYPTED LOCAL STORAGE</p>
                                             <button type="button" onclick="testApiKey()" class="text-xs text-white hover:bg-white hover:text-black px-2 py-1 border border-white" data-i18n="test-connection">
-                                                TEST CONNECTION
+                                                <span data-i18n="test-connection">TEST CONNECTION</span>
                                             </button>
                                         </div>
                                     </div>
@@ -1388,7 +1388,7 @@
 
                                     <div>
                                         <label class="flex items-center justify-between py-2 border border-white hover:bg-white hover:text-black px-2 cursor-pointer">
-                                            <span class="text-xs font-mono">ENABLE AI SIGNALS</span>
+                                            <span class="text-xs font-mono" data-i18n="enable-ai-signals">ENABLE AI SIGNALS</span>
                                             <input type="checkbox" id="ai-signals-enabled" checked class="bg-black border-white">
                                         </label>
                                     </div>
@@ -1412,7 +1412,7 @@
                                     </div>
                                     
                                     <div class="flex justify-between py-2 border-b border-gray-600">
-                                        <span class="text-xs font-mono">MODEL</span>
+                                        <span class="text-xs font-mono" data-i18n="model">MODEL</span>
                                         <span id="current-model" class="text-xs font-mono">NONE</span>
                                     </div>
                                     
@@ -1422,7 +1422,7 @@
                                     </div>
                                     
                                     <div class="flex justify-between py-2">
-                                        <span class="text-xs font-mono">SUCCESS RATE</span>
+                                        <span class="text-xs font-mono" data-i18n="success-rate-label">SUCCESS RATE</span>
                                         <span id="ai-success-rate" class="text-xs font-mono">0%</span>
                                     </div>
                                 </div>
@@ -1447,11 +1447,11 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                             <!-- Trading Platforms -->
                             <div class="border border-white p-4">
-                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">TRADING PLATFORMS</div>
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2" data-i18n="trading-platforms">TRADING PLATFORMS</div>
                                 
                                 <!-- Binance Configuration -->
                                 <div class="mb-6">
-                                    <div class="text-xs font-mono text-white mb-2">BINANCE</div>
+                                    <div class="text-xs font-mono text-white mb-2" data-i18n="binance">BINANCE</div>
                                     <div class="space-y-2">
                                         <input 
                                             type="password" 
@@ -1476,7 +1476,7 @@
 
                                 <!-- OKX Configuration -->
                                 <div class="mb-6">
-                                    <div class="text-xs font-mono text-white mb-2">OKX</div>
+                                    <div class="text-xs font-mono text-white mb-2" data-i18n="okx">OKX</div>
                                     <div class="space-y-2">
                                         <input 
                                             type="password" 
@@ -1519,8 +1519,8 @@
                                             placeholder="Alpaca Secret Key"
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                         <select id="alpaca-environment" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
-                                            <option value="paper">PAPER TRADING</option>
-                                            <option value="live">LIVE TRADING</option>
+                                            <option value="paper" data-i18n="paper-trading">PAPER TRADING</option>
+                                            <option value="live" data-i18n="live-trading">LIVE TRADING</option>
                                         </select>
                                         <div class="flex gap-2">
                                             <button onclick="testAlpacaConnection()" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
@@ -1535,7 +1535,7 @@
 
                                 <!-- Interactive Brokers Configuration -->
                                 <div class="mb-6">
-                                    <div class="text-xs font-mono text-white mb-2">INTERACTIVE BROKERS (GLOBAL)</div>
+                                    <div class="text-xs font-mono text-white mb-2" data-i18n="interactive-brokers-global">INTERACTIVE BROKERS (GLOBAL)</div>
                                     <div class="space-y-2">
                                         <input 
                                             type="text" 
@@ -1586,8 +1586,8 @@
                                             placeholder="Coinbase Pro Passphrase"
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                         <select id="coinbase-environment" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
-                                            <option value="sandbox">SANDBOX</option>
-                                            <option value="live">LIVE TRADING</option>
+                                            <option value="sandbox" data-i18n="sandbox">SANDBOX</option>
+                                            <option value="live" data-i18n="live-trading">LIVE TRADING</option>
                                         </select>
                                         <div class="flex gap-2">
                                             <button onclick="testCoinbaseConnection()" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
@@ -1674,7 +1674,7 @@
 
                             <!-- Platform Status and Data Sources -->
                             <div class="border border-white p-4">
-                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">PLATFORM STATUS</div>
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2" data-i18n="platform-status">PLATFORM STATUS</div>
                                 
                                 <div class="space-y-4">
                                     <!-- Trading Platform Status -->
@@ -1790,15 +1790,15 @@
                     <!-- Backtest Tab -->
                     <div id="settings-backtest" class="settings-tab-content hidden">
                         <div class="border border-white p-4">
-                            <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">STRATEGY BACKTESTING</div>
+                            <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2" data-i18n="strategy-backtesting">STRATEGY BACKTESTING</div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs font-mono text-white mb-2">STRATEGY</label>
+                                    <label class="block text-xs font-mono text-white mb-2" data-i18n="strategy">STRATEGY</label>
                                     <select id="backtest-strategy" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
-                                        <option value="momentum">MOMENTUM</option>
-                                        <option value="mean_reversion">MEAN REVERSION</option>
-                                        <option value="breakout">BREAKOUT</option>
+                                        <option value="momentum" data-i18n="momentum">MOMENTUM</option>
+                                        <option value="mean_reversion" data-i18n="mean-reversion">MEAN REVERSION</option>
+                                        <option value="breakout" data-i18n="breakout">BREAKOUT</option>
                                     </select>
                                 </div>
                                 
@@ -1843,11 +1843,11 @@
                         <!-- Services Health Overview -->
                         <div class="border border-white p-4 mb-6">
                             <div class="flex items-center justify-between mb-4 border-b border-white pb-2">
-                                <div class="text-xs font-mono text-white">SERVICES HEALTH</div>
+                                <div class="text-xs font-mono text-white" data-i18n="services-health">SERVICES HEALTH</div>
                                 <div class="flex items-center space-x-4">
                                     <div id="overall-health" class="text-xs font-mono text-green-400">95.2%</div>
                                     <button onclick="performFullHealthCheck()" class="px-2 py-1 border border-white text-white text-xs font-mono hover:bg-white hover:text-black transition-colors">
-                                        CHECK ALL
+                                        <span data-i18n="check-all">CHECK ALL</span>
                                     </button>
                                 </div>
                             </div>
@@ -1859,7 +1859,7 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <!-- Data Sources -->
                             <div class="border border-white p-4">
-                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">DATA SOURCES</div>
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2" data-i18n="data-sources">DATA SOURCES</div>
                                 
                                 <!-- Yahoo Finance -->
                                 <div class="mb-4">
@@ -1868,7 +1868,7 @@
                                         <span id="yahoo-status" class="text-xs font-mono text-green-400">CONNECTED</span>
                                     </div>
                                     <button onclick="testDataSourceConnection('yahoo_finance')" class="w-full bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
-                                        TEST CONNECTION
+                                        <span data-i18n="test-connection">TEST CONNECTION</span>
                                     </button>
                                 </div>
 
@@ -1886,7 +1886,7 @@
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                         <div class="flex space-x-2">
                                             <button onclick="configureTushare()" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
-                                                CONFIGURE
+                                                <span data-i18n="configure">CONFIGURE</span>
                                             </button>
                                             <button onclick="testDataSourceConnection('tushare')" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
                                                 TEST
@@ -1902,14 +1902,14 @@
                                         <span id="akshare-status" class="text-xs font-mono text-green-400">ENABLED</span>
                                     </div>
                                     <button onclick="testDataSourceConnection('akshare')" class="w-full bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
-                                        TEST CONNECTION
+                                        <span data-i18n="test-connection">TEST CONNECTION</span>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Trading Platforms -->
                             <div class="border border-white p-4">
-                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">TRADING PLATFORMS</div>
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2" data-i18n="trading-platforms">TRADING PLATFORMS</div>
                                 
                                 <!-- Alpaca -->
                                 <div class="mb-4">
@@ -1930,7 +1930,7 @@
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                         <div class="flex space-x-2">
                                             <button onclick="configureAlpaca()" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
-                                                CONFIGURE
+                                                <span data-i18n="configure">CONFIGURE</span>
                                             </button>
                                             <button onclick="testTradingPlatformConnection('alpaca')" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
                                                 TEST
@@ -1958,7 +1958,7 @@
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                         <div class="flex space-x-2">
                                             <button onclick="configureBinanceNew()" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
-                                                CONFIGURE
+                                                <span data-i18n="configure">CONFIGURE</span>
                                             </button>
                                             <button onclick="testCryptoExchangeConnection('binance')" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
                                                 TEST
@@ -1972,7 +1972,7 @@
                         <!-- AI Services -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                             <div class="border border-white p-4">
-                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">AI SERVICES</div>
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2" data-i18n="ai-services">AI SERVICES</div>
                                 
                                 <!-- OpenAI -->
                                 <div class="mb-4">
@@ -1988,7 +1988,7 @@
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                         <div class="flex space-x-2">
                                             <button onclick="configureOpenAI()" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
-                                                CONFIGURE
+                                                <span data-i18n="configure">CONFIGURE</span>
                                             </button>
                                             <button onclick="testAIServiceConnection('openai')" class="flex-1 bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
                                                 TEST
@@ -2000,7 +2000,7 @@
 
                             <!-- Database Services -->
                             <div class="border border-white p-4">
-                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">DATABASE SERVICES</div>
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2" data-i18n="database-services">DATABASE SERVICES</div>
                                 
                                 <!-- Redis -->
                                 <div class="mb-4">
@@ -2009,7 +2009,7 @@
                                         <span id="redis-status" class="text-xs font-mono text-green-400">CONNECTED</span>
                                     </div>
                                     <button onclick="testDatabaseConnection('redis')" class="w-full bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
-                                        TEST CONNECTION
+                                        <span data-i18n="test-connection">TEST CONNECTION</span>
                                     </button>
                                 </div>
 
@@ -2020,7 +2020,7 @@
                                         <span id="postgresql-status" class="text-xs font-mono text-green-400">CONNECTED</span>
                                     </div>
                                     <button onclick="testDatabaseConnection('postgresql')" class="w-full bg-black text-white border border-white py-1 text-xs font-mono hover:bg-white hover:text-black transition-colors">
-                                        TEST CONNECTION
+                                        <span data-i18n="test-connection">TEST CONNECTION</span>
                                     </button>
                                 </div>
                             </div>
@@ -2314,10 +2314,10 @@
             
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.textContent = 'HIDE';
+                icon.textContent = window.t('hide');
             } else {
                 input.type = 'password';
-                icon.textContent = 'SHOW';
+                icon.textContent = window.t('show');
             }
         }
 
@@ -2535,6 +2535,15 @@
                 'tushare-config': '数据源配置',
                 'backtest-tab': '回测',
                 'services-config': '服务管理',
+                'services-health': '服务健康状况',
+                'services-health-check': '健康检查',
+                'overall-health': '整体健康状况',
+                'check-all': '检查全部',
+                'data-sources': '数据源',
+                'trading-platforms': '交易平台',
+                'crypto-exchanges': '加密货币交易所',
+                'ai-services': '人工智能服务',
+                'database-services': '数据库服务',
                 'indicators-tab': '技术指标',
                 'system-config': '系统配置',
                 'api-key': 'API密钥',
@@ -2542,6 +2551,7 @@
                 'model-selection': '模型选择',
                 'temperature': '生成温度',
                 'test-connection': '测试连接',
+                'configure': '配置',
                 'save-config': '保存配置',
                 'config-saved': '配置已保存',
                 'config-failed': '配置失败',
@@ -2567,6 +2577,93 @@
                 'api-status': 'API状态',
                 'not-configured': '未配置',
                 'configured': '已配置',
+                'active': '活跃',
+                'inactive': '未激活', 
+                'enabled': '已启用',
+                'disabled': '已禁用',
+                'online': '在线',
+                'offline': '离线',
+                'loading': '加载中...',
+                'error': '错误',
+                'success': '成功',
+                'failed': '失败',
+                'pending': '待处理',
+                'available': '可用',
+                'unavailable': '不可用',
+                
+                // 全局市场指数
+                'nasdaq': '纳斯达克',
+                'dow': '道琼斯',
+                
+                // 系统配置
+                'refresh-interval': '刷新间隔',
+                'auto-refresh': '自动刷新',
+                'sound-alerts': '声音提醒',
+                'notifications': '通知',
+                'display-settings': '显示设置',
+                'time-format': '时间格式',
+                'decimal-places': '小数位数',
+                'language-setting': '语言设置',
+                'chinese': '中文',
+                'english': '英文',
+                'show': '显示',
+                'hide': '隐藏',
+                'encrypted-local-storage': '加密本地存储',
+                'enable-ai-signals': '启用AI信号',
+                'model': '模型',
+                
+                // 时间格式选项
+                '24h-format': '24小时制',
+                '12h-format': '12小时制',
+                
+                // 小数位数选项
+                '2-places': '2位小数',
+                '3-places': '3位小数', 
+                '4-places': '4位小数',
+                
+                // 刷新间隔选项
+                '5-sec': '5秒',
+                '10-sec': '10秒',
+                '30-sec': '30秒',
+                '60-sec': '60秒',
+                
+                // 交易平台
+                'binance': '币安',
+                'okx': 'OKX',
+                'interactive-brokers': '盈透证券',
+                'interactive-brokers-global': '盈透证券(全球)',
+                'coinbase-pro': 'Coinbase Pro',
+                'kraken': 'Kraken',
+                'alpaca': 'Alpaca',
+                'yahoo-finance': '雅虎财经',
+                'akshare': 'AKShare',
+                'tushare': 'Tushare',
+                'quandl': 'Quandl',
+                'alpha-vantage': 'Alpha Vantage',
+                'iex-cloud': 'IEX Cloud',
+                
+                // 交易选项
+                'paper-trading': '模拟交易',
+                'live-trading': '实盘交易',
+                'sandbox': '沙箱环境',
+                'testnet': '测试网络',
+                
+                // 平台状态
+                'platform-status': '平台状态',
+                'trading-platforms': '交易平台',
+                'data-sources': '数据源',
+                
+                // 策略回测
+                'strategy-backtesting': '策略回测',
+                'strategy': '策略',
+                'momentum': '动量策略',
+                'mean-reversion': '均值回归',
+                'breakout': '突破策略',
+                'initial-capital': '初始资金',
+                'symbols': '股票代码',
+                'period': '周期',
+                'backtest-results': '回测结果',
+                'success-rate-label': '成功率',
                 
                 // 图表
                 'volume-trend': '成交量趋势',
@@ -3018,6 +3115,15 @@
                 'tushare-config': 'DATA SOURCE',
                 'backtest-tab': 'BACKTEST',
                 'services-config': 'SERVICES',
+                'services-health': 'SERVICES HEALTH',
+                'services-health-check': 'HEALTH CHECK',
+                'overall-health': 'OVERALL HEALTH',
+                'check-all': 'CHECK ALL',
+                'data-sources': 'DATA SOURCES',
+                'trading-platforms': 'TRADING PLATFORMS', 
+                'crypto-exchanges': 'CRYPTO EXCHANGES',
+                'ai-services': 'AI SERVICES',
+                'database-services': 'DATABASE SERVICES',
                 'indicators-tab': 'INDICATORS',
                 'system-config': 'SYSTEM CONFIGURATION',
                 'api-key': 'API KEY',
@@ -3025,11 +3131,99 @@
                 'model-selection': 'MODEL',
                 'temperature': 'TEMPERATURE',
                 'test-connection': 'TEST',
+                'configure': 'CONFIGURE',
                 'save-config': 'SAVE CONFIG',
                 'config-saved': 'CONFIGURATION SAVED',
                 'config-failed': 'CONFIGURATION FAILED',
                 'api-status': 'API STATUS',
                 'not-configured': 'NOT CONFIGURED',
+                'configured': 'CONFIGURED',
+                'active': 'ACTIVE',
+                'inactive': 'INACTIVE',
+                'enabled': 'ENABLED',
+                'disabled': 'DISABLED',
+                'online': 'ONLINE',
+                'offline': 'OFFLINE',
+                'loading': 'LOADING',
+                'error': 'ERROR',
+                'success': 'SUCCESS',
+                'failed': 'FAILED',
+                'pending': 'PENDING',
+                'available': 'AVAILABLE',
+                'unavailable': 'UNAVAILABLE',
+                
+                // Global Market Indices
+                'nasdaq': 'NASDAQ',
+                'dow': 'DOW',
+                
+                // System Configuration
+                'refresh-interval': 'REFRESH INTERVAL',
+                'auto-refresh': 'AUTO REFRESH',
+                'sound-alerts': 'SOUND ALERTS',
+                'notifications': 'NOTIFICATIONS',
+                'display-settings': 'DISPLAY SETTINGS',
+                'time-format': 'TIME FORMAT',
+                'decimal-places': 'DECIMAL PLACES',
+                'language-setting': 'LANGUAGE',
+                'chinese': 'Chinese',
+                'english': 'English',
+                'show': 'SHOW',
+                'hide': 'HIDE',
+                'encrypted-local-storage': 'ENCRYPTED LOCAL STORAGE',
+                'enable-ai-signals': 'ENABLE AI SIGNALS',
+                'model': 'MODEL',
+                
+                // Time Format Options
+                '24h-format': '24H FORMAT',
+                '12h-format': '12H FORMAT',
+                
+                // Decimal Places Options
+                '2-places': '2 PLACES',
+                '3-places': '3 PLACES', 
+                '4-places': '4 PLACES',
+                
+                // Refresh Interval Options
+                '5-sec': '5 SEC',
+                '10-sec': '10 SEC',
+                '30-sec': '30 SEC',
+                '60-sec': '60 SEC',
+                
+                // Trading Platforms
+                'binance': 'BINANCE',
+                'okx': 'OKX',
+                'interactive-brokers': 'INTERACTIVE BROKERS',
+                'interactive-brokers-global': 'INTERACTIVE BROKERS (GLOBAL)',
+                'coinbase-pro': 'COINBASE PRO',
+                'kraken': 'KRAKEN',
+                'alpaca': 'ALPACA',
+                'yahoo-finance': 'YAHOO FINANCE',
+                'akshare': 'AKSHARE',
+                'tushare': 'TUSHARE',
+                'quandl': 'QUANDL',
+                'alpha-vantage': 'ALPHA VANTAGE',
+                'iex-cloud': 'IEX CLOUD',
+                
+                // Trading Options
+                'paper-trading': 'PAPER TRADING',
+                'live-trading': 'LIVE TRADING',
+                'sandbox': 'SANDBOX',
+                'testnet': 'TESTNET',
+                
+                // Platform Status
+                'platform-status': 'PLATFORM STATUS',
+                'trading-platforms': 'TRADING PLATFORMS',
+                
+                // Strategy Backtesting
+                'strategy-backtesting': 'STRATEGY BACKTESTING',
+                'strategy': 'STRATEGY',
+                'momentum': 'MOMENTUM',
+                'mean-reversion': 'MEAN REVERSION',
+                'breakout': 'BREAKOUT',
+                'initial-capital': 'INITIAL CAPITAL',
+                'symbols': 'SYMBOLS',
+                'period': 'PERIOD',
+                'backtest-results': 'BACKTEST RESULTS',
+                'success-rate-label': 'SUCCESS RATE',
                 
                 // AI model options
                 'deepseek-chat': 'DeepSeek Chat',
@@ -7992,7 +8186,7 @@
             const originalText = refreshBtn.innerHTML;
             
             // 显示加载状态
-            refreshBtn.innerHTML = '[LOADING] 刷新中...';
+            refreshBtn.innerHTML = `[${window.t('loading')}] 刷新中...`;
             refreshBtn.disabled = true;
             refreshBtn.classList.add('opacity-70');
             
@@ -8136,15 +8330,38 @@
             try {
                 showToast('🔄 正在执行全面健康检查...', 'info');
                 
-                const response = await fetch(`${API_BASE_URL}/api/services/health-check`, {
-                    method: 'POST'
-                });
-                const result = await response.json();
+                // 尝试使用增强健康检查
+                let response;
+                let result;
+                let enhanced = false;
+                
+                try {
+                    response = await fetch(`${API_BASE_URL}/api/services/enhanced-health-check`, {
+                        method: 'POST'
+                    });
+                    result = await response.json();
+                    enhanced = result.enhanced || false;
+                } catch (enhancedError) {
+                    console.warn('⚠️ 增强健康检查不可用，使用标准健康检查');
+                    // 回退到标准健康检查
+                    response = await fetch(`${API_BASE_URL}/api/services/health-check`, {
+                        method: 'POST'
+                    });
+                    result = await response.json();
+                }
                 
                 if (result.status === 'success') {
-                    updateOverallHealth(result.overall_health_percentage);
-                    updateServicesStatusGrid(result.results);
-                    showToast(`✅ 健康检查完成: ${result.healthy_services}/${result.total_services} 服务正常`, 'success');
+                    if (enhanced) {
+                        // 使用增强结果
+                        updateOverallHealth(result.health_percentage);
+                        updateEnhancedServicesDisplay(result);
+                        showToast(`✅ 增强健康检查完成: ${result.healthy_services}/${result.total_services} 服务正常 (${result.health_percentage}%)`, 'success');
+                    } else {
+                        // 使用标准结果
+                        updateOverallHealth(result.overall_health_percentage);
+                        updateServicesStatusGrid(result.results);
+                        showToast(`✅ 健康检查完成: ${result.healthy_services}/${result.total_services} 服务正常`, 'success');
+                    }
                 } else {
                     showToast('❌ 健康检查失败', 'error');
                 }
@@ -8152,6 +8369,40 @@
             } catch (error) {
                 console.error('❌ 健康检查失败:', error);
                 showToast('❌ 健康检查失败', 'error');
+            }
+        }
+        
+        // 更新增强服务状态显示
+        function updateEnhancedServicesDisplay(results) {
+            const gridElement = document.getElementById('services-status-grid');
+            if (!gridElement) return;
+            
+            gridElement.innerHTML = '';
+            
+            // 按类别显示服务状态
+            for (const [category, categoryData] of Object.entries(results.categories || {})) {
+                // 创建类别标题
+                const categoryTitle = document.createElement('div');
+                categoryTitle.className = 'col-span-full text-xs font-mono text-white border-b border-white pb-1 mb-2';
+                categoryTitle.textContent = `${category.toUpperCase()} (${categoryData.healthy}/${categoryData.total})`;
+                gridElement.appendChild(categoryTitle);
+                
+                // 显示该类别下的服务
+                for (const [serviceName, status] of Object.entries(categoryData.services || {})) {
+                    const serviceCard = document.createElement('div');
+                    const connected = status.is_healthy;
+                    const statusColor = connected ? 'text-green-400' : 'text-red-400';
+                    
+                    serviceCard.className = 'border border-white p-2 text-center';
+                    serviceCard.innerHTML = `
+                        <div class="text-xs font-mono text-white">${serviceName.replace('_', ' ').toUpperCase()}</div>
+                        <div class="text-xs font-mono ${statusColor}">${connected ? window.t('online') : window.t('error')}</div>
+                        ${status.response_time_ms ? `<div class="text-xs font-mono text-gray-400">${Math.round(status.response_time_ms)}ms</div>` : ''}
+                        ${status.error_message ? `<div class="text-xs font-mono text-red-400" title="${status.error_message}">!</div>` : ''}
+                    `;
+                    
+                    gridElement.appendChild(serviceCard);
+                }
             }
         }
         
@@ -8186,7 +8437,7 @@
                     serviceCard.className = 'border border-white p-2 text-center';
                     serviceCard.innerHTML = `
                         <div class="text-xs font-mono text-white">${serviceName.toUpperCase()}</div>
-                        <div class="text-xs font-mono ${statusColor}">${connected ? 'OK' : 'ERROR'}</div>
+                        <div class="text-xs font-mono ${statusColor}">${connected ? window.t('online') : window.t('error')}</div>
                         ${status.response_time_ms ? `<div class="text-xs font-mono text-gray-400">${status.response_time_ms}ms</div>` : ''}
                     `;
                     
@@ -8215,11 +8466,11 @@
                 const statusElement = document.getElementById(`${serviceName.replace('_', '-')}-status`);
                 if (statusElement) {
                     if (result.connected) {
-                        statusElement.textContent = 'CONNECTED';
+                        statusElement.textContent = window.t('connected');
                         statusElement.className = 'text-xs font-mono text-green-400';
                         showToast(`✅ ${serviceName} 连接成功`, 'success');
                     } else {
-                        statusElement.textContent = 'ERROR';
+                        statusElement.textContent = window.t('error');
                         statusElement.className = 'text-xs font-mono text-red-400';
                         showToast(`❌ ${serviceName} 连接失败: ${result.error}`, 'error');
                     }
@@ -8320,11 +8571,11 @@
             const statusElement = document.getElementById(`${serviceName.replace('_', '-')}-status`);
             if (statusElement) {
                 if (connected) {
-                    statusElement.textContent = 'CONNECTED';
+                    statusElement.textContent = window.t('connected');
                     statusElement.className = 'text-xs font-mono text-green-400';
                     showToast(`✅ ${serviceName} 连接成功`, 'success');
                 } else {
-                    statusElement.textContent = 'ERROR';
+                    statusElement.textContent = window.t('error');
                     statusElement.className = 'text-xs font-mono text-red-400';
                     showToast(`❌ ${serviceName} 连接失败: ${error || '未知错误'}`, 'error');
                 }
@@ -8492,7 +8743,7 @@
                 });
 
                 if (response.ok) {
-                    document.getElementById('binance-status').textContent = 'CONFIGURED';
+                    document.getElementById('binance-status').textContent = window.t('configured');
                     document.getElementById('binance-status').className = 'text-yellow-400';
                     showToast('✅ Binance配置保存成功', 'success');
                 } else {
@@ -8567,7 +8818,7 @@
                 });
 
                 if (response.ok) {
-                    document.getElementById('okx-status').textContent = 'CONFIGURED';
+                    document.getElementById('okx-status').textContent = window.t('configured');
                     document.getElementById('okx-status').className = 'text-yellow-400';
                     showToast('✅ OKX配置保存成功', 'success');
                 } else {
@@ -8710,7 +8961,7 @@
                     ['binance', 'okx', 'alpaca'].forEach(platform => {
                         const statusElement = document.getElementById(`${platform}-status`);
                         if (statusElement) {
-                            statusElement.textContent = 'NOT CONFIGURED';
+                            statusElement.textContent = window.t('not-configured');
                             statusElement.className = 'text-gray-400';
                         }
                     });
@@ -8722,13 +8973,13 @@
                             const config = platforms[platform];
                             
                             if (config.test_status === '测试成功') {
-                                statusElement.textContent = 'CONNECTED';
+                                statusElement.textContent = window.t('connected');
                                 statusElement.className = 'text-green-400';
                             } else if (config.configured) {
-                                statusElement.textContent = 'CONFIGURED';
+                                statusElement.textContent = window.t('configured');
                                 statusElement.className = 'text-yellow-400';
                             } else {
-                                statusElement.textContent = 'ERROR';
+                                statusElement.textContent = window.t('error');
                                 statusElement.className = 'text-red-400';
                             }
                             
@@ -8947,13 +9198,13 @@
                     console.log(`🔍 Testing service ${def.key} at:`, testUrl);
                     const response = await fetch(testUrl);
                     if (response.ok) {
-                        updateSingleServiceStatus(def.statusId, 'ONLINE', 'text-green-400');
+                        updateSingleServiceStatus(def.statusId, window.t('online'), 'text-green-400');
                     } else {
                         updateSingleServiceStatus(def.statusId, `ERR ${response.status}`, 'text-red-400');
                     }
                 } catch (error) {
                     console.error(`测试服务失败 ${def.key}:`, error);
-                    updateSingleServiceStatus(def.statusId, 'OFFLINE', 'text-red-400');
+                    updateSingleServiceStatus(def.statusId, window.t('offline'), 'text-red-400');
                 }
             }
 
@@ -11492,10 +11743,10 @@
                     const tushareStatus = document.getElementById('tushare-status');
                     if (tushareStatus) {
                         if (config.tushare_enabled) {
-                            tushareStatus.textContent = 'CONFIGURED';
+                            tushareStatus.textContent = window.t('configured');
                             tushareStatus.className = 'text-green-400';
                         } else {
-                            tushareStatus.textContent = 'NOT CONFIGURED';
+                            tushareStatus.textContent = window.t('not-configured');
                             tushareStatus.className = 'text-gray-400';
                         }
                     }
@@ -12264,7 +12515,7 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('ib-status').textContent = 'CONFIGURED';
+                    document.getElementById('ib-status').textContent = window.t('configured');
                     document.getElementById('ib-status').className = 'text-green-400';
                     showToast('✅ Interactive Brokers配置已保存', 'success');
                     localStorage.setItem('ib-config', JSON.stringify(config));
@@ -12340,7 +12591,7 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('coinbase-status').textContent = 'CONFIGURED';
+                    document.getElementById('coinbase-status').textContent = window.t('configured');
                     document.getElementById('coinbase-status').className = 'text-green-400';
                     showToast('✅ Coinbase Pro配置已保存', 'success');
                     
@@ -12412,7 +12663,7 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('kraken-status').textContent = 'CONFIGURED';
+                    document.getElementById('kraken-status').textContent = window.t('configured');
                     document.getElementById('kraken-status').className = 'text-green-400';
                     showToast('✅ Kraken配置已保存', 'success');
                     
@@ -12481,7 +12732,7 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('cmc-status').textContent = 'CONFIGURED';
+                    document.getElementById('cmc-status').textContent = window.t('configured');
                     document.getElementById('cmc-status').className = 'text-green-400';
                     showToast('✅ CoinMarketCap配置已保存', 'success');
                     

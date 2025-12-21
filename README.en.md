@@ -49,15 +49,17 @@ Welcome to join our Discord community to share feedback and issues you encounter
 ## Key Features
 - **AI-Powered Quantitative Strategies** – Integrated DeepSeek AI models for intelligent trading signal generation, supporting multiple quant strategies (Bayesian Momentum, Kelly Optimization, Risk Parity)
 - **Professional Trading Interface** – Bloomberg-style dark theme UI with real-time position display, P&L tracking, risk metrics, and trading signals
-- **Multi-language Support** – Complete Chinese/English interface switching for global user experience
+- **Complete Internationalization Support** – Perfect Chinese/English interface switching with all service and interface text fully managed using key-value pairs, no hardcoded strings
 - **Smart Position Management** – Position Manager provides real-time portfolio monitoring, P&L analysis, one-click portfolio clearing, and data export capabilities
-- **Dual Market Data Feeds** – Yahoo Finance (global) and AkShare (A-shares) out of the box; Tushare Pro integration for enhanced China market data
+- **Comprehensive Platform Service Monitoring** – Integrated service health monitoring system with real-time tracking of 25+ external APIs and data source connection status
+- **Multi-Source Intelligent Data Aggregation** – Support for Yahoo Finance, AkShare, Tushare Pro, Binance, Kraken and other data sources with intelligent switching and failover
 - **Intelligent Stock Search** – Fuzzy search for CN/US stocks with real-time pricing, sector filtering, and market cap categorization
 - **Full Strategy Pipeline** – Integrated QuantEngine, risk engine, and portfolio services supporting strategy backtesting and live execution
 - **iOS Mobile Integration** – Swift SDK support with WebSocket real-time data streaming for seamless mobile trading experience
-- **Machine Learning Models** – LightGBM trained models for price prediction supporting both A-share and US markets
-- **Secure Configuration Management** – Encrypted API key storage with local data protection for sensitive information
+- **Machine Learning Models** – LightGBM trained models for price prediction supporting both A-share and US markets with real-time model health checking
+- **Enterprise-Grade Secure Configuration Management** – 24+ platform API key security configuration, local data protection for sensitive information, professional credential management
 - **Real-time Risk Monitoring** – Professional risk metrics including VaR calculations, Sharpe ratio, and maximum drawdown tracking
+- **Comprehensive Service Connection Testing** – Support for connection status detection and fault diagnosis of data sources, trading platforms, AI services, and machine learning models
 
 ## Architecture
 ```
@@ -87,8 +89,8 @@ UI → FastAPI Gateway (8000)
 ### Option 1: One-Click Launch (Recommended)
 ```bash
 # 1. Clone the project
-git clone https://gitlab.com/arthera/quant-lab.git
-cd quant-lab
+git clone https://github.com/Cinsoul/Arthera-Quant-Lab.git
+cd TradingEngine
 
 # 2. Initialize environment
 ./scripts/bootstrap.sh      # create virtual environment and install dependencies
@@ -262,6 +264,24 @@ docker-compose logs --tail=100 api-gateway
 | `POSTGRES_URL` | PostgreSQL database connection string | `postgresql://arthera:arthera123@localhost:5432/trading_engine` |
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
 | `DEMO_MODE` | Demo mode toggle | `true` |
+
+## New Features
+
+### 🌐 Complete Internationalization System
+- **Chinese/English Interface Switching**: Support for real-time language switching with no interface delay
+- **Service Text Internationalization**: All service statuses, error messages, and API responses fully multilingual
+- **No Hardcoded Text**: Removed all hardcoded strings, using key-value pairs to manage all display text
+
+### 🔍 Enterprise-Level Service Monitoring
+- **Comprehensive Health Checks**: Real-time monitoring of 25+ external service connection statuses
+- **Intelligent Failover**: Multi-source automatic switching and error recovery
+- **Performance Monitoring**: Average response time, health percentage, and service category statistics
+- **Connection Testing**: Support for API, WebSocket, and database connection testing
+
+### 🔐 Professional Configuration Management
+- **Secure Credential Management**: Support for 24+ trading platforms and data source configurations
+- **Layered Configuration System**: Complete configuration for data sources, trading platforms, AI services, and notification services
+- **Encrypted Key Protection**: Sensitive information locally encrypted storage, secure production environment deployment
 
 ## Core APIs
 

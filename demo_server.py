@@ -51,6 +51,14 @@ except ImportError:
     ERROR_HANDLING_ENABLED = False
     error_handler = None
 
+# 导入增强健康监控系统
+try:
+    from service_health_monitor import health_monitor
+    HEALTH_MONITORING_ENABLED = True
+except ImportError:
+    HEALTH_MONITORING_ENABLED = False
+    health_monitor = None
+
 # 导入服务配置管理器
 try:
     from service_config_manager import service_config_manager
@@ -9475,6 +9483,112 @@ async def get_enabled_services(category: str):
     except Exception as e:
         logger.error(f"❌ 获取已启用服务失败: {e}")
         raise HTTPException(status_code=500, detail=f"获取已启用服务失败: {str(e)}")
+
+@app.post("/api/services/enhanced-health-check")
+async def enhanced_health_check():
+    """增强的全面健康检查"""
+    try:
+        if not HEALTH_MONITORING_ENABLED or not health_monitor:
+            # 如果增强监控不可用，回退到基本健康检查
+            logger.warning("⚠️ 增强健康监控不可用，使用基本健康检查")
+            return await perform_services_health_check()
+        
+        logger.info("🔄 开始增强健康检查...")
+        results = await health_monitor.comprehensive_health_check()
+        
+        return {
+            "status": "success",
+            "enhanced": True,
+            "monitoring_enabled": True,
+            **results
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ 增强健康检查失败: {e}")
+        # 回退到基本健康检查
+        try:
+            return await perform_services_health_check()
+        except Exception as fallback_error:
+            logger.error(f"❌ 回退健康检查也失败: {fallback_error}")
+            raise HTTPException(status_code=500, detail=f"健康检查失败: {str(e)}")
+
+@app.get("/api/services/connectivity-status")
+async def get_connectivity_status():
+    """获取各服务连接状态详情"""
+    try:
+        status_info = {
+            "timestamp": datetime.now().isoformat(),
+            "services": {},
+            "summary": {
+                "total_services": 0,
+                "connected_services": 0,
+                "failed_services": 0
+            }
+        }
+        
+        # 检查数据源连接
+        data_sources = {
+            "yahoo_finance": "Yahoo Finance API",
+            "akshare": "AKShare A股数据",
+            "tushare": "Tushare专业版",
+            "binance": "Binance API",
+            "kraken": "Kraken API"
+        }
+        
+        total_services = 0
+        connected_services = 0
+        
+        for service_key, service_name in data_sources.items():
+            total_services += 1
+            try:
+                if service_key == "yahoo_finance":
+                    # 测试Yahoo Finance
+                    import yfinance as yf
+                    ticker = yf.Ticker("AAPL")
+                    info = ticker.info
+                    connected = info is not None and 'symbol' in info
+                elif service_key == "akshare":
+                    # 测试AKShare
+                    import akshare as ak
+                    data = ak.stock_zh_a_spot_em()
+                    connected = data is not None and not data.empty
+                elif service_key == "binance":
+                    # 测试Binance API
+                    import requests
+                    response = requests.get("https://api.binance.com/api/v3/ping", timeout=5)
+                    connected = response.status_code == 200
+                else:
+                    connected = False
+                
+                if connected:
+                    connected_services += 1
+                
+                status_info["services"][service_key] = {
+                    "name": service_name,
+                    "connected": connected,
+                    "last_check": datetime.now().isoformat()
+                }
+                
+            except Exception as e:
+                status_info["services"][service_key] = {
+                    "name": service_name,
+                    "connected": False,
+                    "error": str(e),
+                    "last_check": datetime.now().isoformat()
+                }
+        
+        status_info["summary"].update({
+            "total_services": total_services,
+            "connected_services": connected_services,
+            "failed_services": total_services - connected_services,
+            "connectivity_percentage": round((connected_services / total_services) * 100, 1) if total_services > 0 else 0
+        })
+        
+        return status_info
+        
+    except Exception as e:
+        logger.error(f"❌ 获取连接状态失败: {e}")
+        raise HTTPException(status_code=500, detail=f"获取连接状态失败: {str(e)}")
 
 if __name__ == "__main__":
     print("🚀 启动Arthera量化交易演示系统...")
