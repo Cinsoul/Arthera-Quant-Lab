@@ -182,3 +182,15 @@ coverage.xml
 \#*#
 .*.swp
 .*.swo
+# AI配置文件 - 包含API密钥，不应提交
+ai_providers_config.json
+user_config.json
+config/ai_agents_config.json
+config/crypto_exchanges_config.json
+
+# 临时和测试文件
+temp_*.py
+test_*.py
+*.new
+commit_message.txt
+

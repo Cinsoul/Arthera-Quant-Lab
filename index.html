@@ -1368,10 +1368,8 @@
                                         <div>
                                             <label class="block text-xs font-mono text-white mb-2" data-i18n="model-selection">MODEL</label>
                                             <select id="deepseek-model" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
-                                                <option value="deepseek-chat" data-i18n="deepseek-chat">DeepSeek Chat</option>
+                                                <option value="deepseek-chat" selected data-i18n="deepseek-chat">DeepSeek Chat (Recommended)</option>
                                                 <option value="deepseek-coder" data-i18n="deepseek-coder">DeepSeek Coder</option>
-                                                <option value="deepseek-v2.5" selected data-i18n="deepseek-v25">DeepSeek V2.5 (Recommended)</option>
-                                                <option value="deepseek-v3" data-i18n="deepseek-v3">DeepSeek V3 (Latest)</option>
                                             </select>
                                         </div>
                                         
@@ -1417,7 +1415,7 @@
                                     </div>
                                     
                                     <div class="flex justify-between py-2 border-b border-gray-600">
-                                        <span class="text-xs font-mono">SIGNALS TODAY</span>
+                                        <span class="text-xs font-mono">AI RESPONSES</span>
                                         <span id="signals-today-mini" data-signal-count="true" class="text-xs font-mono">0</span>
                                     </div>
                                     
@@ -1433,6 +1431,184 @@
                                     <div class="text-xs text-gray-300 space-y-1">
                                         <p>• GET API KEY: platform.deepseek.com</p>
                                         <p>• LOWER TEMPERATURE = MORE CONSERVATIVE</p>
+                                        <p>• TEST CONNECTION BEFORE TRADING</p>
+                                        <p>• API CALLS ARE RATE LIMITED</p>
+                                    </div>
+                                </div>
+
+                                <!-- 配置提示 -->
+                                <div id="ai-config-warning" class="border border-yellow-500 bg-yellow-900/20 mt-4 p-3" style="display: none;">
+                                    <div class="text-xs font-mono text-yellow-300 mb-2">⚠️ AI未配置</div>
+                                    <div class="text-xs text-yellow-200 space-y-1">
+                                        <p>请配置至少一个AI Provider:</p>
+                                        <p>• DeepSeek (推荐)</p>
+                                        <p>• OpenAI (GPT-4)</p>
+                                        <p>• Claude (Sonnet)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- OpenAI API Configuration -->
+                            <div class="border border-white p-4">
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">OPENAI API CONFIGURATION</div>
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-mono text-white mb-2" data-i18n="api-key">API KEY</label>
+                                        <div class="relative">
+                                            <input
+                                                type="password"
+                                                id="openai-api-key"
+                                                placeholder="Enter OpenAI API Key (sk-...)"
+                                                autocomplete="new-password"
+                                                class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
+                                            <button type="button" onclick="toggleOpenAIKeyVisibility()" class="absolute right-2 top-2 text-white hover:text-gray-300">
+                                                <span id="openai-key-toggle-icon" class="text-xs" data-i18n="show">SHOW</span>
+                                            </button>
+                                        </div>
+                                        <div class="flex justify-between mt-2">
+                                            <p class="text-xs text-gray-400" data-i18n="encrypted-local-storage">ENCRYPTED LOCAL STORAGE</p>
+                                            <button type="button" onclick="testOpenAIConnection()" class="text-xs text-white hover:bg-white hover:text-black px-2 py-1 border border-white" data-i18n="test-connection">
+                                                TEST CONNECTION
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-mono text-white mb-2" data-i18n="model-selection">MODEL</label>
+                                            <select id="openai-model" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
+                                                <option value="gpt-4o">GPT-4o (Latest)</option>
+                                                <option value="gpt-4o-mini" selected>GPT-4o Mini (Recommended)</option>
+                                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-mono text-white mb-2" data-i18n="temperature">TEMPERATURE</label>
+                                            <select id="openai-temperature" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
+                                                <option value="0.1">0.1 CONSERVATIVE</option>
+                                                <option value="0.3" selected>0.3 BALANCED</option>
+                                                <option value="0.5">0.5 MODERATE</option>
+                                                <option value="0.7">0.7 AGGRESSIVE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <button onclick="saveOpenAIConfig()" class="w-full bg-black text-white border border-white py-2 text-xs font-mono hover:bg-white hover:text-black transition-colors">
+                                            SAVE OPENAI CONFIG
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Claude API Configuration -->
+                            <div class="border border-white p-4">
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">CLAUDE API CONFIGURATION</div>
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-mono text-white mb-2" data-i18n="api-key">API KEY</label>
+                                        <div class="relative">
+                                            <input
+                                                type="password"
+                                                id="claude-api-key"
+                                                placeholder="Enter Claude API Key (sk-ant-...)"
+                                                autocomplete="new-password"
+                                                class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
+                                            <button type="button" onclick="toggleClaudeKeyVisibility()" class="absolute right-2 top-2 text-white hover:text-gray-300">
+                                                <span id="claude-key-toggle-icon" class="text-xs" data-i18n="show">SHOW</span>
+                                            </button>
+                                        </div>
+                                        <div class="flex justify-between mt-2">
+                                            <p class="text-xs text-gray-400" data-i18n="encrypted-local-storage">ENCRYPTED LOCAL STORAGE</p>
+                                            <button type="button" onclick="testClaudeConnection()" class="text-xs text-white hover:bg-white hover:text-black px-2 py-1 border border-white" data-i18n="test-connection">
+                                                TEST CONNECTION
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-mono text-white mb-2" data-i18n="model-selection">MODEL</label>
+                                            <select id="claude-model" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
+                                                <option value="claude-3-5-sonnet-20241022" selected>Claude 3.5 Sonnet (Recommended)</option>
+                                                <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                                                <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+                                                <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-mono text-white mb-2" data-i18n="temperature">TEMPERATURE</label>
+                                            <select id="claude-temperature" class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
+                                                <option value="0.1">0.1 CONSERVATIVE</option>
+                                                <option value="0.3" selected>0.3 BALANCED</option>
+                                                <option value="0.5">0.5 MODERATE</option>
+                                                <option value="0.7">0.7 AGGRESSIVE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <button onclick="saveClaudeConfig()" class="w-full bg-black text-white border border-white py-2 text-xs font-mono hover:bg-white hover:text-black transition-colors">
+                                            SAVE CLAUDE CONFIG
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AI Providers Status Overview -->
+                            <div class="border border-white p-4">
+                                <div class="text-xs font-mono text-white mb-4 border-b border-white pb-2">ALL PROVIDERS STATUS</div>
+
+                                <div class="space-y-3">
+                                    <!-- DeepSeek Status -->
+                                    <div class="border border-white p-3">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-xs font-mono font-bold">DEEPSEEK</span>
+                                            <span id="deepseek-connection-status" class="text-xs font-mono text-gray-400">NOT CONFIGURED</span>
+                                        </div>
+                                        <div class="text-xs text-gray-400">
+                                            <div class="flex justify-between"><span>Model:</span><span id="deepseek-current-model">NONE</span></div>
+                                            <div class="flex justify-between"><span>Temperature:</span><span id="deepseek-current-temp">0.3</span></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- OpenAI Status -->
+                                    <div class="border border-white p-3">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-xs font-mono font-bold">OPENAI</span>
+                                            <span id="openai-connection-status" class="text-xs font-mono text-gray-400">NOT CONFIGURED</span>
+                                        </div>
+                                        <div class="text-xs text-gray-400">
+                                            <div class="flex justify-between"><span>Model:</span><span id="openai-current-model">NONE</span></div>
+                                            <div class="flex justify-between"><span>Temperature:</span><span id="openai-current-temp">0.3</span></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Claude Status -->
+                                    <div class="border border-white p-3">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-xs font-mono font-bold">CLAUDE</span>
+                                            <span id="claude-connection-status" class="text-xs font-mono text-gray-400">NOT CONFIGURED</span>
+                                        </div>
+                                        <div class="text-xs text-gray-400">
+                                            <div class="flex justify-between"><span>Model:</span><span id="claude-current-model">NONE</span></div>
+                                            <div class="flex justify-between"><span>Temperature:</span><span id="claude-current-temp">0.3</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- API Information -->
+                                <div class="border border-white mt-4 p-3">
+                                    <div class="text-xs font-mono text-white mb-2">API INFORMATION</div>
+                                    <div class="text-xs text-gray-300 space-y-1">
+                                        <p>• DEEPSEEK: platform.deepseek.com</p>
+                                        <p>• OPENAI: platform.openai.com</p>
+                                        <p>• CLAUDE: console.anthropic.com</p>
                                         <p>• TEST CONNECTION BEFORE TRADING</p>
                                         <p>• API CALLS ARE RATE LIMITED</p>
                                     </div>
@@ -1879,9 +2055,9 @@
                                         <span id="tushare-status" class="text-xs font-mono text-red-400">NOT CONFIGURED</span>
                                     </div>
                                     <div class="space-y-2">
-                                        <input 
-                                            type="password" 
-                                            id="tushare-token" 
+                                        <input
+                                            type="password"
+                                            id="tushare-service-token"
                                             placeholder="Enter Tushare Token"
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                         <div class="flex space-x-2">
@@ -1918,14 +2094,14 @@
                                         <span id="alpaca-status" class="text-xs font-mono text-red-400">NOT CONFIGURED</span>
                                     </div>
                                     <div class="space-y-2">
-                                        <input 
-                                            type="password" 
-                                            id="alpaca-api-key" 
+                                        <input
+                                            type="password"
+                                            id="alpaca-api-key-platform"
                                             placeholder="Alpaca API Key"
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
-                                        <input 
-                                            type="password" 
-                                            id="alpaca-secret-key" 
+                                        <input
+                                            type="password"
+                                            id="alpaca-secret-key-platform"
                                             placeholder="Alpaca Secret Key"
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                         <div class="flex space-x-2">
@@ -1981,9 +2157,9 @@
                                         <span id="openai-status" class="text-xs font-mono text-red-400">NOT CONFIGURED</span>
                                     </div>
                                     <div class="space-y-2">
-                                        <input 
-                                            type="password" 
-                                            id="openai-api-key" 
+                                        <input
+                                            type="password"
+                                            id="openai-service-key"
                                             placeholder="OpenAI API Key"
                                             class="w-full bg-black text-white border border-white p-2 text-xs font-mono focus:outline-none focus:bg-white focus:text-black">
                                         <div class="flex space-x-2">
@@ -2081,9 +2257,43 @@
     </div>
 
     <script>
+        // ==================== 全局错误处理器 ====================
+
+        // 🔥 捕获未处理的Promise错误（通常来自浏览器扩展）
+        window.addEventListener('unhandledrejection', function(event) {
+            // 检查是否是浏览器扩展引起的错误
+            const errorMessage = event.reason?.message || event.reason || '';
+            const isExtensionError = errorMessage.includes('message channel closed') ||
+                                   errorMessage.includes('Extension context') ||
+                                   errorMessage.includes('chrome.runtime');
+
+            if (isExtensionError) {
+                // 静默处理扩展错误，不影响用户体验
+                event.preventDefault();
+                console.debug('🔇 已捕获浏览器扩展错误（已忽略）:', errorMessage.substring(0, 100));
+            } else {
+                // 应用相关错误，记录但不中断
+                console.error('⚠️ 未处理的Promise错误:', event.reason);
+                event.preventDefault(); // 防止控制台显示红色错误
+            }
+        });
+
+        // 🔥 捕获全局错误
+        window.addEventListener('error', function(event) {
+            const errorMessage = event.message || '';
+            const isExtensionError = errorMessage.includes('Extension') ||
+                                   errorMessage.includes('chrome-extension');
+
+            if (isExtensionError) {
+                event.preventDefault();
+                console.debug('🔇 已捕获浏览器扩展错误（已忽略）');
+                return false;
+            }
+        });
+
         // ==================== 错误处理和库检查 ====================
         console.log('🚀 开始加载Arthera交易系统JavaScript...');
-        
+
         // 清除旧的服务配置缓存，确保使用最新配置
         try {
             localStorage.removeItem('arthera-service-config');
@@ -2106,11 +2316,11 @@
         
         // 全局错误处理 - 防止扩展上下文错误影响页面功能
         window.addEventListener('error', function(event) {
-            const errorMsg = event.error?.message || '';
+            const errorMsg = event.error?.message || event.message || '';
             const fileName = event.filename || '';
-            
-            // 检查是否为扩展相关错误
-            if (errorMsg.includes('Extension context invalidated') || 
+
+            // 检查是否为扩展相关错误或浏览器扩展缺失文件
+            if (errorMsg.includes('Extension context invalidated') ||
                 errorMsg.includes('message port closed') ||
                 errorMsg.includes('Extension context') ||
                 errorMsg.includes('chrome-extension://') ||
@@ -2119,12 +2329,18 @@
                 fileName.includes('content.js') ||
                 fileName.includes('extension://') ||
                 fileName.includes('chrome-extension://') ||
-                fileName.includes('moz-extension://')) {
+                fileName.includes('moz-extension://') ||
+                fileName.includes('utils.js') ||
+                fileName.includes('extensionState.js') ||
+                fileName.includes('heuristicsRedefinitions.js') ||
+                errorMsg.includes('utils.js') ||
+                errorMsg.includes('extensionState.js') ||
+                errorMsg.includes('heuristicsRedefinitions.js')) {
                 // 静默处理扩展相关错误，不影响页面功能
                 event.preventDefault();
                 event.stopPropagation();
                 event.stopImmediatePropagation();
-                console.debug('🔇 扩展错误已静默处理');
+                console.debug('🔇 浏览器扩展相关错误已静默处理');
                 return false;
             }
         }, true);
@@ -2133,24 +2349,58 @@
         window.addEventListener('unhandledrejection', function(event) {
             const reason = event.reason?.message || event.reason || '';
             const stack = event.reason?.stack || '';
-            
-            if (typeof reason === 'string' && 
-                (reason.includes('Extension context invalidated') || 
+
+            if (typeof reason === 'string' &&
+                (reason.includes('Extension context invalidated') ||
                  reason.includes('message port closed') ||
                  reason.includes('Extension context') ||
                  reason.includes('chrome-extension://') ||
                  reason.includes('moz-extension://') ||
                  reason.includes('Invalid response received') ||
+                 reason.includes('A listener indicated an asynchronous response') ||
+                 reason.includes('message channel closed') ||
+                 reason.includes('Could not establish connection') ||
+                 reason.includes('Receiving end does not exist') ||
+                 reason.includes('runtime.lastError') ||
                  stack.includes('content.js') ||
                  stack.includes('extension://') ||
                  stack.includes('chrome-extension://') ||
-                 stack.includes('moz-extension://'))) {
+                 stack.includes('moz-extension://') ||
+                 stack.includes('utils.js') ||
+                 stack.includes('extensionState.js') ||
+                 stack.includes('heuristicsRedefinitions.js'))) {
                 // 静默处理扩展相关Promise错误
                 event.preventDefault();
-                console.debug('🔇 扩展Promise错误已静默处理');
+                console.debug('🔇 浏览器扩展Promise错误已静默处理');
                 return;
             }
         }, true);
+
+        // 拦截console.error，过滤掉浏览器扩展相关错误
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+            const errorMsg = args.join(' ');
+
+            // 检查是否为浏览器扩展相关错误
+            if (errorMsg.includes('runtime.lastError') ||
+                errorMsg.includes('Could not establish connection') ||
+                errorMsg.includes('Receiving end does not exist') ||
+                errorMsg.includes('Extension context invalidated') ||
+                errorMsg.includes('message port closed') ||
+                errorMsg.includes('message channel closed') ||
+                errorMsg.includes('chrome-extension://') ||
+                errorMsg.includes('moz-extension://') ||
+                errorMsg.includes('utils.js') ||
+                errorMsg.includes('extensionState.js') ||
+                errorMsg.includes('heuristicsRedefinitions.js')) {
+                // 静默处理，不输出到控制台
+                console.debug('🔇 已过滤浏览器扩展错误:', errorMsg.substring(0, 100));
+                return;
+            }
+
+            // 其他错误正常输出
+            originalConsoleError.apply(console, args);
+        };
 
         const SERVICE_CONFIG_STORAGE_KEY = 'arthera-service-config';
 
@@ -2373,12 +2623,12 @@
             const model = document.getElementById('deepseek-model').value;
             const temperature = parseFloat(document.getElementById('deepseek-temperature').value);
             const enabled = document.getElementById('ai-signals-enabled')?.checked || true;
-            
+
             if (!apiKey) {
                 showToast('请输入API Key', 'error');
                 return;
             }
-            
+
             try {
                 // 保存到后端
                 const response = await fetch(`${API_BASE_URL}/api/ai/configure`, {
@@ -2390,7 +2640,7 @@
                         api_key: apiKey,
                         model: model,
                         temperature: temperature,
-                        max_tokens: 200
+                        max_tokens: 8192  // DeepSeek最大支持8192 tokens
                     })
                 });
                 
@@ -2425,9 +2675,9 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/api/ai/status`);
                 const status = await response.json();
-                
+
                 console.log('🤖 AI状态更新:', status);
-                
+
                 // 更新状态指示器
                 const statusElements = document.querySelectorAll('.ai-status-indicator');
                 statusElements.forEach(el => {
@@ -2441,12 +2691,333 @@
                         el.textContent = '⚠️ AI未配置';
                     }
                 });
-                
+
+                // 更新右侧API状态框
+                const connectionStatusEl = document.getElementById('connection-status');
+                if (connectionStatusEl) {
+                    if (status.configured) {
+                        connectionStatusEl.textContent = 'CONNECTED';
+                        connectionStatusEl.classList.remove('text-gray-400', 'text-red-400');
+                        connectionStatusEl.classList.add('text-green-400');
+                    } else {
+                        connectionStatusEl.textContent = window.t('not-configured') || 'NOT CONFIGURED';
+                        connectionStatusEl.classList.remove('text-green-400');
+                        connectionStatusEl.classList.add('text-gray-400');
+                    }
+                }
+
+                // 更新当前模型
+                const currentModelEl = document.getElementById('current-model');
+                if (currentModelEl && status.current_config) {
+                    currentModelEl.textContent = status.current_config.model || 'NONE';
+                }
+
+                // 更新今日信号数
+                const signalsTodayEl = document.getElementById('signals-today-mini');
+                if (signalsTodayEl) {
+                    signalsTodayEl.textContent = status.signals_generated_today || 0;
+                }
+
+                // 更新成功率
+                const successRateEl = document.getElementById('ai-success-rate');
+                if (successRateEl && status.success_rate !== undefined) {
+                    successRateEl.textContent = `${Math.round(status.success_rate * 100)}%`;
+                }
+
+                // 显示/隐藏配置警告
+                const warningElement = document.getElementById('ai-config-warning');
+                if (warningElement) {
+                    if (status.configured) {
+                        warningElement.style.display = 'none';
+                    } else {
+                        warningElement.style.display = 'block';
+                    }
+                }
+
+                // 更新各provider状态
+                await updateAllProvidersStatus();
+
                 return status;
             } catch (error) {
                 console.error('❌ 获取AI状态失败:', error);
             }
         }
+
+        // ==================== OpenAI配置函数 ====================
+
+        function toggleOpenAIKeyVisibility() {
+            const input = document.getElementById('openai-api-key');
+            const icon = document.getElementById('openai-key-toggle-icon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'HIDE';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'SHOW';
+            }
+        }
+
+        async function testOpenAIConnection() {
+            const apiKey = document.getElementById('openai-api-key').value.trim();
+            const model = document.getElementById('openai-model').value;
+
+            if (!apiKey) {
+                showToast('请输入OpenAI API Key', 'error');
+                return;
+            }
+
+            if (!apiKey.startsWith('sk-')) {
+                showToast('API密钥格式不正确，应以sk-开头', 'error');
+                return;
+            }
+
+            try {
+                showToast('正在测试OpenAI连接...', 'info');
+
+                const response = await fetch(`${API_BASE_URL}/api/ai/openai/test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        model: model
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(`✅ OpenAI连接成功! 延迟: ${result.latency_ms}ms`, 'success');
+                    await saveOpenAIConfig();
+                } else {
+                    showToast(`❌ OpenAI连接失败: ${result.message}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('❌ OpenAI测试失败:', error);
+                let errorMessage = '网络连接失败或API服务不可达';
+                if (error.message && error.message.includes('timeout')) {
+                    errorMessage = '连接超时，请检查网络连接';
+                } else if (error.message && error.message.includes('fetch')) {
+                    errorMessage = '无法连接到OpenAI服务，请检查网络';
+                }
+                showToast(`❌ ${errorMessage}`, 'error');
+            }
+        }
+
+        async function saveOpenAIConfig() {
+            const apiKey = document.getElementById('openai-api-key').value.trim();
+            const model = document.getElementById('openai-model').value;
+            const temperature = parseFloat(document.getElementById('openai-temperature').value);
+
+            if (!apiKey) {
+                showToast('请输入OpenAI API Key', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ai/openai/configure`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        model: model,
+                        temperature: temperature,
+                        max_tokens: 16000  // OpenAI支持长输出
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    localStorage.setItem('arthera-openai-config', JSON.stringify({
+                        apiKey: btoa(apiKey),
+                        model: model,
+                        temperature: temperature,
+                        savedAt: new Date().toISOString()
+                    }));
+
+                    showToast('✅ OpenAI配置已保存', 'success');
+                    await updateAllProvidersStatus();
+                } else {
+                    showToast(`❌ OpenAI配置失败: ${result.message}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('❌ 保存OpenAI配置失败:', error);
+                showToast(`❌ 保存失败: ${error.message}`, 'error');
+            }
+        }
+
+        // ==================== Claude配置函数 ====================
+
+        function toggleClaudeKeyVisibility() {
+            const input = document.getElementById('claude-api-key');
+            const icon = document.getElementById('claude-key-toggle-icon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'HIDE';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'SHOW';
+            }
+        }
+
+        async function testClaudeConnection() {
+            const apiKey = document.getElementById('claude-api-key').value.trim();
+            const model = document.getElementById('claude-model').value;
+
+            if (!apiKey) {
+                showToast('请输入Claude API Key', 'error');
+                return;
+            }
+
+            if (!apiKey.startsWith('sk-ant-')) {
+                showToast('API密钥格式不正确，应以sk-ant-开头', 'error');
+                return;
+            }
+
+            try {
+                showToast('正在测试Claude连接...', 'info');
+
+                const response = await fetch(`${API_BASE_URL}/api/ai/claude/test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        model: model
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(`✅ Claude连接成功! 延迟: ${result.latency_ms}ms`, 'success');
+                    await saveClaudeConfig();
+                } else {
+                    showToast(`❌ Claude连接失败: ${result.message}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('❌ Claude测试失败:', error);
+                let errorMessage = '网络连接失败或API服务不可达';
+                if (error.message && error.message.includes('timeout')) {
+                    errorMessage = '连接超时，请检查网络连接';
+                } else if (error.message && error.message.includes('fetch')) {
+                    errorMessage = '无法连接到Claude服务，请检查网络';
+                }
+                showToast(`❌ ${errorMessage}`, 'error');
+            }
+        }
+
+        async function saveClaudeConfig() {
+            const apiKey = document.getElementById('claude-api-key').value.trim();
+            const model = document.getElementById('claude-model').value;
+            const temperature = parseFloat(document.getElementById('claude-temperature').value);
+
+            if (!apiKey) {
+                showToast('请输入Claude API Key', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ai/claude/configure`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        model: model,
+                        temperature: temperature,
+                        max_tokens: 8000  // Claude限制为8192
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    localStorage.setItem('arthera-claude-config', JSON.stringify({
+                        apiKey: btoa(apiKey),
+                        model: model,
+                        temperature: temperature,
+                        savedAt: new Date().toISOString()
+                    }));
+
+                    showToast('✅ Claude配置已保存', 'success');
+                    await updateAllProvidersStatus();
+                } else {
+                    showToast(`❌ Claude配置失败: ${result.message}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('❌ 保存Claude配置失败:', error);
+                showToast(`❌ 保存失败: ${error.message}`, 'error');
+            }
+        }
+
+        // ==================== 更新所有Provider状态 ====================
+
+        async function updateAllProvidersStatus() {
+            try {
+                // 获取所有provider状态
+                const response = await fetch(`${API_BASE_URL}/api/ai/providers`);
+                const data = await response.json();
+
+                console.log('🤖 所有Provider状态:', data);
+
+                // 更新DeepSeek状态
+                const deepseekStatus = data.providers?.deepseek;
+                if (deepseekStatus) {
+                    updateProviderStatus('deepseek', deepseekStatus);
+                }
+
+                // 更新OpenAI状态
+                const openaiStatus = data.providers?.openai;
+                if (openaiStatus) {
+                    updateProviderStatus('openai', openaiStatus);
+                }
+
+                // 更新Claude状态
+                const claudeStatus = data.providers?.claude;
+                if (claudeStatus) {
+                    updateProviderStatus('claude', claudeStatus);
+                }
+
+            } catch (error) {
+                console.error('❌ 获取Provider状态失败:', error);
+            }
+        }
+
+        function updateProviderStatus(provider, status) {
+            const statusElement = document.getElementById(`${provider}-connection-status`);
+            const modelElement = document.getElementById(`${provider}-current-model`);
+            const tempElement = document.getElementById(`${provider}-current-temp`);
+
+            if (statusElement) {
+                if (status.configured) {
+                    statusElement.textContent = 'CONNECTED';
+                    statusElement.classList.remove('text-gray-400');
+                    statusElement.classList.add('text-green-400');
+                } else {
+                    statusElement.textContent = 'NOT CONFIGURED';
+                    statusElement.classList.remove('text-green-400');
+                    statusElement.classList.add('text-gray-400');
+                }
+            }
+
+            if (modelElement) {
+                modelElement.textContent = status.status?.model || 'NONE';
+            }
+
+            if (tempElement) {
+                tempElement.textContent = status.status?.temperature || '0.3';
+            }
+        }
+
+        // 页面加载时更新状态
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAllProvidersStatus();
+        });
 
         // 更新设置界面语言选择器的值
         function updateLanguageSelector() {
@@ -5741,11 +6312,11 @@
                 const response = await fetch(`${API_BASE_URL}/signals/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         symbols: selectedSymbols,
                         timeframe: '1D',
                         strategy_config: {
-                            risk_level: 'medium',
+                            risk_level: 'moderate',
                             max_positions: 5,
                             confidence_threshold: 0.7
                         }
@@ -7961,15 +8532,24 @@
         }
         
         async function updateRiskChart() {
-            if (!charts.risk) {
-                console.error('❌ 风险图表对象不存在');
+            if (!charts || !charts.risk) {
+                console.warn('⚠️ 风险图表对象未初始化，跳过更新');
                 return;
             }
-            
+
             try {
                 // 检查图表数据结构
                 if (!charts.risk.data || !charts.risk.data.datasets || !charts.risk.data.datasets[0]) {
-                    console.error('❌ 风险图表数据结构不正确');
+                    console.warn('⚠️ 风险图表数据结构未就绪，使用默认数据');
+                    // 尝试初始化数据结构
+                    if (charts.risk.data) {
+                        charts.risk.data.datasets = [{
+                            label: '风险指标',
+                            data: [50, 40, 60],
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)'
+                        }];
+                    }
                     return;
                 }
                 
@@ -7999,28 +8579,28 @@
                 console.log('✅ 风险报告数据:', data);
                 
                 // 使用真实风险指标数据
-                if (data.risk_metrics) {
+                if (data && data.risk_metrics) {
                     // 重新计算合理的风险指标值
                     const var95 = Math.abs(data.risk_metrics.var_95 || 0.025) * 100; // 转换为百分比
                     const maxDrawdown = Math.abs(data.risk_metrics.max_drawdown || 0.05) * 100; // 转换为百分比
                     const volatility = Math.abs(data.risk_metrics.annualized_volatility || 0.15) * 100; // 转换为百分比
-                    
+
                     console.log(`📊 原始风险数据: VaR=${data.risk_metrics.var_95}, 回撤=${data.risk_metrics.max_drawdown}, 波动率=${data.risk_metrics.annualized_volatility}`);
-                    
+
                     // 确保有合理的显示范围 (雷达图需要较大的数值)
                     const var95Display = Math.max(var95, 2.5) * 20;        // VaR 95% (适度放大)
-                    const maxDrawdownDisplay = Math.max(maxDrawdown, 5.0) * 15; // 最大回撤 (适度放大)  
+                    const maxDrawdownDisplay = Math.max(maxDrawdown, 5.0) * 15; // 最大回撤 (适度放大)
                     const volatilityDisplay = Math.max(volatility, 15.0) * 8;   // 波动率 (适度放大)
-                    
+
                     // 安全地更新雷达图数据
                     const riskData = [var95Display, maxDrawdownDisplay, volatilityDisplay];
                     charts.risk.data.datasets[0].data = riskData;
-                    
+
                     console.log(`✅ 风险指标显示: VaR=${var95Display.toFixed(0)}, 最大回撤=${maxDrawdownDisplay.toFixed(0)}, 波动率=${volatilityDisplay.toFixed(0)}`);
                 } else {
                     // Fallback数据 - 雷达图格式
                     charts.risk.data.datasets[0].data = [50, 40, 60];  // [VaR, 回撤, 波动率] 较小的合理值
-                    console.log('⚠️ 使用fallback风险数据');
+                    console.log('ℹ️ 风险数据未就绪，使用默认显示数据');
                 }
                 
                 charts.risk.update('none');
@@ -8585,7 +9165,7 @@
         // 配置 Tushare
         async function configureTushare() {
             try {
-                const token = document.getElementById('tushare-token').value;
+                const token = document.getElementById('tushare-service-token').value;
                 if (!token) {
                     showToast('请输入 Tushare Token', 'warning');
                     return;
@@ -8688,8 +9268,8 @@
         // 配置 OpenAI
         async function configureOpenAI() {
             try {
-                const apiKey = document.getElementById('openai-api-key').value;
-                
+                const apiKey = document.getElementById('openai-service-key').value;
+
                 if (!apiKey) {
                     showToast('请输入 OpenAI API Key', 'warning');
                     return;
@@ -10594,8 +11174,12 @@
                 
                 // 3秒后自动消失
                 setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
+                    try {
+                        if (toast && toast.parentNode) {
+                            toast.remove();
+                        }
+                    } catch (e) {
+                        console.warn('Toast已被移除:', e);
                     }
                 }, 3000);
             };
@@ -10886,21 +11470,21 @@
                     symbols: symbols,
                     timeframe: '1D',
                     strategy_config: {
-                        risk_level: 'medium',
+                        risk_level: 'moderate',
                         max_positions: 10,
                         confidence_threshold: 0.6
                     }
                 };
-                
+
                 console.log('📦 信号生成请求:', requestData);
-                
+
                 const response = await fetch(`${API_BASE_URL}/signals/generate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(requestData),
-                    signal: AbortSignal.timeout(30000) // 30 second timeout
+                    signal: AbortSignal.timeout(120000) // 120 second timeout - 增加到120秒以支持多股票技术分析
                 });
                 
                 if (!response.ok) {
@@ -10909,26 +11493,71 @@
                 }
                 
                 const data = await response.json();
-                console.log('✅ 信号生成完成:', data.signals.length, '个信号');
+                console.log('✅ 信号生成完成:', data.signals?.length || 0, '个信号');
                 console.log('📊 信号详情:', data.signals);
-                
-                // 更新信号显示和图表
+
+                // 检查是否有信号生成
                 if (data.signals && data.signals.length > 0) {
+                    // 更新信号显示和图表
                     updateSignalsDisplay(data.signals);
                     updateSignalsChart(data.signals);
                     updateSignalStats(data.signals);
-                    
-                    // 更新信号面板显示
                     displaySignalsInPanel(data.signals);
+
+                    if (window.showToast) {
+                        window.showToast(`🚀 生成 ${data.signals.length} 个交易信号`, 'success');
+                    }
+
+                    return data.signals;
+                } else {
+                    // 传统信号生成返回空结果，尝试使用AI批量生成
+                    console.log('⚠️ 传统信号生成返回空结果，尝试使用AI批量生成...');
+
+                    // 获取股票列表
+                    const symbolsInput = document.getElementById('target-symbols');
+                    let symbols = ['AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL'];
+                    if (symbolsInput && symbolsInput.value) {
+                        symbols = symbolsInput.value.split(',').map(s => s.trim()).filter(s => s);
+                    }
+
+                    // 使用AI批量生成
+                    const aiSignals = await generateAISignals(symbols);
+
+                    if (aiSignals && aiSignals.length > 0) {
+                        if (window.showToast) {
+                            window.showToast(`🤖 AI生成 ${aiSignals.length} 个交易信号`, 'success');
+                        }
+                        return aiSignals;
+                    } else {
+                        if (window.showToast) {
+                            window.showToast('⚠️ 未生成任何信号，请稍后重试', 'warning');
+                        }
+                        return [];
+                    }
                 }
-                
-                if (window.showToast) {
-                    window.showToast(`🚀 生成 ${data.signals.length} 个交易信号`, 'success');
-                }
-                
-                return data.signals;
             } catch (error) {
                 console.error('❌ 信号生成失败:', error);
+
+                // 出错时也尝试使用AI批量生成作为备选
+                console.log('⚠️ 信号生成出错，尝试使用AI批量生成作为备选...');
+                try {
+                    const symbolsInput = document.getElementById('target-symbols');
+                    let symbols = ['AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL'];
+                    if (symbolsInput && symbolsInput.value) {
+                        symbols = symbolsInput.value.split(',').map(s => s.trim()).filter(s => s);
+                    }
+
+                    const aiSignals = await generateAISignals(symbols);
+                    if (aiSignals && aiSignals.length > 0) {
+                        if (window.showToast) {
+                            window.showToast(`🤖 AI备选生成 ${aiSignals.length} 个信号`, 'success');
+                        }
+                        return aiSignals;
+                    }
+                } catch (aiError) {
+                    console.error('❌ AI备选生成也失败:', aiError);
+                }
+
                 if (window.showToast) {
                     window.showToast(`❌ 信号生成失败: ${error.message}`, 'error');
                 }
@@ -10967,26 +11596,217 @@
         // 更新信号图表
         function updateSignalsChart(signals) {
             try {
+                // 检查信号数组
+                if (!signals || !Array.isArray(signals)) {
+                    console.warn('⚠️ 信号数据无效，使用空数组');
+                    signals = [];
+                }
+
+                if (signals.length === 0) {
+                    console.log('ℹ️ 当前无交易信号数据，等待信号生成...');
+                    return;
+                }
+
                 // 生成信号强度数据用于图表显示
                 const signalData = signals.map(signal => ({
                     x: signal.symbol,
                     y: (signal.confidence || 0.5) * 100,
                     action: signal.action,
-                    color: signal.action === 'BUY' ? 'rgba(16, 185, 129, 0.8)' : 
+                    color: signal.action === 'BUY' ? 'rgba(16, 185, 129, 0.8)' :
                            signal.action === 'SELL' ? 'rgba(239, 68, 68, 0.8)' : 'rgba(156, 163, 175, 0.8)'
                 }));
-                
+
                 // 更新现有图表或创建新的信号图表
                 if (window.updateSignalChart) {
                     window.updateSignalChart(signalData);
                 }
-                
-                console.log('✅ 信号图表已更新');
+
+                console.log(`✅ 信号图表已更新 (${signals.length}个信号)`);
             } catch (error) {
                 console.error('❌ 更新信号图表失败:', error);
             }
         }
-        
+
+        // 从后端获取最近的信号
+        async function fetchRecentSignals(limit = 50) {
+            try {
+                console.log('🔄 正在获取最近的信号数据...');
+
+                const response = await fetch(`${API_BASE_URL}/signals/recent?limit=${limit}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ 获取到信号数据:', data.count, '个信号');
+
+                if (data.signals && data.signals.length > 0) {
+                    // 更新所有信号显示
+                    updateSignalsDisplay(data.signals);
+                    updateSignalsChart(data.signals);
+                    updateSignalStats(data.signals);
+                    displaySignalsInPanel(data.signals);
+
+                    return data.signals;
+                } else {
+                    console.log('ℹ️ 后端暂无信号数据');
+                    return [];
+                }
+            } catch (error) {
+                console.error('❌ 获取最近信号失败:', error);
+                return [];
+            }
+        }
+
+        // 启动信号自动刷新机制
+        let signalRefreshInterval = null;
+        let initialSignalFetchDone = false;
+        function startSignalAutoRefresh(intervalSeconds = 30) {
+            // 清除已存在的定时器
+            if (signalRefreshInterval) {
+                clearInterval(signalRefreshInterval);
+            }
+
+            console.log(`🔄 启动信号智能刷新，间隔: ${intervalSeconds}秒`);
+
+            // 立即执行一次智能获取（仅在首次）
+            if (!initialSignalFetchDone) {
+                smartFetchSignals().then(() => {
+                    initialSignalFetchDone = true;
+                });
+            }
+
+            // 设置定时刷新（使用智能获取）
+            signalRefreshInterval = setInterval(() => {
+                smartFetchSignals();
+            }, intervalSeconds * 1000);
+        }
+
+        // 停止信号自动刷新
+        function stopSignalAutoRefresh() {
+            if (signalRefreshInterval) {
+                clearInterval(signalRefreshInterval);
+                signalRefreshInterval = null;
+                console.log('⏹️ 已停止信号自动刷新');
+            }
+        }
+
+        // 使用AI批量生成交易信号
+        async function generateAISignals(symbols = null) {
+            try {
+                console.log('🤖 正在使用AI批量生成交易信号...');
+
+                // 如果没有提供股票列表，使用默认股票池
+                if (!symbols) {
+                    const stockPool = JSON.parse(localStorage.getItem('stockPool') || '[]');
+                    if (stockPool.length > 0) {
+                        symbols = stockPool.map(s => s.symbol);
+                    } else {
+                        symbols = ['AAPL', 'TSLA', 'NVDA', 'MSFT', 'GOOGL'];
+                    }
+                }
+
+                // 限制最多10个股票
+                if (symbols.length > 10) {
+                    symbols = symbols.slice(0, 10);
+                }
+
+                console.log(`📊 目标股票: ${symbols.join(', ')}`);
+
+                // 显示加载提示
+                if (window.showToast) {
+                    window.showToast(`🤖 正在为 ${symbols.length} 只股票生成AI信号...`, 'info');
+                }
+
+                // 调用批量AI信号生成API
+                const response = await fetch(`${API_BASE_URL}/api/ai/batch-generate-signals`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        symbols: symbols,
+                        market: 'US',
+                        strategy: 'momentum',
+                        provider: 'deepseek'  // 使用DeepSeek作为AI provider
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ AI信号生成完成:', data);
+
+                if (data.success && data.signals && data.signals.length > 0) {
+                    // 更新所有信号显示
+                    updateSignalsDisplay(data.signals);
+                    updateSignalsChart(data.signals);
+                    updateSignalStats(data.signals);
+                    displaySignalsInPanel(data.signals);
+
+                    // 显示成功消息
+                    if (window.showToast) {
+                        const successMsg = `✅ 成功生成 ${data.success_count} 个AI信号`;
+                        const failMsg = data.failed_count > 0 ? `，${data.failed_count} 个失败` : '';
+                        window.showToast(successMsg + failMsg, 'success');
+                    }
+
+                    return data.signals;
+                } else {
+                    console.warn('⚠️ AI信号生成返回空结果');
+                    if (window.showToast) {
+                        window.showToast('⚠️ AI信号生成返回空结果，请稍后重试', 'warning');
+                    }
+                    return [];
+                }
+            } catch (error) {
+                console.error('❌ AI信号生成失败:', error);
+                if (window.showToast) {
+                    window.showToast(`❌ AI信号生成失败: ${error.message}`, 'error');
+                }
+                return [];
+            }
+        }
+
+        // 智能信号获取：优先使用AI生成，其次使用最近信号
+        async function smartFetchSignals() {
+            try {
+                console.log('🧠 智能获取信号...');
+
+                // 首先检查AI是否已配置
+                const aiStatusResponse = await fetch(`${API_BASE_URL}/api/ai/status`);
+                if (aiStatusResponse.ok) {
+                    const aiStatus = await aiStatusResponse.json();
+
+                    if (aiStatus.configured) {
+                        console.log('✅ AI已配置，使用AI生成信号');
+                        // AI已配置，使用AI批量生成信号
+                        const aiSignals = await generateAISignals();
+                        if (aiSignals && aiSignals.length > 0) {
+                            return aiSignals;
+                        }
+                    } else {
+                        console.log('⚠️ AI未配置，尝试获取最近信号');
+                    }
+                }
+
+                // AI未配置或生成失败，尝试获取最近的信号
+                const recentSignals = await fetchRecentSignals();
+                if (recentSignals && recentSignals.length > 0) {
+                    return recentSignals;
+                }
+
+                console.log('ℹ️ 暂无可用信号');
+                return [];
+            } catch (error) {
+                console.error('❌ 智能信号获取失败:', error);
+                return [];
+            }
+        }
+
         // 更新信号统计
         function updateSignalStats(signals) {
             try {
@@ -11472,9 +12292,16 @@
                     ordersContainer.insertBefore(orderElement, ordersContainer.firstChild);
                     
                     // 保持最多8个订单显示
-                    const orders = ordersContainer.children;
+                    const orders = Array.from(ordersContainer.children);
                     if (orders.length > 8) {
-                        ordersContainer.removeChild(orders[orders.length - 1]);
+                        try {
+                            const elementToRemove = orders[orders.length - 1];
+                            if (elementToRemove && elementToRemove.parentNode) {
+                                elementToRemove.remove();
+                            }
+                        } catch (e) {
+                            console.warn('无法移除订单元素:', e);
+                        }
                     }
                 }
                 
@@ -11888,9 +12715,74 @@
         };
         
         // 更新风险图表
-        window.updateRiskChart = function(stockData) {
-            console.log('📊 更新风险图表:', stockData);
-            // 这里可以实现具体的风险图表更新逻辑
+        window.updateRiskChart = async function(stockData) {
+            // 如果有stockData参数，记录日志；否则调用原有的风险图表更新逻辑
+            if (stockData) {
+                console.log('📊 更新风险图表（基于股票数据）:', stockData.length ? `${stockData.length}只股票` : '数据为空');
+            }
+
+            // 调用原有的风险图表更新函数（从第8534行）
+            if (!charts || !charts.risk) {
+                console.warn('⚠️ 风险图表对象未初始化，跳过更新');
+                return;
+            }
+
+            try {
+                // 检查图表数据结构
+                if (!charts.risk.data || !charts.risk.data.datasets || !charts.risk.data.datasets[0]) {
+                    console.warn('⚠️ 风险图表数据结构未就绪，初始化默认数据');
+                    if (charts.risk.data) {
+                        charts.risk.data.datasets = [{
+                            label: '风险指标',
+                            data: [50, 40, 60],
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)'
+                        }];
+                        charts.risk.update();
+                    }
+                    return;
+                }
+
+                // 获取当前股票池和资金设置
+                const symbolsInput = document.getElementById('target-symbols');
+                const capitalInput = document.getElementById('capital');
+
+                let symbols = 'AAPL,TSLA,NVDA,MSFT,GOOGL';
+                let capital = 100000;
+
+                if (symbolsInput && symbolsInput.value) {
+                    symbols = symbolsInput.value;
+                }
+                if (capitalInput && capitalInput.value) {
+                    capital = parseFloat(capitalInput.value) || 100000;
+                }
+
+                console.log(`📊 更新风险雷达图表: 资金=${capital}, 股票=${symbols}`);
+
+                // 调用风险报告接口
+                const response = await fetch(`${API_BASE_URL}/dashboard/risk-report?capital=${capital}&market=mixed&risk_level=moderate&symbols=${symbols}`);
+                if (!response.ok) {
+                    console.warn(`⚠️ 风险报告接口返回 ${response.status}，使用默认数据`);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('✅ 风险报告数据已获取');
+
+                // 更新图表
+                if (data && data.risk_metrics && charts.risk.data.datasets[0]) {
+                    const metrics = data.risk_metrics;
+                    charts.risk.data.datasets[0].data = [
+                        Math.min((metrics.volatility || 0.15) * 100, 100),
+                        Math.min((metrics.max_drawdown || 0.10) * 100, 100),
+                        Math.min((metrics.var_95 || 0.05) * 100, 100)
+                    ];
+                    charts.risk.update();
+                    console.log('✅ 风险图表已更新');
+                }
+            } catch (error) {
+                console.error('❌ 更新风险图表失败:', error);
+            }
         };
         
         // 验证核心函数
@@ -12008,7 +12900,17 @@
                     console.error('❌ AI状态检查失败:', error);
                 }
             }, 3000);
-            
+
+            // 启动信号自动刷新机制
+            setTimeout(() => {
+                try {
+                    startSignalAutoRefresh(30); // 每30秒自动刷新一次信号
+                    console.log('✅ 信号自动刷新已启动');
+                } catch (error) {
+                    console.error('❌ 启动信号自动刷新失败:', error);
+                }
+            }, 3500);
+
             // 强制重新初始化风险图表
             setTimeout(() => {
                 try {
@@ -13124,6 +14026,94 @@
         console.log('✅ AkShare A股搜索功能已加载');
         console.log('✅ 新增交易平台配置功能已加载');
         console.log('✅ 增强多平台搜索功能已加载');
+    </script>
+
+    <!-- AI财务分析聊天组件 - 直接嵌入 -->
+    <script>
+        console.log('🤖 开始加载AI财务分析聊天组件...');
+
+        // 加载AI聊天组件HTML
+        fetch('/static/ai-chat-widget.html')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(html => {
+                // 创建容器div
+                const container = document.createElement('div');
+                container.id = 'ai-chat-container';
+
+                // 使用DOMParser解析HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // 提取并添加样式
+                const styles = doc.querySelectorAll('style');
+                styles.forEach(style => {
+                    container.appendChild(style.cloneNode(true));
+                });
+
+                // 提取并添加HTML内容（不包括script）
+                const body = doc.body;
+                Array.from(body.children).forEach(child => {
+                    if (child.tagName !== 'SCRIPT') {
+                        container.appendChild(child.cloneNode(true));
+                    }
+                });
+
+                // 添加到页面
+                document.body.appendChild(container);
+
+                console.log('✅ AI财务分析聊天组件HTML已加载');
+
+                // 提取并执行script标签
+                const scripts = doc.querySelectorAll('script');
+                scripts.forEach(script => {
+                    const newScript = document.createElement('script');
+                    if (script.src) {
+                        newScript.src = script.src;
+                    } else {
+                        newScript.textContent = script.textContent;
+                    }
+                    document.body.appendChild(newScript);
+                });
+
+                console.log('✅ AI聊天脚本已执行');
+
+                // 等待脚本执行后初始化
+                setTimeout(() => {
+                    if (window.aiChat && typeof window.aiChat.init === 'function') {
+                        window.aiChat.init();
+                        console.log('✅ AI聊天功能已初始化');
+                    } else {
+                        console.error('❌ window.aiChat 未定义或没有init方法');
+                    }
+                }, 300);
+
+                // 触发自定义事件
+                window.dispatchEvent(new CustomEvent('ai-chat-loaded'));
+            })
+            .catch(error => {
+                console.error('❌ AI聊天组件加载失败:', error);
+            });
+
+        // 配置AI服务端点
+        window.AI_CHAT_CONFIG = {
+            apiBaseUrl: window.location.hostname === 'localhost'
+                ? 'http://localhost:8009'
+                : `http://${window.location.hostname}:8009`,
+            wsBaseUrl: window.location.hostname === 'localhost'
+                ? 'ws://localhost:8009'
+                : `ws://${window.location.hostname}:8009`,
+            enableWebSocket: true,
+            enableFileUpload: true,
+            maxHistoryLength: 50,
+            timeout: 30000
+        };
+
+        console.log('📡 AI服务配置已设置');
     </script>
 </body>
 </html>

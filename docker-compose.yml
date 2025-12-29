@@ -28,14 +28,116 @@ services:
     networks:
       - trading_network
 
-  # Market Data Service
-  market-data:
+  # Market Data Service (handled by QuantEngine and API Gateway)
+  # market-data:
+  #   build:
+  #     context: ./services/market-data
+  #     dockerfile: Dockerfile
+  #   container_name: trading_market_data
+  #   ports:
+  #     - "8001:8000"
+  #   environment:
+  #     - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+  #     - REDIS_URL=redis://redis:6379
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   networks:
+  #     - trading_network
+
+  # Strategy Runner (handled by QuantEngine and AI Agents)
+  # strategy-runner:
+  #   build:
+  #     context: ./services/strategy-runner
+  #     dockerfile: Dockerfile
+  #   container_name: trading_strategy_runner
+  #   ports:
+  #     - "8002:8000"
+  #   environment:
+  #     - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+  #     - REDIS_URL=redis://redis:6379
+  #     - MARKET_DATA_URL=http://market-data:8000
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - market-data
+  #   networks:
+  #     - trading_network
+
+  # Advanced Risk Management Service (NEW - Dynamic VaR and Real-time Monitoring)
+  risk-management:
     build:
-      context: ./services/market-data
+      context: ./services/risk-management
       dockerfile: Dockerfile
-    container_name: trading_market_data
+    container_name: trading_risk_management
     ports:
-      - "8001:8000"
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
+      - AI_AGENTS_URL=http://ai-agents:8006
+      - CRYPTO_CONNECTORS_URL=http://crypto-connectors:8007
+    depends_on:
+      - postgres
+      - redis
+      - ai-agents
+      - crypto-connectors
+    networks:
+      - trading_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Paper OMS (Order Management System - handled by QuantEngine)
+  # paper-oms:
+  #   build:
+  #     context: ./services/paper-oms
+  #     dockerfile: Dockerfile
+  #   container_name: trading_paper_oms
+  #   ports:
+  #     - "8004:8000"
+  #   environment:
+  #     - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+  #     - REDIS_URL=redis://redis:6379
+  #     - MARKET_DATA_URL=http://market-data:8000
+  #     - RISK_MANAGEMENT_URL=http://risk-management:8003
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - market-data
+  #     - risk-management
+  #   networks:
+  #     - trading_network
+
+  # Portfolio & PnL Service (handled by QuantEngine)
+  # portfolio-pnl:
+  #   build:
+  #     context: ./services/portfolio-pnl
+  #     dockerfile: Dockerfile
+  #   container_name: trading_portfolio_pnl
+  #   ports:
+  #     - "8005:8000"
+  #   environment:
+  #     - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+  #     - REDIS_URL=redis://redis:6379
+  #     - PAPER_OMS_URL=http://paper-oms:8000
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - paper-oms
+  #   networks:
+  #     - trading_network
+
+  # AI Agents Service (NEW - Multi-Agent AI Framework)
+  ai-agents:
+    build:
+      context: ./services/ai-agents
+      dockerfile: Dockerfile
+    container_name: trading_ai_agents
+    ports:
+      - "8006:8006"
     environment:
       - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
       - REDIS_URL=redis://redis:6379
@@ -44,91 +146,105 @@ services:
       - redis
     networks:
       - trading_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # Strategy Runner
-  strategy-runner:
+  # Crypto Exchange Connectors Service (NEW - Binance, OKX support)
+  crypto-connectors:
     build:
-      context: ./services/strategy-runner
+      context: ./services/crypto-connectors
       dockerfile: Dockerfile
-    container_name: trading_strategy_runner
+    container_name: trading_crypto_connectors
     ports:
-      - "8002:8000"
+      - "8007:8007"
+    environment:
+      # Binance API credentials (set in your environment or .env file)
+      - BINANCE_API_KEY=${BINANCE_API_KEY:-}
+      - BINANCE_SECRET_KEY=${BINANCE_SECRET_KEY:-}
+      - BINANCE_TESTNET=${BINANCE_TESTNET:-true}
+      
+      # OKX API credentials (set in your environment or .env file)
+      - OKX_API_KEY=${OKX_API_KEY:-}
+      - OKX_SECRET_KEY=${OKX_SECRET_KEY:-}
+      - OKX_PASSPHRASE=${OKX_PASSPHRASE:-}
+      - OKX_TESTNET=${OKX_TESTNET:-true}
+    networks:
+      - trading_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Enhanced Backtesting Engine (NEW - Multi-strategy comparison and performance analysis)
+  backtesting-engine:
+    build:
+      context: ./services/backtesting-engine
+      dockerfile: Dockerfile
+    container_name: trading_backtesting_engine
+    ports:
+      - "8008:8008"
     environment:
       - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
       - REDIS_URL=redis://redis:6379
-      - MARKET_DATA_URL=http://market-data:8000
+      - AI_AGENTS_URL=http://ai-agents:8006
+      - RISK_MANAGEMENT_URL=http://risk-management:8003
     depends_on:
       - postgres
       - redis
-      - market-data
+      - ai-agents
+      - risk-management
     networks:
       - trading_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # Risk Engine
-  risk-engine:
+  # AI Financial Analyst Service (NEW - Arthera v1.7.0 Integration)
+  ai-financial-analyst:
     build:
-      context: ./services/risk-engine
+      context: ./services/ai-financial-analyst
       dockerfile: Dockerfile
-    container_name: trading_risk_engine
+    container_name: trading_ai_financial_analyst
     ports:
-      - "8003:8000"
+      - "8009:8009"
     environment:
       - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
       - REDIS_URL=redis://redis:6379
+      - AI_AGENTS_URL=http://ai-agents:8006
+      - RISK_MANAGEMENT_URL=http://risk-management:8003
+      - BACKTESTING_ENGINE_URL=http://backtesting-engine:8008
+      # Arthera项目路径（挂载宿主机路径）
+      - ARTHERA_ROOT=/arthera
+    volumes:
+      # 挂载Arthera项目以使用ML模型和量化引擎
+      - ../../../Arthera:/arthera:ro
     depends_on:
       - postgres
       - redis
+      - ai-agents
+      - risk-management
     networks:
       - trading_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # Paper OMS (Order Management System)
-  paper-oms:
-    build:
-      context: ./services/paper-oms
-      dockerfile: Dockerfile
-    container_name: trading_paper_oms
-    ports:
-      - "8004:8000"
-    environment:
-      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
-      - REDIS_URL=redis://redis:6379
-      - MARKET_DATA_URL=http://market-data:8000
-      - RISK_ENGINE_URL=http://risk-engine:8000
-    depends_on:
-      - postgres
-      - redis
-      - market-data
-      - risk-engine
-    networks:
-      - trading_network
-
-  # Portfolio & PnL Service
-  portfolio-pnl:
-    build:
-      context: ./services/portfolio-pnl
-      dockerfile: Dockerfile
-    container_name: trading_portfolio_pnl
-    ports:
-      - "8005:8000"
-    environment:
-      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
-      - REDIS_URL=redis://redis:6379
-      - PAPER_OMS_URL=http://paper-oms:8000
-    depends_on:
-      - postgres
-      - redis
-      - paper-oms
-    networks:
-      - trading_network
-
-  # API Gateway (Unified entry point)
+  # API Gateway (Enhanced - Unified entry point)
   api-gateway:
     build:
       context: ./services/api-gateway
       dockerfile: Dockerfile
     container_name: trading_api_gateway
     ports:
-      - "8000:8000"  # Main entry point for all services
+      - "8001:8000"  # Main entry point for all services - exposed as 8001
     environment:
       - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
       - REDIS_URL=redis://redis:6379
@@ -137,16 +253,30 @@ services:
       - PAPER_TRADING_URL=http://paper-oms:8000
       - PORTFOLIO_PNL_URL=http://portfolio-pnl:8000
       - IOS_CONNECTOR_URL=http://ios-connector:8000
+      - AI_AGENTS_URL=http://ai-agents:8006
+      - CRYPTO_CONNECTORS_URL=http://crypto-connectors:8007
+      - RISK_MANAGEMENT_URL=http://risk-management:8003
+      - BACKTESTING_ENGINE_URL=http://backtesting-engine:8008
+      - AI_FINANCIAL_ANALYST_URL=http://ai-financial-analyst:8009
+      - ENABLE_DASHBOARD_FALLBACKS=1
     depends_on:
       - postgres
       - redis
       - quant-engine
-      - quant-lab
       - ios-connector
+      - ai-agents
+      - crypto-connectors
+      - risk-management
+      - ai-financial-analyst
     networks:
       - trading_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # iOS Connector Service
+  # iOS Connector Service (Enhanced)
   ios-connector:
     build:
       context: ./services/ios-connector
@@ -155,88 +285,235 @@ services:
     ports:
       - "8002:8002"  # iOS-specific endpoints
     environment:
+      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+      - REDIS_URL=redis://redis:6379
       - API_GATEWAY_URL=http://api-gateway:8000
       - QUANT_ENGINE_URL=http://quant-engine:8000
+      - AI_AGENTS_URL=http://ai-agents:8006
+      - CRYPTO_CONNECTORS_URL=http://crypto-connectors:8007
     depends_on:
       - postgres
       - redis
+      - ai-agents
+      - crypto-connectors
     networks:
       - trading_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # QuantEngine Service (existing Arthera backend)
+  # QuantEngine Service (Arthera Quant Engine)
   quant-engine:
     build:
-      context: ../QuantEngine
+      context: ./services/quant-engine
       dockerfile: Dockerfile
     container_name: trading_quant_engine
     ports:
-      - "8001:8000"
+      - "8081:8000"
     environment:
       - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
       - REDIS_URL=redis://redis:6379
+      - PYTHONPATH=/app
     volumes:
-      - ../QuantEngine:/app
+      - ../../../Arthera/packages/quant_engine:/app/quant_engine
     depends_on:
       - postgres
       - redis
     networks:
       - trading_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # Quant Lab Service (existing Arthera_Quant_Lab)
-  quant-lab:
-    build:
-      context: ../Arthera_Quant_Lab/backend
-      dockerfile: Dockerfile
-    container_name: trading_quant_lab
-    ports:
-      - "8003:8000"
-    environment:
-      - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
-      - REDIS_URL=redis://redis:6379
-    volumes:
-      - ../Arthera_Quant_Lab:/app
-    depends_on:
-      - postgres
-      - redis
-    networks:
-      - trading_network
+  # Quant Lab Service (placeholder - external project not available)  
+  # quant-lab:
+  #   build:
+  #     context: ../Arthera_Quant_Lab/backend
+  #     dockerfile: Dockerfile
+  #   container_name: trading_quant_lab
+  #   ports:
+  #     - "8082:8000"
+  #   environment:
+  #     - DATABASE_URL=postgresql://trader:secure_password@postgres:5432/trading_engine
+  #     - REDIS_URL=redis://redis:6379
+  #   volumes:
+  #     - ../Arthera_Quant_Lab:/app
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   networks:
+  #     - trading_network
 
-  # Grafana (Optional - for system monitoring)
-  grafana:
-    image: grafana/grafana:latest
-    container_name: trading_grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana:/etc/grafana/provisioning
-    networks:
-      - trading_network
-
-  # Prometheus (Optional - for metrics)
+  # ================== COMPREHENSIVE MONITORING STACK ==================
+  
+  # Prometheus - Metrics Collection & Storage
   prometheus:
     image: prom/prometheus:latest
     container_name: trading_prometheus
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
     networks:
       - trading_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      timeout: 5s
+      interval: 30s
+      retries: 3
+
+  # AlertManager - Alert Routing & Notification
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: trading_alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - trading_network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # Grafana - Visualization & Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: trading_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=arthera_admin_2024
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - trading_network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # Node Exporter - System Metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: trading_node_exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - trading_network
+    restart: unless-stopped
+
+  # cAdvisor - Container Metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: trading_cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    networks:
+      - trading_network
+    restart: unless-stopped
+
+  # PostgreSQL Exporter - Database Metrics
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: trading_postgres_exporter
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://trader:secure_password@postgres:5432/trading_engine?sslmode=disable"
+    networks:
+      - trading_network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # Redis Exporter - Cache Metrics
+  redis-exporter:
+    image: oliver006/redis_exporter
+    container_name: trading_redis_exporter
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+    networks:
+      - trading_network
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  # Loki - Log Aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: trading_loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+    networks:
+      - trading_network
+    restart: unless-stopped
+
+  # Promtail - Log Collection
+  promtail:
+    image: grafana/promtail:latest
+    container_name: trading_promtail
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - trading_network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
   grafana_data:
   prometheus_data:
+  alertmanager_data:
+  loki_data:
 
 networks:
   trading_network:

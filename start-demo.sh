@@ -81,6 +81,10 @@ check_service() {
 # 检查各个服务
 check_service "API Gateway" 8000 "/health"
 check_service "iOS Connector" 8002 "/health"
+check_service "AI Agents" 8006 "/health"
+check_service "Crypto Connectors" 8007 "/health"
+check_service "Risk Management" 8003 "/health"
+check_service "Backtesting Engine" 8008 "/health"
 
 # 显示系统状态
 echo ""
@@ -90,6 +94,10 @@ echo ""
 echo "📊 服务访问地址："
 echo "  • API Gateway:     http://localhost:8000"
 echo "  • iOS Connector:   http://localhost:8002"
+echo "  • AI Agents:       http://localhost:8006"
+echo "  • Crypto Connect:  http://localhost:8007"
+echo "  • Risk Management: http://localhost:8003"
+echo "  • Backtesting:     http://localhost:8008"
 echo "  • 系统仪表板:      http://localhost:8000/dashboard/system-status"
 echo "  • 交易统计:        http://localhost:8000/dashboard/trading-stats"
 echo ""
@@ -109,9 +117,13 @@ echo "📋 查看实时日志请选择："
 echo "  1. 全部服务日志"
 echo "  2. API Gateway日志" 
 echo "  3. iOS Connector日志"
-echo "  4. 退出（系统继续运行）"
+echo "  4. AI Agents日志"
+echo "  5. Crypto Connectors日志"
+echo "  6. Risk Management日志"
+echo "  7. Backtesting Engine日志"
+echo "  8. 退出（系统继续运行）"
 echo ""
-read -p "请选择 [1-4]: " choice
+read -p "请选择 [1-8]: " choice
 
 case $choice in
     1)
@@ -127,6 +139,22 @@ case $choice in
         docker-compose logs -f ios-connector
         ;;
     4)
+        echo "🤖 显示AI Agents日志（Ctrl+C退出）..."
+        docker-compose logs -f ai-agents
+        ;;
+    5)
+        echo "₿ 显示Crypto Connectors日志（Ctrl+C退出）..."
+        docker-compose logs -f crypto-connectors
+        ;;
+    6)
+        echo "⚠️ 显示Risk Management日志（Ctrl+C退出）..."
+        docker-compose logs -f risk-management
+        ;;
+    7)
+        echo "📈 显示Backtesting Engine日志（Ctrl+C退出）..."
+        docker-compose logs -f backtesting-engine
+        ;;
+    8)
         echo "✅ 演示系统继续在后台运行"
         echo "💡 提示：使用 'docker-compose down' 停止系统"
         ;;

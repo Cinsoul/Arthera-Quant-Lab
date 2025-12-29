@@ -22,5 +22,53 @@
     "tags": ["ai", "semiconductor"],
     "region": "Global",
     "symbols": ["NVDA", "AMD", "TSM", "ASML", "AVGO", "MSFT", "CRM", "ORCL", "NOW"]
+  },
+  {
+    "id": "crypto_blue_chips",
+    "name": "加密货币蓝筹",
+    "description": "市值最大的主流加密货币",
+    "tags": ["crypto", "large-cap", "bitcoin"],
+    "region": "Crypto",
+    "symbols": ["BTCUSDT", "ETHUSDT", "BNBUSDT", "XRPUSDT", "ADAUSDT", "SOLUSDT", "DOTUSDT", "AVAXUSDT"]
+  },
+  {
+    "id": "defi_tokens",
+    "name": "DeFi协议代币",
+    "description": "去中心化金融生态系统代币",
+    "tags": ["crypto", "defi", "protocol"],
+    "region": "Crypto",
+    "symbols": ["UNIUSDT", "AAVEUSDT", "COMPUSDT", "MKRUSDT", "SUSHIUSDT", "YFIUSDT", "CRVUSDT", "1INCHUSDT"]
+  },
+  {
+    "id": "crypto_ai_gaming",
+    "name": "加密AI与游戏",
+    "description": "区块链AI和GameFi项目代币",
+    "tags": ["crypto", "ai", "gaming", "metaverse"],
+    "region": "Crypto", 
+    "symbols": ["FETUSDT", "AGIXUSDT", "RNDRNDUSDT", "AXSUSDT", "SANDUSDT", "MANAUSDT", "GALAUSDT", "FLOWUSDT"]
+  },
+  {
+    "id": "layer1_blockchains",
+    "name": "Layer1区块链",
+    "description": "主流公链平台代币",
+    "tags": ["crypto", "layer1", "blockchain"],
+    "region": "Crypto",
+    "symbols": ["ETHUSDT", "SOLUSDT", "ADAUSDT", "DOTUSDT", "AVAXUSDT", "ATOMUSDT", "NEARUSDT", "FTMUSDT"]
+  },
+  {
+    "id": "hk_tech_giants",
+    "name": "港股科技巨头",
+    "description": "香港上市中概股科技公司",
+    "tags": ["tech", "large-cap", "china"],
+    "region": "HK",
+    "symbols": ["0700.HK", "9988.HK", "3690.HK", "1024.HK", "9618.HK", "9626.HK", "9999.HK", "3888.HK"]
+  },
+  {
+    "id": "jp_dividend_aristocrats",
+    "name": "日本分红贵族",
+    "description": "持续分红的日本优质企业",
+    "tags": ["dividend", "value", "japan"],
+    "region": "JP",
+    "symbols": ["7203.T", "6758.T", "9432.T", "8306.T", "4502.T", "8031.T", "9984.T", "6501.T"]
   }
 ]

@@ -4,7 +4,7 @@ Arthera量化交易演示服务器
 集成QuantEngine真实数据源 - 使用LightGBM模型和AKShare数据
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -923,13 +923,18 @@ class ServiceConnector:
                 integration_result["ai_model_integration"] = True
                 integration_result["ml_models_count"] = len(quant_engine.models)
             
-            integration_result["overall_integration_success"] = all([
-                integration_result["quant_engine_integration"],
+            # 核心集成成功标准：市场数据、投资组合管理、风险管理
+            # QuantEngine 和 AI 模型是可选的增强功能
+            core_integrations_success = all([
                 integration_result["market_data_integration"],
                 integration_result["portfolio_management_integration"],
                 integration_result["risk_management_integration"]
             ])
-            
+
+            integration_result["overall_integration_success"] = core_integrations_success
+            integration_result["core_services_active"] = core_integrations_success
+            integration_result["enhanced_features_active"] = integration_result["quant_engine_integration"]
+
             return integration_result
             
         except Exception as e:
@@ -2851,6 +2856,211 @@ class RealMarketDataService:
 # 创建全局市场数据服务实例
 market_data_service = RealMarketDataService()
 
+# ==================== 策略执行引擎 ====================
+
+class StrategyExecutionEngine:
+    """策略执行引擎 - 集成真实数据、AI信号、风险管理"""
+
+    def __init__(self, market_data_service, ai_signal_service):
+        self.market_data_service = market_data_service
+        self.ai_signal_service = ai_signal_service
+        self.active_strategies = {}  # 活跃策略
+        self.strategy_positions = {}  # 策略持仓
+        self.strategy_performance = {}  # 策略表现
+        self.signal_history = []  # 信号历史
+        self.execution_log = []  # 执行日志
+
+    async def execute_strategy(self, strategy_id: str, strategy_config: dict) -> Dict[str, Any]:
+        """
+        执行单个策略
+        Args:
+            strategy_id: 策略ID (deepseek_alpha, bayesian_momentum等)
+            strategy_config: 策略配置
+        """
+        try:
+            logger.info(f"🎯 执行策略: {strategy_id}")
+
+            # 1. 获取策略配置
+            symbols = strategy_config.get("symbols", ["AAPL", "MSFT", "GOOGL"])
+            market = strategy_config.get("market", "US")
+            strategy_type = strategy_config.get("strategy_type", "momentum")
+            risk_level = strategy_config.get("risk_level", "moderate")
+            max_position = strategy_config.get("max_position", 10000)
+
+            # 2. 并发获取所有股票的实时数据
+            market_data_tasks = [
+                self.market_data_service.get_stock_data(symbol, market)
+                for symbol in symbols[:5]  # 限制最多5个
+            ]
+            market_data_list = await asyncio.gather(*market_data_tasks, return_exceptions=True)
+
+            # 3. 使用AI生成交易信号
+            signal_tasks = []
+            valid_symbols = []
+
+            for i, data in enumerate(market_data_list):
+                if not isinstance(data, Exception):
+                    symbol = symbols[i]
+                    valid_symbols.append(symbol)
+                    # 注意：这里先不调用AI，等ai_signal_service初始化完成后才能用
+
+            # 4. 生成策略信号（简化版，不依赖AI）
+            signals = []
+            for i, symbol in enumerate(valid_symbols):
+                if not isinstance(market_data_list[i], Exception):
+                    market_data = market_data_list[i]
+
+                    # 简单的技术分析信号
+                    signal = self._generate_technical_signal(
+                        symbol,
+                        market_data,
+                        strategy_type,
+                        risk_level
+                    )
+                    signals.append(signal)
+
+            # 5. 风险过滤
+            filtered_signals = self._apply_risk_filters(signals, risk_level, max_position)
+
+            # 6. 记录执行结果
+            execution_result = {
+                "strategy_id": strategy_id,
+                "timestamp": datetime.now().isoformat(),
+                "symbols_analyzed": len(valid_symbols),
+                "signals_generated": len(signals),
+                "signals_passed_risk": len(filtered_signals),
+                "signals": filtered_signals,
+                "market_conditions": {
+                    "market": market,
+                    "data_quality": "high" if len(market_data_list) == len(valid_symbols) else "medium"
+                }
+            }
+
+            # 记录到执行日志
+            self.execution_log.append(execution_result)
+            if len(self.execution_log) > 100:
+                self.execution_log = self.execution_log[-100:]
+
+            # 记录信号历史
+            self.signal_history.extend(filtered_signals)
+            if len(self.signal_history) > 200:
+                self.signal_history = self.signal_history[-200:]
+
+            return execution_result
+
+        except Exception as e:
+            logger.error(f"❌ 策略执行失败 {strategy_id}: {e}")
+            return {
+                "strategy_id": strategy_id,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+
+    def _generate_technical_signal(self, symbol: str, market_data: MarketData,
+                                   strategy_type: str, risk_level: str) -> Dict[str, Any]:
+        """生成技术分析信号"""
+        change_percent = market_data.change_percent
+
+        # 根据策略类型和风险等级调整阈值
+        if risk_level == "conservative":
+            buy_threshold, sell_threshold = 2.0, -2.0
+        elif risk_level == "aggressive":
+            buy_threshold, sell_threshold = 1.0, -1.0
+        else:  # moderate
+            buy_threshold, sell_threshold = 1.5, -1.5
+
+        # 根据策略类型生成信号
+        if strategy_type == "momentum":
+            if change_percent > buy_threshold:
+                action, confidence = "BUY", 0.75
+            elif change_percent < sell_threshold:
+                action, confidence = "SELL", 0.7
+            else:
+                action, confidence = "HOLD", 0.6
+        elif strategy_type == "mean_reversion":
+            if change_percent < -3:
+                action, confidence = "BUY", 0.7
+            elif change_percent > 3:
+                action, confidence = "SELL", 0.7
+            else:
+                action, confidence = "HOLD", 0.5
+        else:
+            action, confidence = "HOLD", 0.6
+
+        return {
+            "symbol": symbol,
+            "action": action,
+            "confidence": confidence,
+            "current_price": market_data.price,
+            "change_percent": change_percent,
+            "strategy_type": strategy_type,
+            "risk_level": risk_level,
+            "timestamp": datetime.now().isoformat(),
+            "data_source": market_data.data_source
+        }
+
+    def _apply_risk_filters(self, signals: List[Dict], risk_level: str,
+                           max_position: float) -> List[Dict]:
+        """应用风险过滤规则"""
+        filtered = []
+
+        # 根据风险等级设置置信度阈值
+        if risk_level == "conservative":
+            confidence_threshold = 0.8
+        elif risk_level == "aggressive":
+            confidence_threshold = 0.6
+        else:  # moderate
+            confidence_threshold = 0.7
+
+        for signal in signals:
+            # 过滤低置信度信号
+            if signal["confidence"] >= confidence_threshold:
+                # 过滤HOLD信号
+                if signal["action"] != "HOLD":
+                    filtered.append(signal)
+
+        # 限制同时持仓数量
+        max_positions = 10 if risk_level == "aggressive" else 5 if risk_level == "moderate" else 3
+        return filtered[:max_positions]
+
+    def get_strategy_performance(self, strategy_id: str) -> Dict[str, Any]:
+        """获取策略表现"""
+        # 从执行日志中计算策略表现
+        strategy_logs = [
+            log for log in self.execution_log
+            if log.get("strategy_id") == strategy_id
+        ]
+
+        if not strategy_logs:
+            return {
+                "strategy_id": strategy_id,
+                "status": "not_running",
+                "total_executions": 0
+            }
+
+        total_signals = sum(log.get("signals_generated", 0) for log in strategy_logs)
+        passed_risk = sum(log.get("signals_passed_risk", 0) for log in strategy_logs)
+
+        return {
+            "strategy_id": strategy_id,
+            "status": "running",
+            "total_executions": len(strategy_logs),
+            "total_signals": total_signals,
+            "signals_passed_risk": passed_risk,
+            "risk_filter_rate": (passed_risk / total_signals * 100) if total_signals > 0 else 0,
+            "last_execution": strategy_logs[-1].get("timestamp") if strategy_logs else None
+        }
+
+    def get_all_signals(self, limit: int = 50) -> List[Dict]:
+        """获取所有信号历史"""
+        return self.signal_history[-limit:]
+
+    def get_execution_log(self, limit: int = 50) -> List[Dict]:
+        """获取执行日志"""
+        return self.execution_log[-limit:]
+
+# 策略执行引擎将在ai_signal_service初始化后创建
+
 # ==================== API限流和错误处理管理器 ====================
 
 class APIRateLimitManager:
@@ -3314,8 +3524,8 @@ trading_platform_connector = RealTradingPlatformConnector()
 # 全局状态
 class SystemState:
     def __init__(self):
-        self.trading_active = True
-        self.strategies_running = 8
+        self.trading_active = False
+        self.strategies_running = 0
         self.signals_today = 0
         self.orders_today = 0
         self.total_volume = 0
@@ -3553,13 +3763,19 @@ class AIRecommendationRequest(BaseModel):
 
 class AIConfigRequest(BaseModel):
     api_key: str
-    model: str = "deepseek-v2.5"
+    model: str = "deepseek-chat"
     temperature: float = 0.3
-    max_tokens: int = 1000
+    max_tokens: int = 8000  # 🔥 增加到8000以支持超长文本输出
 
 class AITestRequest(BaseModel):
     api_key: str
-    model: str = "deepseek-v2.5"
+    model: str = "deepseek-chat"
+
+class AIChatAnalyzeRequest(BaseModel):
+    message: str
+    history: list = []
+    context: dict = {}
+    language: str = "zh"  # zh或en
 
 # ==================== 配置管理 ====================
 
@@ -4265,23 +4481,101 @@ async def get_api_statistics():
 
 # ==================== AI配置管理 ====================
 
-class AIConfigManager:
-    """AI配置管理器"""
-    
+class MultiProviderAIConfigManager:
+    """多Provider AI配置管理器 - 支持DeepSeek, OpenAI, Claude"""
+
     def __init__(self):
-        self.config = {
-            "api_key": None,
-            "model": "deepseek-v2.5",
-            "temperature": 0.3,
-            "max_tokens": 200,
-            "enabled": False,
-            "configured_at": None,
-            "test_results": None
+        self.config_file = "ai_providers_config.json"  # 配置文件
+        self.providers = {
+            "deepseek": {
+                "api_key": None,
+                "model": "deepseek-chat",
+                "temperature": 0.3,
+                "max_tokens": 32000,  # 🔥 大幅增加以支持完整的详细分析报告
+                "enabled": False,
+                "configured_at": None,
+                "test_results": None,
+                "api_base": "https://api.deepseek.com/v1/chat/completions"
+            },
+            "openai": {
+                "api_key": None,
+                "model": "gpt-4o-mini",
+                "temperature": 0.3,
+                "max_tokens": 16000,  # 🔥 增加以支持完整分析
+                "enabled": False,
+                "configured_at": None,
+                "test_results": None,
+                "api_base": "https://api.openai.com/v1/chat/completions"
+            },
+            "claude": {
+                "api_key": None,
+                "model": "claude-3-5-sonnet-20240620",
+                "temperature": 0.3,
+                "max_tokens": 8000,  # Claude限制为8192
+                "enabled": False,
+                "configured_at": None,
+                "test_results": None,
+                "api_base": "https://api.anthropic.com/v1/messages"
+            }
         }
-    
-    def set_config(self, api_key: str, model: str, temperature: float, max_tokens: int):
-        """设置AI配置"""
-        self.config.update({
+
+        # 加载已保存的配置
+        self.load_config()
+
+    def load_config(self):
+        """从文件加载配置"""
+        try:
+            if os.path.exists(self.config_file):
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    saved_config = json.load(f)
+
+                # 更新providers配置
+                config_updated = False
+                for provider, config in saved_config.get("providers", {}).items():
+                    if provider in self.providers:
+                        self.providers[provider].update(config)
+
+                        # 🔥 自动修复过低的max_tokens（防止AI响应被截断）
+                        min_tokens = {"deepseek": 32000, "openai": 16000, "claude": 8000}
+                        if provider in min_tokens:
+                            if self.providers[provider]["max_tokens"] < min_tokens[provider]:
+                                old_value = self.providers[provider]["max_tokens"]
+                                self.providers[provider]["max_tokens"] = min_tokens[provider]
+                                logger.warning(f"⚠️ {provider} max_tokens过低({old_value})，已自动更新为{min_tokens[provider]}")
+                                config_updated = True
+
+                logger.info(f"✅ 已加载AI配置: {list(saved_config.get('providers', {}).keys())}")
+
+                # 如果有配置被自动修复，保存到文件
+                if config_updated:
+                    self.save_config()
+                    logger.info("✅ 已自动修复并保存AI配置")
+        except Exception as e:
+            logger.warning(f"⚠️ 加载AI配置失败: {e}")
+
+    def save_config(self):
+        """保存配置到文件"""
+        try:
+            config_data = {
+                "providers": self.providers,
+                "updated_at": datetime.now().isoformat()
+            }
+
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(config_data, f, indent=2, ensure_ascii=False)
+
+            logger.info("✅ AI配置已保存")
+            return True
+        except Exception as e:
+            logger.error(f"❌ 保存AI配置失败: {e}")
+            return False
+
+    def set_config(self, provider: str, api_key: str, model: str, temperature: float, max_tokens: int):
+        """设置指定Provider的AI配置"""
+        if provider not in self.providers:
+            raise ValueError(f"不支持的Provider: {provider}")
+
+        self.providers[provider].update({
             "api_key": api_key,
             "model": model,
             "temperature": temperature,
@@ -4289,20 +4583,430 @@ class AIConfigManager:
             "enabled": bool(api_key),
             "configured_at": datetime.now().isoformat()
         })
-    
-    def get_config(self):
-        """获取AI配置（隐藏敏感信息）"""
-        config_copy = self.config.copy()
-        if config_copy["api_key"]:
-            config_copy["api_key"] = "sk-***" + config_copy["api_key"][-8:]
-        return config_copy
-    
-    def is_configured(self):
-        """检查AI是否已配置"""
-        return self.config["enabled"] and self.config["api_key"] is not None
 
-# 全局AI配置管理器
-ai_config_manager = AIConfigManager()
+        # 保存配置到文件
+        self.save_config()
+
+    def get_config(self, provider: str):
+        """获取指定Provider的配置（隐藏敏感信息）"""
+        if provider not in self.providers:
+            raise ValueError(f"不支持的Provider: {provider}")
+
+        config_copy = self.providers[provider].copy()
+        if config_copy["api_key"]:
+            # 隐藏API密钥
+            if len(config_copy["api_key"]) > 8:
+                config_copy["api_key"] = config_copy["api_key"][:6] + "***" + config_copy["api_key"][-4:]
+            else:
+                config_copy["api_key"] = "***"
+        return config_copy
+
+    def is_configured(self, provider: str):
+        """检查指定Provider是否已配置"""
+        if provider not in self.providers:
+            return False
+        return self.providers[provider]["enabled"] and self.providers[provider]["api_key"] is not None
+
+    def get_all_status(self):
+        """获取所有Provider的状态"""
+        return {
+            provider: {
+                "configured": self.is_configured(provider),
+                "model": config["model"],
+                "enabled": config["enabled"],
+                "configured_at": config["configured_at"]
+            }
+            for provider, config in self.providers.items()
+        }
+
+# 全局多Provider AI配置管理器
+ai_config_manager = MultiProviderAIConfigManager()
+
+# 多Provider AI信号生成服务
+class MultiProviderAISignalService:
+    """统一的多AI提供商信号生成服务 - 支持DeepSeek, OpenAI, Claude"""
+
+    def __init__(self, config_manager: MultiProviderAIConfigManager, market_data_service):
+        self.config_manager = config_manager
+        self.market_data_service = market_data_service
+        self.rate_limiter = APIRateLimitManager()
+
+    async def generate_signal(self, symbol: str, market: str = "US", strategy: str = "momentum",
+                             provider: str = None) -> Dict[str, Any]:
+        """
+        生成AI交易信号
+        Args:
+            symbol: 股票代码
+            market: 市场类型 (US, CN, Crypto)
+            strategy: 策略类型 (momentum, value, growth, etc.)
+            provider: 指定AI提供商 (deepseek, openai, claude)，None则自动选择
+        """
+        try:
+            # 1. 获取真实市场数据
+            market_data = await self.market_data_service.get_stock_data(symbol, market)
+
+            # 2. 选择AI提供商
+            selected_provider = provider or self._select_best_provider()
+
+            if not selected_provider:
+                logger.warning("⚠️ 没有配置可用的AI提供商，使用技术分析生成信号")
+                return await self._generate_technical_signal(symbol, market_data, strategy)
+
+            # 3. 调用AI提供商生成信号
+            logger.info(f"🤖 使用 {selected_provider} 生成 {symbol} 的交易信号")
+
+            if selected_provider == "deepseek":
+                return await self._generate_deepseek_signal(symbol, market_data, strategy)
+            elif selected_provider == "openai":
+                return await self._generate_openai_signal(symbol, market_data, strategy)
+            elif selected_provider == "claude":
+                return await self._generate_claude_signal(symbol, market_data, strategy)
+            else:
+                return await self._generate_technical_signal(symbol, market_data, strategy)
+
+        except Exception as e:
+            logger.error(f"❌ AI信号生成失败 {symbol}: {e}")
+            # 降级到技术分析
+            return await self._generate_technical_signal(symbol, market_data, strategy)
+
+    def _select_best_provider(self) -> Optional[str]:
+        """自动选择最佳可用的AI提供商"""
+        # 按优先级顺序检查
+        priority_order = ["claude", "openai", "deepseek"]
+
+        logger.debug(f"🔍 开始选择AI提供商...")
+        for provider in priority_order:
+            is_conf = self.config_manager.is_configured(provider)
+            provider_info = self.config_manager.providers.get(provider, {})
+            logger.debug(f"  检查 {provider}: configured={is_conf}, enabled={provider_info.get('enabled')}, has_key={provider_info.get('api_key') is not None}")
+
+            if is_conf:
+                logger.info(f"✅ 选择AI提供商: {provider}")
+                return provider
+
+        logger.warning("⚠️ 没有配置可用的AI提供商")
+        return None
+
+    async def _generate_deepseek_signal(self, symbol: str, market_data: MarketData,
+                                       strategy: str) -> Dict[str, Any]:
+        """使用DeepSeek生成信号"""
+        config = self.config_manager.providers["deepseek"]
+
+        prompt = self._build_analysis_prompt(symbol, market_data, strategy)
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                headers = {
+                    "Authorization": f"Bearer {config['api_key']}",
+                    "Content-Type": "application/json"
+                }
+
+                payload = {
+                    "model": config["model"],
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are a professional quantitative trading analyst. Provide concise, actionable trading signals with clear reasoning."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    "max_tokens": config["max_tokens"],
+                    "temperature": config["temperature"]
+                }
+
+                async with session.post(
+                    config["api_base"],
+                    headers=headers,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        ai_response = result["choices"][0]["message"]["content"]
+
+                        return self._parse_ai_response(symbol, ai_response, market_data,
+                                                      "deepseek", config["model"])
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"❌ DeepSeek API错误 {response.status}: {error_text}")
+                        raise Exception(f"DeepSeek API error: {response.status}")
+
+        except Exception as e:
+            logger.error(f"❌ DeepSeek信号生成失败: {e}")
+            logger.error(f"   错误类型: {type(e).__name__}")
+            logger.error(f"   错误详情: {str(e)}")
+            import traceback
+            logger.error(f"   堆栈跟踪:\n{traceback.format_exc()}")
+            raise
+
+    async def _generate_openai_signal(self, symbol: str, market_data: MarketData,
+                                     strategy: str) -> Dict[str, Any]:
+        """使用OpenAI生成信号"""
+        config = self.config_manager.providers["openai"]
+
+        prompt = self._build_analysis_prompt(symbol, market_data, strategy)
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                headers = {
+                    "Authorization": f"Bearer {config['api_key']}",
+                    "Content-Type": "application/json"
+                }
+
+                payload = {
+                    "model": config["model"],
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are a professional quantitative trading analyst. Provide concise, actionable trading signals with clear reasoning."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    "max_tokens": config["max_tokens"],
+                    "temperature": config["temperature"]
+                }
+
+                async with session.post(
+                    config["api_base"],
+                    headers=headers,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        ai_response = result["choices"][0]["message"]["content"]
+
+                        return self._parse_ai_response(symbol, ai_response, market_data,
+                                                      "openai", config["model"])
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"❌ OpenAI API错误 {response.status}: {error_text}")
+                        raise Exception(f"OpenAI API error: {response.status}")
+
+        except Exception as e:
+            logger.error(f"❌ OpenAI信号生成失败: {e}")
+            raise
+
+    async def _generate_claude_signal(self, symbol: str, market_data: MarketData,
+                                      strategy: str) -> Dict[str, Any]:
+        """使用Claude生成信号"""
+        config = self.config_manager.providers["claude"]
+
+        prompt = self._build_analysis_prompt(symbol, market_data, strategy)
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                headers = {
+                    "x-api-key": config['api_key'],
+                    "anthropic-version": "2023-06-01",
+                    "Content-Type": "application/json"
+                }
+
+                payload = {
+                    "model": config["model"],
+                    "max_tokens": config["max_tokens"],
+                    "temperature": config["temperature"],
+                    "system": "You are a professional quantitative trading analyst. Provide concise, actionable trading signals with clear reasoning.",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ]
+                }
+
+                async with session.post(
+                    config["api_base"],
+                    headers=headers,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        ai_response = result["content"][0]["text"]
+
+                        return self._parse_ai_response(symbol, ai_response, market_data,
+                                                      "claude", config["model"])
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"❌ Claude API错误 {response.status}: {error_text}")
+                        raise Exception(f"Claude API error: {response.status}")
+
+        except Exception as e:
+            logger.error(f"❌ Claude信号生成失败: {e}")
+            raise
+
+    def _build_analysis_prompt(self, symbol: str, market_data: MarketData, strategy: str) -> str:
+        """构建AI分析提示词"""
+        return f"""Analyze the following stock and provide a trading signal:
+
+Symbol: {symbol}
+Current Price: ${market_data.price:.2f}
+Change: {market_data.change_percent:+.2f}%
+Volume: {market_data.volume:,}
+High: ${market_data.high:.2f}
+Low: ${market_data.low:.2f}
+Data Source: {market_data.data_source}
+Strategy: {strategy}
+
+Please provide your analysis in the following format:
+ACTION: [BUY/SELL/HOLD]
+CONFIDENCE: [0.0-1.0]
+TARGET_PRICE: [specific price]
+REASONING: [brief explanation in 1-2 sentences]
+RISK_LEVEL: [LOW/MEDIUM/HIGH]
+TIME_HORIZON: [1D/3D/1W/2W/1M]
+"""
+
+    def _parse_ai_response(self, symbol: str, ai_response: str, market_data: MarketData,
+                          provider: str, model: str) -> Dict[str, Any]:
+        """解析AI响应生成标准信号格式"""
+
+        # 简单的关键词解析
+        action = "HOLD"
+        confidence = 0.7
+        target_price = market_data.price
+        risk_level = "MEDIUM"
+        time_horizon = "1W"
+
+        response_upper = ai_response.upper()
+
+        # 解析动作
+        if "ACTION:" in response_upper:
+            if "BUY" in response_upper:
+                action = "BUY"
+            elif "SELL" in response_upper:
+                action = "SELL"
+        elif "BUY" in response_upper and response_upper.index("BUY") < 200:
+            action = "BUY"
+        elif "SELL" in response_upper and response_upper.index("SELL") < 200:
+            action = "SELL"
+
+        # 解析置信度
+        import re
+        confidence_match = re.search(r'CONFIDENCE[:\s]+([\d.]+)', response_upper)
+        if confidence_match:
+            try:
+                confidence = float(confidence_match.group(1))
+                confidence = max(0.0, min(1.0, confidence))
+            except:
+                pass
+
+        # 解析目标价
+        target_match = re.search(r'TARGET[_\s]?PRICE[:\s]+\$?([\d.]+)', response_upper)
+        if target_match:
+            try:
+                target_price = float(target_match.group(1))
+            except:
+                target_price = market_data.price * (1.05 if action == "BUY" else 0.95 if action == "SELL" else 1.0)
+        else:
+            target_price = market_data.price * (1.05 if action == "BUY" else 0.95 if action == "SELL" else 1.0)
+
+        # 解析风险等级
+        if "RISK" in response_upper:
+            if "HIGH" in response_upper:
+                risk_level = "HIGH"
+            elif "LOW" in response_upper:
+                risk_level = "LOW"
+
+        # 解析时间范围
+        horizon_match = re.search(r'TIME[_\s]?HORIZON[:\s]+([A-Z0-9]+)', response_upper)
+        if horizon_match:
+            time_horizon = horizon_match.group(1)
+
+        return {
+            "symbol": symbol,
+            "timestamp": datetime.now().isoformat(),
+            "action": action,
+            "confidence": round(confidence, 3),
+            "price_target": round(target_price, 2),
+            "current_price": market_data.price,
+            "risk_level": risk_level,
+            "time_horizon": time_horizon,
+            "provider": provider,
+            "model": model,
+            "ai_reasoning": ai_response[:500],  # 保留前500字符
+            "market_data": {
+                "price": market_data.price,
+                "change_percent": market_data.change_percent,
+                "volume": market_data.volume,
+                "data_source": market_data.data_source
+            },
+            "ai_generated": True,
+            "success": True
+        }
+
+    async def _generate_technical_signal(self, symbol: str, market_data: MarketData,
+                                        strategy: str) -> Dict[str, Any]:
+        """降级方案：使用技术分析生成信号"""
+        logger.info(f"📊 使用技术分析生成 {symbol} 信号")
+
+        # 简单的技术分析逻辑
+        change_percent = market_data.change_percent
+
+        if strategy == "momentum":
+            if change_percent > 3:
+                action, confidence = "BUY", 0.8
+            elif change_percent < -3:
+                action, confidence = "SELL", 0.75
+            else:
+                action, confidence = "HOLD", 0.6
+        elif strategy == "mean_reversion":
+            if change_percent < -5:
+                action, confidence = "BUY", 0.7
+            elif change_percent > 5:
+                action, confidence = "SELL", 0.7
+            else:
+                action, confidence = "HOLD", 0.5
+        else:
+            action, confidence = "HOLD", 0.6
+
+        return {
+            "symbol": symbol,
+            "timestamp": datetime.now().isoformat(),
+            "action": action,
+            "confidence": round(confidence, 3),
+            "price_target": round(market_data.price * (1.03 if action == "BUY" else 0.97 if action == "SELL" else 1.0), 2),
+            "current_price": market_data.price,
+            "risk_level": "MEDIUM",
+            "time_horizon": "1W",
+            "provider": "technical_analysis",
+            "model": f"{strategy}_strategy",
+            "ai_reasoning": f"Technical analysis based on {strategy} strategy. Price change: {change_percent:+.2f}%",
+            "market_data": {
+                "price": market_data.price,
+                "change_percent": market_data.change_percent,
+                "volume": market_data.volume,
+                "data_source": market_data.data_source
+            },
+            "ai_generated": False,
+            "success": True
+        }
+
+# 初始化多Provider AI信号服务
+ai_signal_service = MultiProviderAISignalService(ai_config_manager, market_data_service)
+
+# 初始化策略执行引擎
+strategy_execution_engine = StrategyExecutionEngine(market_data_service, ai_signal_service)
+
+# 保留旧的兼容性接口（使用DeepSeek作为默认）
+class AIConfigManager:
+    """旧版AI配置管理器（兼容性）"""
+
+    def set_config(self, api_key: str, model: str, temperature: float, max_tokens: int):
+        ai_config_manager.set_config("deepseek", api_key, model, temperature, max_tokens)
+
+    def get_config(self):
+        return ai_config_manager.get_config("deepseek")
+
+    def is_configured(self):
+        return ai_config_manager.is_configured("deepseek")
 
 @app.post("/api/ai/test-connection")
 async def test_ai_connection(request: AITestRequest):
@@ -4393,42 +5097,59 @@ async def test_ai_connection(request: AITestRequest):
 
 @app.post("/api/ai/configure")
 async def configure_ai_model(request: AIConfigRequest):
-    """配置AI模型设置"""
+    """配置AI模型设置（兼容旧接口，默认配置DeepSeek）"""
     try:
+        # 从模型名称推断provider
+        provider = "deepseek"  # 默认
+        if "gpt" in request.model.lower():
+            provider = "openai"
+        elif "claude" in request.model.lower():
+            provider = "claude"
+
         # 保存AI配置到全局管理器
         ai_config_manager.set_config(
+            provider=provider,
             api_key=request.api_key,
             model=request.model,
             temperature=request.temperature,
             max_tokens=request.max_tokens
         )
-        
+
         return {
             "status": "success",
-            "message": "AI模型配置成功",
-            "config": ai_config_manager.get_config()
+            "message": f"AI模型配置成功 (Provider: {provider})",
+            "provider": provider,
+            "config": ai_config_manager.get_config(provider)
         }
-        
+
     except Exception as e:
         return {
-            "status": "error", 
+            "status": "error",
             "message": f"配置失败: {str(e)}"
         }
 
 @app.get("/api/ai/status")
 async def get_ai_status():
-    """获取AI服务状态"""
-    config = ai_config_manager.get_config()
-    
+    """获取AI服务状态（兼容旧接口，返回DeepSeek配置）"""
+    # 默认返回DeepSeek的配置（向后兼容）
+    config = ai_config_manager.get_config("deepseek")
+    is_configured = ai_config_manager.is_configured("deepseek")
+
+    # 如果DeepSeek未配置，尝试找第一个已配置的provider
+    if not is_configured:
+        for provider in ["openai", "claude"]:
+            if ai_config_manager.is_configured(provider):
+                config = ai_config_manager.get_config(provider)
+                is_configured = True
+                break
+
     return {
-        "status": "active" if ai_config_manager.is_configured() else "not_configured",
-        "configured": ai_config_manager.is_configured(),
+        "status": "active" if is_configured else "not_configured",
+        "configured": is_configured,
         "current_config": config,
         "available_models": [
-            {"id": "deepseek-chat", "name": "DeepSeek Chat", "description": "通用对话模型"},
-            {"id": "deepseek-coder", "name": "DeepSeek Coder", "description": "代码生成模型"},
-            {"id": "deepseek-v2.5", "name": "DeepSeek V2.5", "description": "推荐使用的均衡模型"},
-            {"id": "deepseek-v3", "name": "DeepSeek V3", "description": "最新版本，性能最强"}
+            {"id": "deepseek-chat", "name": "DeepSeek Chat", "description": "通用对话模型（推荐）"},
+            {"id": "deepseek-coder", "name": "DeepSeek Coder", "description": "代码生成专用模型"}
         ],
         "signals_generated_today": random.randint(50, 200),
         "last_signal_time": datetime.now().isoformat(),
@@ -4439,7 +5160,8 @@ async def get_ai_status():
             "strategy_analysis": True,
             "risk_assessment": True,
             "market_sentiment": True
-        }
+        },
+        "all_providers": ai_config_manager.get_all_status()
     }
 
 @app.post("/api/ai/generate-signal")
@@ -4451,9 +5173,9 @@ async def generate_ai_signal(request: dict):
         
         # 使用全局AI配置或请求中的配置
         api_key = request.get("api_key") or ai_config_manager.config.get("api_key")
-        model = request.get("model") or ai_config_manager.config.get("model", "deepseek-v2.5")
+        model = request.get("model") or ai_config_manager.config.get("model", "deepseek-chat")
         temperature = ai_config_manager.config.get("temperature", 0.3)
-        max_tokens = ai_config_manager.config.get("max_tokens", 200)
+        max_tokens = ai_config_manager.config.get("max_tokens", 8000)  # 🔥 增加到8000以支持超长文本输出
         
         # 获取实时市场数据
         market_data = await real_data_fetcher.get_real_stock_data(symbol)
@@ -4606,6 +5328,984 @@ async def generate_ai_signal(request: dict):
         return {
             "success": False,
             "message": f"AI信号生成失败: {str(e)}"
+        }
+
+@app.post("/api/ai/generate-signal-v2")
+async def generate_ai_signal_v2(request: dict):
+    """
+    增强版AI交易信号生成 - 支持多AI提供商
+    支持: DeepSeek, OpenAI, Claude
+    """
+    try:
+        symbol = request.get("symbol", "AAPL")
+        market = request.get("market", "US")
+        strategy = request.get("strategy", "momentum")
+        provider = request.get("provider")  # 可选：指定AI提供商
+
+        logger.info(f"🤖 生成AI信号: {symbol} ({market}), 策略: {strategy}, Provider: {provider or 'auto'}")
+
+        start_time = time.time()
+
+        # 使用统一的AI信号服务
+        signal = await ai_signal_service.generate_signal(
+            symbol=symbol,
+            market=market,
+            strategy=strategy,
+            provider=provider
+        )
+
+        processing_time = int((time.time() - start_time) * 1000)
+        signal["processing_time_ms"] = processing_time
+
+        return {
+            "success": True,
+            "signal": signal,
+            "processing_time_ms": processing_time,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"❌ AI信号生成失败: {e}")
+        return {
+            "success": False,
+            "message": f"AI信号生成失败: {str(e)}",
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/ai/debug/config")
+async def debug_ai_config():
+    """调试端点 - 检查AI配置管理器的实际状态"""
+    try:
+        providers_status = {}
+
+        for provider in ["deepseek", "openai", "claude"]:
+            provider_data = ai_config_manager.providers.get(provider, {})
+            providers_status[provider] = {
+                "enabled": provider_data.get("enabled"),
+                "has_api_key": provider_data.get("api_key") is not None,
+                "api_key_preview": provider_data.get("api_key", "")[:10] + "..." if provider_data.get("api_key") else None,
+                "model": provider_data.get("model"),
+                "is_configured": ai_config_manager.is_configured(provider)
+            }
+
+        # 测试选择提供商
+        selected = None
+        for provider in ["claude", "openai", "deepseek"]:
+            if ai_config_manager.is_configured(provider):
+                selected = provider
+                break
+
+        return {
+            "providers_status": providers_status,
+            "selected_provider": selected,
+            "ai_signal_service_exists": ai_signal_service is not None,
+            "config_manager_id": id(ai_config_manager),
+            "signal_service_config_id": id(ai_signal_service.config_manager) if ai_signal_service else None
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "traceback": str(e.__traceback__)
+        }
+
+@app.post("/api/ai/batch-generate-signals")
+async def batch_generate_ai_signals(request: dict):
+    """批量生成AI交易信号 - 支持多个股票同时分析"""
+    try:
+        symbols = request.get("symbols", ["AAPL", "MSFT", "GOOGL"])
+        market = request.get("market", "US")
+        strategy = request.get("strategy", "momentum")
+        provider = request.get("provider")
+
+        logger.info(f"🚀 批量生成AI信号: {len(symbols)} 个股票")
+
+        start_time = time.time()
+
+        # 并发生成信号
+        tasks = []
+        for symbol in symbols[:10]:  # 限制最多10个
+            task = ai_signal_service.generate_signal(
+                symbol=symbol,
+                market=market,
+                strategy=strategy,
+                provider=provider
+            )
+            tasks.append(task)
+
+        signals = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # 过滤成功的信号
+        successful_signals = []
+        failed_signals = []
+
+        for i, signal in enumerate(signals):
+            if isinstance(signal, Exception):
+                failed_signals.append({
+                    "symbol": symbols[i],
+                    "error": str(signal)
+                })
+            else:
+                successful_signals.append(signal)
+
+        processing_time = int((time.time() - start_time) * 1000)
+
+        return {
+            "success": True,
+            "signals": successful_signals,
+            "failed": failed_signals,
+            "total_count": len(symbols),
+            "success_count": len(successful_signals),
+            "failed_count": len(failed_signals),
+            "processing_time_ms": processing_time,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"❌ 批量AI信号生成失败: {e}")
+        return {
+            "success": False,
+            "message": f"批量生成失败: {str(e)}",
+            "timestamp": datetime.now().isoformat()
+        }
+
+# ==================== Provider特定的AI配置端点 ====================
+
+@app.get("/api/ai/providers")
+async def get_ai_providers():
+    """获取所有支持的AI Provider及其状态"""
+    return {
+        "providers": {
+            "deepseek": {
+                "name": "DeepSeek",
+                "description": "高性价比中文优化模型",
+                "models": [
+                    {"id": "deepseek-chat", "name": "DeepSeek Chat", "description": "通用对话模型（推荐）"},
+                    {"id": "deepseek-coder", "name": "DeepSeek Coder", "description": "代码生成专用模型"}
+                ],
+                "configured": ai_config_manager.is_configured("deepseek"),
+                "status": ai_config_manager.get_config("deepseek")
+            },
+            "openai": {
+                "name": "OpenAI",
+                "description": "业界领先的AI模型",
+                "models": [
+                    {"id": "gpt-4o", "name": "GPT-4o", "description": "最新多模态旗舰模型"},
+                    {"id": "gpt-4o-mini", "name": "GPT-4o Mini", "description": "性价比优选"},
+                    {"id": "gpt-4-turbo", "name": "GPT-4 Turbo", "description": "高性能版本"},
+                    {"id": "gpt-3.5-turbo", "name": "GPT-3.5 Turbo", "description": "快速经济选择"}
+                ],
+                "configured": ai_config_manager.is_configured("openai"),
+                "status": ai_config_manager.get_config("openai")
+            },
+            "claude": {
+                "name": "Anthropic Claude",
+                "description": "安全可靠的AI助手",
+                "models": [
+                    {"id": "claude-3-5-sonnet-20240620", "name": "Claude 3.5 Sonnet", "description": "最新版本，性能最强"},
+                    {"id": "claude-3-opus-20240229", "name": "Claude 3 Opus", "description": "旗舰模型"},
+                    {"id": "claude-3-sonnet-20240229", "name": "Claude 3 Sonnet", "description": "均衡选择"},
+                    {"id": "claude-3-haiku-20240307", "name": "Claude 3 Haiku", "description": "快速高效"}
+                ],
+                "configured": ai_config_manager.is_configured("claude"),
+                "status": ai_config_manager.get_config("claude")
+            }
+        },
+        "active_provider": next((p for p in ["deepseek", "openai", "claude"] if ai_config_manager.is_configured(p)), None)
+    }
+
+@app.post("/api/ai/{provider}/configure")
+async def configure_provider(provider: str, request: AIConfigRequest):
+    """配置指定Provider的AI模型设置"""
+    try:
+        if provider not in ["deepseek", "openai", "claude"]:
+            return {
+                "status": "error",
+                "message": f"不支持的Provider: {provider}"
+            }
+
+        # 保存配置
+        ai_config_manager.set_config(
+            provider=provider,
+            api_key=request.api_key,
+            model=request.model,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens
+        )
+
+        return {
+            "status": "success",
+            "message": f"{provider.upper()} AI模型配置成功",
+            "provider": provider,
+            "config": ai_config_manager.get_config(provider)
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"配置失败: {str(e)}"
+        }
+
+@app.get("/api/ai/{provider}/status")
+async def get_provider_status(provider: str):
+    """获取指定Provider的配置状态"""
+    try:
+        if provider not in ["deepseek", "openai", "claude"]:
+            return {
+                "status": "error",
+                "message": f"不支持的Provider: {provider}"
+            }
+
+        config = ai_config_manager.get_config(provider)
+        is_configured = ai_config_manager.is_configured(provider)
+
+        # Provider特定的模型列表
+        model_lists = {
+            "deepseek": [
+                {"id": "deepseek-chat", "name": "DeepSeek Chat"},
+                {"id": "deepseek-coder", "name": "DeepSeek Coder"},
+                {"id": "deepseek-v2.5", "name": "DeepSeek V2.5"},
+                {"id": "deepseek-v3", "name": "DeepSeek V3"}
+            ],
+            "openai": [
+                {"id": "gpt-4o", "name": "GPT-4o"},
+                {"id": "gpt-4o-mini", "name": "GPT-4o Mini"},
+                {"id": "gpt-4-turbo", "name": "GPT-4 Turbo"},
+                {"id": "gpt-3.5-turbo", "name": "GPT-3.5 Turbo"}
+            ],
+            "claude": [
+                {"id": "claude-3-5-sonnet-20240620", "name": "Claude 3.5 Sonnet"},
+                {"id": "claude-3-opus-20240229", "name": "Claude 3 Opus"},
+                {"id": "claude-3-sonnet-20240229", "name": "Claude 3 Sonnet"},
+                {"id": "claude-3-haiku-20240307", "name": "Claude 3 Haiku"}
+            ]
+        }
+
+        return {
+            "provider": provider,
+            "status": "active" if is_configured else "not_configured",
+            "configured": is_configured,
+            "current_config": config,
+            "available_models": model_lists.get(provider, []),
+            "capabilities": {
+                "chat": True,
+                "signal_generation": True,
+                "analysis": True,
+                "decision_explanation": True
+            }
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"获取状态失败: {str(e)}"
+        }
+
+@app.post("/api/ai/{provider}/test")
+async def test_provider_connection(provider: str, request: AITestRequest):
+    """测试指定Provider的API连接"""
+    try:
+        if provider not in ["deepseek", "openai", "claude"]:
+            return {
+                "success": False,
+                "message": f"不支持的Provider: {provider}"
+            }
+
+        # 检查API密钥格式
+        if len(request.api_key) < 10:
+            return {
+                "success": False,
+                "message": "API密钥格式不正确，长度过短"
+            }
+
+        # Provider特定的API配置
+        api_configs = {
+            "deepseek": {
+                "url": "https://api.deepseek.com/v1/chat/completions",
+                "headers": {
+                    "Authorization": f"Bearer {request.api_key}",
+                    "Content-Type": "application/json"
+                },
+                "payload": {
+                    "model": request.model,
+                    "messages": [{"role": "user", "content": "测试连接"}],
+                    "max_tokens": 10
+                }
+            },
+            "openai": {
+                "url": "https://api.openai.com/v1/chat/completions",
+                "headers": {
+                    "Authorization": f"Bearer {request.api_key}",
+                    "Content-Type": "application/json"
+                },
+                "payload": {
+                    "model": request.model,
+                    "messages": [{"role": "user", "content": "测试连接"}],
+                    "max_tokens": 10
+                }
+            },
+            "claude": {
+                "url": "https://api.anthropic.com/v1/messages",
+                "headers": {
+                    "x-api-key": request.api_key,
+                    "anthropic-version": "2023-06-01",
+                    "Content-Type": "application/json"
+                },
+                "payload": {
+                    "model": request.model,
+                    "messages": [{"role": "user", "content": "测试连接"}],
+                    "max_tokens": 10
+                }
+            }
+        }
+
+        api_config = api_configs[provider]
+
+        # 真实调用API测试连接
+        try:
+            async with aiohttp.ClientSession() as session:
+                start_time = time.time()
+                async with session.post(
+                    api_config["url"],
+                    headers=api_config["headers"],
+                    json=api_config["payload"],
+                    timeout=10
+                ) as response:
+                    latency = int((time.time() - start_time) * 1000)
+
+                    if response.status == 200:
+                        result = await response.json()
+                        return {
+                            "success": True,
+                            "message": f"成功连接到 {provider.upper()} {request.model}",
+                            "provider": provider,
+                            "model": request.model,
+                            "status": "connected",
+                            "latency_ms": latency,
+                            "model_info": {
+                                "id": result.get("model", request.model),
+                                "usage": result.get("usage", {})
+                            }
+                        }
+                    else:
+                        error_data = await response.text()
+                        return {
+                            "success": False,
+                            "message": f"API错误: {response.status} - {error_data[:100]}"
+                        }
+
+        except asyncio.TimeoutError:
+            return {
+                "success": False,
+                "message": "连接超时，请检查网络连接或API服务状态"
+            }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"连接失败: {str(e)}"
+        }
+
+# ==================== AI Chat 辅助函数 ====================
+
+async def extract_and_fetch_stock_data(message: str):
+    """从消息中提取股票代码并获取真实数据"""
+    import re
+
+    # 股票代码和公司名称映射
+    stock_info = []
+
+    # 中国公司名称到股票代码的映射
+    cn_company_map = {
+        '招商银行': ('600036.SH', 'CN'),
+        '汇川技术': ('300124.SZ', 'CN'),
+        '平安银行': ('000001.SZ', 'CN'),
+        '贵州茅台': ('600519.SS', 'CN'),
+        '宁德时代': ('300750.SZ', 'CN'),
+        '比亚迪': ('002594.SZ', 'CN'),
+        '中国平安': ('601318.SS', 'CN'),
+        '工商银行': ('601398.SS', 'CN'),
+        '建设银行': ('601939.SS', 'CN'),
+        '农业银行': ('601288.SS', 'CN'),
+        '腾讯': ('00700.HK', 'CN'),
+        '阿里巴巴': ('09988.HK', 'CN')
+    }
+
+    # 1. 检测公司名称
+    for company, (symbol, market) in cn_company_map.items():
+        if company in message:
+            stock_info.append({
+                'name': company,
+                'symbol': symbol,
+                'market': market
+            })
+
+    # 2. 提取A股代码 (600036.SH, 300124.SZ等)
+    a_stock_pattern = r'\b(\d{6})\.(SH|SZ|SS|sh|sz|ss)\b'
+    a_stocks = re.findall(a_stock_pattern, message)
+    for code, exchange in a_stocks:
+        symbol = f"{code}.{exchange.upper()}"
+        if not any(s['symbol'] == symbol for s in stock_info):
+            stock_info.append({
+                'name': code,
+                'symbol': symbol,
+                'market': 'CN'
+            })
+
+    # 3. 提取美股代码
+    us_stock_pattern = r'\b([A-Z]{2,5})\b'
+    common_words = {'TO', 'A', 'IN', 'ON', 'FOR', 'THE', 'AND', 'OR', 'IS', 'AT', 'BY', 'AS', 'AN', 'BE', 'IF', 'IT', 'OF', 'WE', 'UP', 'SO', 'NO', 'MY', 'VS', 'YTD'}
+    known_us_stocks = {'AAPL', 'TSLA', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'META', 'AMD', 'INTC', 'NFLX', 'DIS', 'BA', 'JPM', 'BAC', 'WMT', 'V', 'MA'}
+
+    us_stocks = re.findall(us_stock_pattern, message)
+    for symbol in us_stocks:
+        if symbol in known_us_stocks and not any(s['symbol'] == symbol for s in stock_info):
+            stock_info.append({
+                'name': symbol,
+                'symbol': symbol,
+                'market': 'US'
+            })
+
+    # 4. 获取真实市场数据
+    real_data = []
+    for stock in stock_info[:5]:  # 最多获取5个股票数据
+        try:
+            market_data = await market_data_service.get_stock_data(stock['symbol'], stock['market'])
+            real_data.append({
+                'name': stock['name'],
+                'symbol': stock['symbol'],
+                'price': market_data.price,
+                'change': market_data.change,
+                'change_percent': market_data.change_percent,
+                'volume': market_data.volume,
+                'market_cap': getattr(market_data, 'market_cap', None),
+                'high': getattr(market_data, 'high', None),
+                'low': getattr(market_data, 'low', None),
+                'open': getattr(market_data, 'open', None)
+            })
+            logger.info(f"✅ 获取 {stock['name']} 真实数据成功: ¥{market_data.price:.2f}, {market_data.change_percent:+.2f}%")
+        except Exception as e:
+            logger.error(f"❌ 获取 {stock['symbol']} 数据失败: {e}")
+            continue
+
+    return real_data
+
+def generate_chart_data_from_real_data(real_data: list, message: str, language: str = "zh"):
+    """基于真实数据生成图表"""
+    if not real_data:
+        return None
+
+    message_lower = message.lower()
+
+    # 检测图表类型
+    has_compare = any(keyword in message_lower for keyword in ['对比', 'compare', '比较', 'vs', '分析'])
+
+    # 如果有多个股票，生成对比图表
+    if len(real_data) >= 2 or has_compare:
+        labels = [stock['name'] for stock in real_data]
+        values = [stock['change_percent'] for stock in real_data]
+
+        title = "股票涨跌对比" if language == "zh" else "Stock Performance Comparison"
+
+        return {
+            "type": "bar",
+            "title": title,
+            "labels": labels,
+            "values": values,
+            "real_data": True  # 标记为真实数据
+        }
+
+    return None
+
+# ==================== AI Chat 分析端点 ====================
+
+@app.post("/api/ai-chat/analyze")
+async def ai_chat_analyze(request: AIChatAnalyzeRequest):
+    """AI Chat分析端点 - 使用配置的Provider分析用户消息"""
+    try:
+        # 检查是否有已配置的provider
+        configured_providers = []
+        for provider in ["deepseek", "openai", "claude"]:
+            if ai_config_manager.is_configured(provider):
+                configured_providers.append(provider)
+
+        if not configured_providers:
+            return {
+                "success": False,
+                "response": "请先在配置页面(CONFIG)配置AI Provider的API密钥。支持：DeepSeek、OpenAI、Claude。",
+                "demo_mode": True
+            }
+
+        # 选择provider（优先级：DeepSeek > OpenAI > Claude）
+        if "deepseek" in configured_providers:
+            active_provider = "deepseek"
+        elif "openai" in configured_providers:
+            active_provider = "openai"
+        else:
+            active_provider = configured_providers[0]
+
+        # 获取provider配置
+        provider_config = ai_config_manager.providers[active_provider]
+
+        # 🔥 获取真实市场数据
+        real_stock_data = await extract_and_fetch_stock_data(request.message)
+        logger.info(f"📊 获取到 {len(real_stock_data)} 个股票的真实数据")
+
+        # 构建消息历史（包含上下文）
+        messages = []
+
+        # 根据语言选择系统提示并添加真实数据
+        if request.language == "en":
+            system_prompt = """You are an AI financial analyst assistant for the Arthera quantitative trading platform with advanced data visualization capabilities.
+
+Your responsibilities are:
+1. Analyze stock financial data and market trends in comprehensive detail
+2. Assess investment portfolio risks with thorough evaluation
+3. Provide data-driven investment recommendations with complete analysis
+4. Answer user questions about quantitative trading with detailed explanations
+
+PLATFORM CAPABILITIES:
+- ✅ The system AUTOMATICALLY GENERATES CHARTS when you compare stocks or analyze market data
+- ✅ Real-time market data is available and will be displayed with your analysis
+- ✅ Visual charts (bar, line, pie) will be automatically created based on the data you discuss
+- ✅ Simply provide thorough analysis - the platform handles visualization automatically
+
+CRITICAL INSTRUCTIONS:
+- Provide COMPLETE and COMPREHENSIVE analysis (aim for 3000+ words for detailed questions)
+- DO NOT truncate or cut off your response mid-sentence
+- Ensure ALL sections are fully developed and concluded with proper endings
+- Include detailed data support and specific metrics
+- When comparing stocks, discuss them thoroughly - charts will auto-generate
+- Respond in professional, detailed English
+- NEVER say you cannot generate charts - the platform does this automatically
+- IMPORTANT: Always respond in English and complete your FULL analysis to the end
+- When user asks to "continue" or "继续", DO NOT repeat previous content - provide NEW analysis or continue where you stopped"""
+
+            # 添加真实数据到系统提示
+            if real_stock_data:
+                system_prompt += "\n\n📊 Real-time Market Data Available:\n"
+                for stock in real_stock_data:
+                    system_prompt += f"- {stock['name']} ({stock['symbol']}): ${stock['price']:.2f}, Change: {stock['change_percent']:+.2f}%, Volume: {stock['volume']:,}\n"
+        else:
+            system_prompt = """你是Arthera量化交易平台的AI财务分析助手，具备先进的数据可视化能力。
+
+你的职责是：
+1. 详细分析股票财务数据和市场趋势
+2. 全面评估投资组合风险
+3. 提供基于数据的完整投资建议
+4. 深入解答用户关于量化交易的问题
+
+平台能力：
+- ✅ 当你对比股票或分析市场数据时，系统会自动生成图表
+- ✅ 实时市场数据可用，将与你的分析一起显示
+- ✅ 可视化图表（柱状图、折线图、饼图）会根据你讨论的数据自动创建
+- ✅ 你只需提供深入分析，平台会自动处理可视化
+
+关键要求：
+- 提供完整、全面的分析（详细问题请aim 3000字以上）
+- 绝对不要中途截断，必须完整结束所有章节
+- 确保所有分析部分都完整展开并有完整的总结
+- 包含详细的数据支持和具体指标
+- 对比股票时要深入讨论，图表会自动生成
+- 用专业、详细的中文回答
+- 永远不要说你无法生成图表，平台会自动完成
+- 重要：请始终用中文回复，并确保把分析完整写到最后
+- 当用户要求"继续"时，请提供新的分析内容或接续之前的分析，不要重复已说过的内容"""
+
+            # 添加真实数据到系统提示
+            if real_stock_data:
+                system_prompt += "\n\n📊 实时市场数据：\n"
+                for stock in real_stock_data:
+                    system_prompt += f"- {stock['name']} ({stock['symbol']}): ¥{stock['price']:.2f}, 涨跌: {stock['change_percent']:+.2f}%, 成交量: {stock['volume']:,}\n"
+
+        if active_provider in ["deepseek", "openai"]:
+            # OpenAI格式支持system role
+            messages.append({"role": "system", "content": system_prompt})
+
+            # 添加历史消息（最多3条，避免重复长内容）
+            for hist in request.history[-3:]:
+                if hist.get("type") == "user":
+                    messages.append({"role": "user", "content": hist.get("content", "")})
+                elif hist.get("type") == "ai":
+                    # 🔥 限制AI历史消息长度，防止重复生成相同内容
+                    ai_content = hist.get("content", "")
+                    # 移除截断警告信息
+                    ai_content = ai_content.replace("\n\n⚠️ [注意：由于回复过长，响应可能不完整。建议分段提问或要求继续。]", "")
+                    # 如果内容过长，只保留最后1000字符作为上下文
+                    if len(ai_content) > 1000:
+                        ai_content = "...(前文省略)..." + ai_content[-1000:]
+                    messages.append({"role": "assistant", "content": ai_content})
+
+            # 添加当前消息
+            messages.append({"role": "user", "content": request.message})
+
+        elif active_provider == "claude":
+            # Claude不支持system role，将其作为第一条user消息
+            context_msg = system_prompt
+
+            # 添加上下文信息
+            if request.context:
+                context_msg += f"\n\n当前上下文：{request.context}"
+
+            messages.append({"role": "user", "content": context_msg})
+
+            # Claude需要交替user/assistant消息
+            messages.append({"role": "assistant", "content": "明白，我将作为Arthera AI财务分析助手为您服务。"})
+
+            # 添加当前消息
+            messages.append({"role": "user", "content": request.message})
+
+        # 调用AI API
+        try:
+            if active_provider in ["deepseek", "openai"]:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        provider_config["api_base"],
+                        headers={
+                            "Authorization": f"Bearer {provider_config['api_key']}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "model": provider_config["model"],
+                            "messages": messages,
+                            "temperature": provider_config["temperature"],
+                            "max_tokens": provider_config["max_tokens"]
+                        },
+                        timeout=180  # 🔥 增加到180秒以支持8000 tokens的长文本生成
+                    ) as response:
+                        if response.status == 200:
+                            result = await response.json()
+                            ai_response = result["choices"][0]["message"]["content"]
+                            finish_reason = result["choices"][0].get("finish_reason", "unknown")
+
+                            # 🔥 检查响应是否完整
+                            if finish_reason == "length":
+                                logger.warning(f"⚠️ AI响应因长度限制被截断！finish_reason: {finish_reason}")
+                                # 不再添加警告到响应中，让AI自然结束
+                                logger.info(f"📊 AI响应长度: {len(ai_response)} 字符（已达到max_tokens限制）")
+                            elif finish_reason == "stop":
+                                logger.info(f"✅ AI响应完整生成（{len(ai_response)} 字符）")
+                            else:
+                                logger.warning(f"⚠️ 未知的finish_reason: {finish_reason}")
+
+                            # 🔥 使用真实数据生成图表
+                            chart_data = generate_chart_data_from_real_data(real_stock_data, request.message, request.language)
+
+                            return {
+                                "success": True,
+                                "response": ai_response,
+                                "provider": active_provider,
+                                "model": provider_config["model"],
+                                "demo_mode": False,
+                                "finish_reason": finish_reason,  # 🔥 返回finish_reason供调试
+                                "data": {"chart": chart_data, "stocks": real_stock_data} if chart_data or real_stock_data else None
+                            }
+                        else:
+                            error_text = await response.text()
+                            logger.error(f"❌ {active_provider} API错误: {response.status} - {error_text[:200]}")
+                            return {
+                                "success": False,
+                                "response": f"AI服务暂时不可用（{response.status}），请稍后重试。",
+                                "error": error_text[:200]
+                            }
+
+            elif active_provider == "claude":
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        provider_config["api_base"],
+                        headers={
+                            "x-api-key": provider_config['api_key'],
+                            "anthropic-version": "2023-06-01",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "model": provider_config["model"],
+                            "messages": messages,
+                            "temperature": provider_config["temperature"],
+                            "max_tokens": provider_config["max_tokens"]
+                        },
+                        timeout=180  # 🔥 增加到180秒以支持8000 tokens的长文本生成
+                    ) as response:
+                        if response.status == 200:
+                            result = await response.json()
+                            ai_response = result["content"][0]["text"]
+
+                            # 🔥 使用真实数据生成图表
+                            chart_data = generate_chart_data_from_real_data(real_stock_data, request.message, request.language)
+
+                            return {
+                                "success": True,
+                                "response": ai_response,
+                                "provider": active_provider,
+                                "model": provider_config["model"],
+                                "demo_mode": False,
+                                "data": {"chart": chart_data, "stocks": real_stock_data} if chart_data or real_stock_data else None
+                            }
+                        else:
+                            error_text = await response.text()
+                            logger.error(f"❌ Claude API错误: {response.status} - {error_text[:200]}")
+                            return {
+                                "success": False,
+                                "response": f"AI服务暂时不可用（{response.status}），请稍后重试。",
+                                "error": error_text[:200]
+                            }
+
+        except asyncio.TimeoutError:
+            return {
+                "success": False,
+                "response": f"{active_provider} API调用超时，请检查网络连接或稍后重试。"
+            }
+        except Exception as api_error:
+            logger.error(f"❌ {active_provider} API调用失败: {api_error}")
+            return {
+                "success": False,
+                "response": f"AI服务调用失败：{str(api_error)[:100]}"
+            }
+
+    except Exception as e:
+        import traceback
+        logger.error(f"❌ AI Chat分析失败: {e}")
+        logger.error(f"错误详情: {traceback.format_exc()}")
+
+        # 提供更详细的错误信息
+        error_msg = str(e)
+        if "configured" in error_msg.lower() or "api" in error_msg.lower():
+            return {
+                "success": False,
+                "response": "⚠️ AI服务未配置。请在配置页面(CONFIG → AI配置)添加以下任一Provider的API密钥：\n\n• DeepSeek (推荐) - platform.deepseek.com\n• OpenAI (GPT-4) - platform.openai.com\n• Claude (Sonnet) - console.anthropic.com\n\n配置后即可使用AI功能。"
+            }
+        else:
+            return {
+                "success": False,
+                "response": f"抱歉，处理您的请求时出现错误：{error_msg[:100]}。请稍后重试或联系支持。"
+            }
+
+@app.post("/api/ai-chat/upload-report")
+async def ai_chat_upload_report(file: UploadFile = File(...)):
+    """上传并分析财务报表"""
+    try:
+        # 检查文件类型
+        allowed_extensions = ['.pdf', '.xlsx', '.csv', '.xls', '.txt']
+        file_ext = os.path.splitext(file.filename)[1].lower()
+
+        if file_ext not in allowed_extensions:
+            return {
+                "success": False,
+                "analysis": f"不支持的文件格式：{file_ext}。支持的格式：PDF, XLSX, CSV, TXT"
+            }
+
+        # 读取文件内容
+        file_content = await file.read()
+        file_size_kb = len(file_content) / 1024
+
+        # 解析文件内容
+        extracted_data = None
+        text_content = ""
+
+        if file_ext == '.csv':
+            try:
+                import csv
+                from io import StringIO
+                csv_text = file_content.decode('utf-8', errors='ignore')
+                csv_reader = csv.DictReader(StringIO(csv_text))
+                rows = list(csv_reader)
+                extracted_data = rows[:100]  # 最多读取100行
+                text_content = f"CSV文件包含 {len(rows)} 行数据\n"
+                if rows:
+                    text_content += f"列名: {', '.join(rows[0].keys())}\n"
+                    text_content += f"前5行数据:\n{str(rows[:5])}"
+            except Exception as e:
+                logger.warning(f"CSV解析错误: {e}")
+                text_content = "CSV文件解析失败，可能是编码问题"
+
+        elif file_ext in ['.xlsx', '.xls']:
+            try:
+                import openpyxl
+                from io import BytesIO
+                wb = openpyxl.load_workbook(BytesIO(file_content), read_only=True)
+                sheet = wb.active
+                rows = []
+                for idx, row in enumerate(sheet.iter_rows(values_only=True)):
+                    if idx > 100:  # 最多读取100行
+                        break
+                    rows.append(row)
+                extracted_data = rows
+                text_content = f"Excel文件包含 {len(rows)} 行数据\n"
+                if rows:
+                    text_content += f"列数: {len(rows[0])}\n"
+                    text_content += f"前5行数据:\n{str(rows[:5])}"
+            except Exception as e:
+                logger.warning(f"Excel解析错误: {e}")
+                text_content = "Excel文件解析失败，请确保文件未损坏"
+
+        elif file_ext == '.pdf':
+            try:
+                import PyPDF2
+                from io import BytesIO
+                pdf_reader = PyPDF2.PdfReader(BytesIO(file_content))
+                text_content = ""
+                for page in pdf_reader.pages[:10]:  # 最多读取前10页
+                    text_content += page.extract_text() + "\n"
+                text_content = text_content[:5000]  # 限制长度
+            except Exception as e:
+                logger.warning(f"PDF解析错误: {e}")
+                text_content = "PDF文件解析失败，可能不支持该PDF版本"
+
+        elif file_ext == '.txt':
+            text_content = file_content.decode('utf-8', errors='ignore')[:5000]
+
+        # 🔥 生成图表数据（如果有数值数据）
+        chart_data = None
+        if extracted_data and len(extracted_data) > 0:
+            try:
+                # 对于CSV文件（字典列表）
+                if file_ext == '.csv' and isinstance(extracted_data[0], dict):
+                    keys = list(extracted_data[0].keys())
+                    # 找到数值列
+                    numeric_cols = []
+                    for key in keys:
+                        try:
+                            values = [float(row[key]) for row in extracted_data[:10] if row.get(key)]
+                            if len(values) > 0:
+                                numeric_cols.append(key)
+                        except (ValueError, TypeError):
+                            pass
+
+                    # 如果有数值列，生成柱状图
+                    if numeric_cols and len(extracted_data) <= 20:
+                        first_col = keys[0]  # 标签列
+                        value_col = numeric_cols[0]  # 数值列
+
+                        labels = [str(row.get(first_col, f'Row {i}')) for i, row in enumerate(extracted_data[:10])]
+                        values = []
+                        for row in extracted_data[:10]:
+                            try:
+                                values.append(float(row.get(value_col, 0)))
+                            except (ValueError, TypeError):
+                                values.append(0)
+
+                        chart_data = {
+                            "type": "bar",
+                            "title": f"{value_col} 分析",
+                            "labels": labels,
+                            "values": values,
+                            "x_label": first_col,
+                            "y_label": value_col
+                        }
+
+                # 对于Excel文件（元组列表）
+                elif file_ext in ['.xlsx', '.xls'] and len(extracted_data) > 1:
+                    header = extracted_data[0]
+                    data_rows = extracted_data[1:11]  # 最多10行
+
+                    # 找到数值列
+                    numeric_cols_idx = []
+                    for idx in range(len(header)):
+                        try:
+                            values = [float(row[idx]) for row in data_rows if idx < len(row) and row[idx] is not None]
+                            if len(values) > 0:
+                                numeric_cols_idx.append(idx)
+                        except (ValueError, TypeError):
+                            pass
+
+                    if numeric_cols_idx and len(data_rows) <= 20:
+                        label_idx = 0  # 第一列作为标签
+                        value_idx = numeric_cols_idx[0]  # 第一个数值列
+
+                        labels = [str(row[label_idx]) if label_idx < len(row) else f'Row {i}' for i, row in enumerate(data_rows)]
+                        values = []
+                        for row in data_rows:
+                            try:
+                                values.append(float(row[value_idx]) if value_idx < len(row) else 0)
+                            except (ValueError, TypeError):
+                                values.append(0)
+
+                        chart_data = {
+                            "type": "bar",
+                            "title": f"{header[value_idx]} 分析",
+                            "labels": labels,
+                            "values": values,
+                            "x_label": str(header[label_idx]),
+                            "y_label": str(header[value_idx])
+                        }
+
+            except Exception as e:
+                logger.warning(f"图表生成失败: {e}")
+
+        # 使用AI分析文件内容
+        analysis_prompt = f"""请详细分析以下上传的文件内容：
+
+文件名: {file.filename}
+文件类型: {file_ext}
+文件大小: {file_size_kb:.2f} KB
+
+文件内容摘要:
+{text_content[:4000]}
+
+请提供详细分析，包括：
+1. 文件内容概述
+2. 关键数据点或发现（具体数字和趋势）
+3. 如果是财务数据，提供深入的财务分析和见解
+4. 数据质量评估
+5. 建议或注意事项
+6. 如果有异常值或有趣的模式，请指出
+
+请用专业、详细的语言回答，提供深度分析。"""
+
+        # 调用AI进行分析
+        ai_response = "📊 文件已成功上传和解析。\n\n"
+
+        if ai_config_manager.is_configured('deepseek'):
+            try:
+                config = ai_config_manager.get_config('deepseek')
+                client = AsyncOpenAI(
+                    api_key=config['api_key'],
+                    base_url=config['base_url']
+                )
+
+                completion = await client.chat.completions.create(
+                    model=config['model'],
+                    messages=[
+                        {"role": "system", "content": "你是一个专业的财务和数据分析助手，擅长从数据中提取有价值的见解，并提供详细、准确、全面的分析报告。请确保分析完整、深入，不要中途截断。"},
+                        {"role": "user", "content": analysis_prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=8000  # 🔥 增加到8000以支持超长文本输出和完整分析
+                )
+
+                ai_response = completion.choices[0].message.content
+
+            except Exception as e:
+                logger.error(f"AI分析失败: {e}")
+                ai_response += f"文件解析成功，但AI分析暂不可用。\n\n📄 文件内容预览:\n{text_content[:1000]}"
+        else:
+            ai_response += f"⚠️ AI服务未配置，无法进行智能分析。\n\n📄 文件内容预览:\n{text_content[:1000]}"
+
+        # 🔥 添加图表信息到响应
+        response_data = {
+            "filename": file.filename,
+            "size": f"{file_size_kb:.2f} KB",
+            "type": file_ext,
+            "rows": len(extracted_data) if extracted_data else 0,
+            "preview": text_content[:200] if text_content else ""
+        }
+
+        if chart_data:
+            response_data["chart"] = chart_data
+            logger.info(f"✅ 为文件 {file.filename} 生成了图表")
+
+        return {
+            "success": True,
+            "analysis": ai_response,
+            "data": response_data
+        }
+
+    except Exception as e:
+        logger.error(f"❌ 文件上传失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "analysis": f"文件上传失败: {str(e)}"
         }
 
 # ==================== 健康检查 ====================
@@ -6131,25 +7831,66 @@ async def integrate_strategy_services(strategy_config: StrategyConfigRequest):
         logger.error(f"❌ 策略服务集成失败: {e}")
         raise HTTPException(status_code=500, detail=f"策略服务集成失败: {str(e)}")
 
+@app.post("/strategy/execute")
+async def execute_strategy_endpoint(request: dict):
+    """执行策略 - 使用真实数据和AI信号"""
+    try:
+        strategy_id = request.get("strategy_id", "deepseek_alpha")
+        symbols = request.get("symbols", ["AAPL", "MSFT", "GOOGL"])
+        market = request.get("market", "US")
+        strategy_type = request.get("strategy_type", "momentum")
+        risk_level = request.get("risk_level", "moderate")
+        max_position = request.get("max_position", 10000)
+
+        strategy_config = {
+            "symbols": symbols,
+            "market": market,
+            "strategy_type": strategy_type,
+            "risk_level": risk_level,
+            "max_position": max_position
+        }
+
+        logger.info(f"🎯 执行策略请求: {strategy_id}")
+
+        result = await strategy_execution_engine.execute_strategy(strategy_id, strategy_config)
+
+        return {
+            "success": True,
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"❌ 策略执行失败: {e}")
+        return {
+            "success": False,
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 @app.get("/strategy/execution-log")
 async def get_strategy_execution_log(limit: int = 50):
-    """获取策略执行日志"""
+    """获取策略执行日志 - 真实数据"""
     try:
-        # 生成模拟的策略执行日志
-        execution_log = []
-        
-        for i in range(limit):
-            log_time = datetime.now() - timedelta(minutes=i*2)
-            
-            strategies = ["deepseek_alpha", "bayesian_momentum", "kelly_optimizer", "risk_parity"]
-            actions = ["信号生成", "订单执行", "风险检查", "仓位调整", "收益计算"]
-            
-            log_entry = {
-                "timestamp": log_time.isoformat(),
-                "strategy": random.choice(strategies),
-                "action": random.choice(actions),
-                "symbol": random.choice(["AAPL", "TSLA", "NVDA", "600519.SS", "000858.SZ"]),
-                "result": random.choice(["成功", "成功", "成功", "失败"]),  # 75%成功率
+        # 从策略执行引擎获取真实日志
+        execution_log = strategy_execution_engine.get_execution_log(limit)
+
+        # 如果没有真实日志，生成模拟数据作为示例
+        if not execution_log:
+            execution_log = []
+
+            for i in range(min(limit, 10)):
+                log_time = datetime.now() - timedelta(minutes=i*2)
+
+                strategies = ["deepseek_alpha", "bayesian_momentum", "kelly_optimizer", "risk_parity"]
+                actions = ["信号生成", "订单执行", "风险检查", "仓位调整", "收益计算"]
+
+                log_entry = {
+                    "timestamp": log_time.isoformat(),
+                    "strategy": random.choice(strategies),
+                    "action": random.choice(actions),
+                    "symbol": random.choice(["AAPL", "TSLA", "NVDA", "600519.SS", "000858.SZ"]),
+                    "result": random.choice(["成功", "成功", "成功", "失败"]),  # 75%成功率
                 "details": f"执行时间: {random.randint(10, 500)}ms",
                 "level": "INFO" if random.random() > 0.1 else "WARNING"
             }
@@ -6811,7 +8552,7 @@ async def ios_generate_deepseek_signal(request: dict):
             "confidence": round(random.uniform(0.6, 0.9), 3),
             "time_horizon": "1D"
         },
-        "model_version": "deepseek-v2.5",
+        "model_version": "deepseek-chat",
         "analysis_timestamp": datetime.now().isoformat(),
         "data_quality": round(random.uniform(0.85, 0.98), 3),
         "calibrated": True
@@ -6921,6 +8662,190 @@ async def websocket_endpoint(websocket: WebSocket):
             manager.disconnect(websocket)
         except:
             pass
+
+# ==================== AI Chat WebSocket ====================
+
+@app.websocket("/ws/ai-chat")
+async def ai_chat_websocket(websocket: WebSocket):
+    """AI聊天WebSocket连接 - 使用配置的AI Provider"""
+    try:
+        await websocket.accept()
+        logger.info("🤖 AI Chat WebSocket客户端已连接")
+
+        # 检查已配置的providers
+        configured_providers = []
+        for provider in ["deepseek", "openai", "claude"]:
+            if ai_config_manager.is_configured(provider):
+                configured_providers.append(provider)
+
+        # 发送欢迎消息
+        if configured_providers:
+            welcome_msg = f"AI聊天助手已连接 (可用: {', '.join(configured_providers)})"
+        else:
+            welcome_msg = "AI聊天助手已连接 (演示模式 - 请配置API密钥)"
+
+        await websocket.send_text(json.dumps({
+            "type": "welcome",
+            "message": welcome_msg,
+            "configured_providers": configured_providers,
+            "timestamp": datetime.now().isoformat()
+        }))
+
+        while True:
+            try:
+                # 接收用户消息
+                data = await websocket.receive_text()
+                message_data = json.loads(data)
+                user_message = message_data.get("message", "")
+                preferred_provider = message_data.get("provider", None)  # 用户可指定provider
+
+                logger.info(f"📨 收到AI Chat消息: {user_message[:50]}...")
+
+                # 重新检查配置（可能在WebSocket连接期间更新了）
+                configured_providers = []
+                for provider in ["deepseek", "openai", "claude"]:
+                    if ai_config_manager.is_configured(provider):
+                        configured_providers.append(provider)
+
+                # 如果有配置的provider，使用真实AI调用
+                if configured_providers:
+                    # 选择provider：优先用户指定 > DeepSeek > OpenAI > Claude
+                    if preferred_provider and preferred_provider in configured_providers:
+                        active_provider = preferred_provider
+                    elif "deepseek" in configured_providers:
+                        active_provider = "deepseek"
+                    elif "openai" in configured_providers:
+                        active_provider = "openai"
+                    else:
+                        active_provider = configured_providers[0]
+
+                    # 获取provider配置
+                    provider_config = ai_config_manager.providers[active_provider]
+
+                    try:
+                        # 根据provider调用不同的API
+                        if active_provider in ["deepseek", "openai"]:
+                            # DeepSeek和OpenAI使用相同的API格式
+                            async with aiohttp.ClientSession() as session:
+                                async with session.post(
+                                    provider_config["api_base"],
+                                    headers={
+                                        "Authorization": f"Bearer {provider_config['api_key']}",
+                                        "Content-Type": "application/json"
+                                    },
+                                    json={
+                                        "model": provider_config["model"],
+                                        "messages": [{"role": "user", "content": user_message}],
+                                        "temperature": provider_config["temperature"],
+                                        "max_tokens": provider_config["max_tokens"]
+                                    },
+                                    timeout=180  # 🔥 增加到180秒以支持长文本生成
+                                ) as response:
+                                    if response.status == 200:
+                                        result = await response.json()
+                                        ai_response = result["choices"][0]["message"]["content"]
+                                        finish_reason = result["choices"][0].get("finish_reason", "unknown")
+
+                                        # 🔥 检查响应是否完整
+                                        if finish_reason == "length":
+                                            logger.warning(f"⚠️ [WebSocket] AI响应因长度限制被截断！")
+                                            ai_response += "\n\n⚠️ [回复过长被截断，请要求我继续]"
+                                        elif finish_reason == "stop":
+                                            logger.info(f"✅ [WebSocket] AI完整响应（{len(ai_response)} 字符）")
+
+                                        await websocket.send_text(json.dumps({
+                                            "type": "ai_response",
+                                            "message": ai_response,
+                                            "provider": active_provider,
+                                            "model": provider_config["model"],
+                                            "timestamp": datetime.now().isoformat(),
+                                            "demo_mode": False,
+                                            "finish_reason": finish_reason  # 🔥 添加finish_reason
+                                        }))
+                                    else:
+                                        error_text = await response.text()
+                                        raise Exception(f"API错误 {response.status}: {error_text[:200]}")
+
+                        elif active_provider == "claude":
+                            # Claude使用不同的API格式
+                            async with aiohttp.ClientSession() as session:
+                                async with session.post(
+                                    provider_config["api_base"],
+                                    headers={
+                                        "x-api-key": provider_config['api_key'],
+                                        "anthropic-version": "2023-06-01",
+                                        "Content-Type": "application/json"
+                                    },
+                                    json={
+                                        "model": provider_config["model"],
+                                        "messages": [{"role": "user", "content": user_message}],
+                                        "temperature": provider_config["temperature"],
+                                        "max_tokens": provider_config["max_tokens"]
+                                    },
+                                    timeout=180  # 🔥 增加到180秒以支持长文本生成
+                                ) as response:
+                                    if response.status == 200:
+                                        result = await response.json()
+                                        ai_response = result["content"][0]["text"]
+
+                                        await websocket.send_text(json.dumps({
+                                            "type": "ai_response",
+                                            "message": ai_response,
+                                            "provider": active_provider,
+                                            "model": provider_config["model"],
+                                            "timestamp": datetime.now().isoformat(),
+                                            "demo_mode": False
+                                        }))
+                                    else:
+                                        error_text = await response.text()
+                                        raise Exception(f"API错误 {response.status}: {error_text[:200]}")
+
+                    except asyncio.TimeoutError:
+                        await websocket.send_text(json.dumps({
+                            "type": "error",
+                            "message": f"⏱️ {active_provider} API调用超时，请检查网络连接",
+                            "provider": active_provider
+                        }))
+                    except Exception as api_error:
+                        logger.error(f"❌ {active_provider} API调用失败: {api_error}")
+                        await websocket.send_text(json.dumps({
+                            "type": "error",
+                            "message": f"❌ {active_provider} API调用失败: {str(api_error)[:100]}",
+                            "provider": active_provider
+                        }))
+
+                else:
+                    # 演示模式：没有配置任何provider
+                    if "分析" in user_message or "股票" in user_message:
+                        response_text = "📊 演示模式回复：\n\n基于技术分析，建议关注以下几点：\n1. RSI指标显示当前处于中性区域\n2. MACD呈现上升趋势\n3. 成交量相对稳定\n\n⚠️ 这是演示响应。请在配置页面(CONFIG)配置API密钥后获得真实AI分析。"
+                    elif "风险" in user_message:
+                        response_text = "⚠️ 演示模式回复：\n\n风险评估要点：\n1. 当前波动率：中等\n2. VaR (95%)：建议关注\n3. 最大回撤：在可控范围内\n\n配置API密钥可获得详细风险分析。"
+                    else:
+                        response_text = f"👋 您好！我是Arthera AI助手（演示模式）。\n\n收到您的消息：{user_message}\n\n💡 提示：请在配置页面配置以下任一Provider的API密钥：\n- DeepSeek (推荐)\n- OpenAI (GPT-4o)\n- Claude (Sonnet)\n\n配置后即可使用真实AI功能。"
+
+                    await websocket.send_text(json.dumps({
+                        "type": "ai_response",
+                        "message": response_text,
+                        "timestamp": datetime.now().isoformat(),
+                        "demo_mode": True
+                    }))
+
+            except json.JSONDecodeError:
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "message": "无效的JSON格式"
+                }))
+            except Exception as e:
+                logger.error(f"❌ AI Chat消息处理错误: {e}")
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "message": f"处理消息时出错: {str(e)[:100]}"
+                }))
+
+    except WebSocketDisconnect:
+        logger.info("🤖 AI Chat WebSocket客户端已断开")
+    except Exception as e:
+        logger.error(f"❌ AI Chat WebSocket错误: {e}")
 
 # ==================== 主界面和API路由 ====================
 

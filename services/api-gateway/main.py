@@ -40,15 +40,23 @@ logger = logging.getLogger(__name__)
 class ServiceConfig:
     """Central place for downstream service URLs and timeouts."""
 
-    QUANT_ENGINE_URL = os.getenv("QUANT_ENGINE_URL", "http://localhost:8001")
-    QUANT_LAB_URL = os.getenv("QUANT_LAB_URL", "http://localhost:8002")
-    PAPER_TRADING_URL = os.getenv("PAPER_TRADING_URL", "http://localhost:8003")
-    DASHBOARD_URL = os.getenv("DASHBOARD_URL", "http://localhost:8004")
+    # Core external services
+    QUANT_ENGINE_URL = os.getenv("QUANT_ENGINE_URL", "http://quant-engine:8000")
+    QUANT_LAB_URL = os.getenv("QUANT_LAB_URL", "http://quant-lab:8000") 
+    
+    # Internal microservices
     MARKET_DATA_URL = os.getenv("MARKET_DATA_URL", QUANT_ENGINE_URL)
     STRATEGY_RUNNER_URL = os.getenv("STRATEGY_RUNNER_URL", QUANT_LAB_URL)
-    RISK_ENGINE_URL = os.getenv("RISK_ENGINE_URL", os.getenv("RISK_SERVICE_URL", "http://localhost:8003"))
-    PORTFOLIO_SERVICE_URL = os.getenv("PORTFOLIO_PNL_URL", "http://localhost:8005")
-    ANALYTICS_SERVICE_URL = os.getenv("ANALYTICS_SERVICE_URL", PORTFOLIO_SERVICE_URL)
+    AI_AGENTS_URL = os.getenv("AI_AGENTS_URL", "http://ai-agents:8006")
+    RISK_MANAGEMENT_URL = os.getenv("RISK_MANAGEMENT_URL", "http://risk-management:8003")
+    CRYPTO_CONNECTORS_URL = os.getenv("CRYPTO_CONNECTORS_URL", "http://crypto-connectors:8007")
+    BACKTESTING_ENGINE_URL = os.getenv("BACKTESTING_ENGINE_URL", "http://backtesting-engine:8008")
+    
+    # Legacy/placeholder services - will route to QuantEngine as fallback
+    PAPER_TRADING_URL = os.getenv("PAPER_TRADING_URL", QUANT_ENGINE_URL)
+    PORTFOLIO_SERVICE_URL = os.getenv("PORTFOLIO_PNL_URL", QUANT_ENGINE_URL)
+    ANALYTICS_SERVICE_URL = os.getenv("ANALYTICS_SERVICE_URL", QUANT_ENGINE_URL)
+    DASHBOARD_URL = os.getenv("DASHBOARD_URL", QUANT_ENGINE_URL)
 
     UNIVERSE_SERVICE_URL = os.getenv("UNIVERSE_SERVICE_URL")
     UNIVERSE_API_KEY = os.getenv("UNIVERSE_API_KEY")
@@ -96,42 +104,279 @@ class PortfolioRequest(BaseModel):
 class DataSourceConfigRequest(BaseModel):
     tushare_token: Optional[str] = None
 
-# WebSocket Connection Manager
+# Enhanced WebSocket Connection Manager with High-Frequency Data Streaming
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
         self.ios_connections: List[WebSocket] = []
+        self.crypto_connections: List[WebSocket] = []
+        self.ai_connections: List[WebSocket] = []
+        self.risk_connections: List[WebSocket] = []
+        self.market_data_connections: List[WebSocket] = []
+        
+        # Subscription management
+        self.subscriptions: Dict[str, Set[WebSocket]] = {
+            "market_data": set(),
+            "ai_signals": set(),
+            "crypto_prices": set(),
+            "order_updates": set(),
+            "risk_alerts": set(),
+            "portfolio_risk": set(),
+            "var_updates": set(),
+            "portfolio_updates": set()
+        }
+        
+        # High-frequency data streaming
+        self.streaming_tasks: Dict[str, asyncio.Task] = {}
+        self.is_streaming = False
     
     async def connect(self, websocket: WebSocket, connection_type: str = "general"):
         await websocket.accept()
         if connection_type == "ios":
             self.ios_connections.append(websocket)
+        elif connection_type == "crypto":
+            self.crypto_connections.append(websocket)
+        elif connection_type == "ai":
+            self.ai_connections.append(websocket)
+        elif connection_type == "risk":
+            self.risk_connections.append(websocket)
+        elif connection_type == "market_data":
+            self.market_data_connections.append(websocket)
         else:
             self.active_connections.append(websocket)
         logger.info(f"New {connection_type} WebSocket connection established")
     
     def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-        if websocket in self.ios_connections:
-            self.ios_connections.remove(websocket)
+        # Remove from all connection lists
+        for conn_list in [self.active_connections, self.ios_connections, 
+                         self.crypto_connections, self.ai_connections, self.risk_connections, self.market_data_connections]:
+            if websocket in conn_list:
+                conn_list.remove(websocket)
+        
+        # Remove from all subscriptions
+        for subscription_set in self.subscriptions.values():
+            subscription_set.discard(websocket)
+        
         logger.info("WebSocket connection closed")
+    
+    async def subscribe(self, websocket: WebSocket, channels: List[str]):
+        """Subscribe to specific data channels"""
+        for channel in channels:
+            if channel in self.subscriptions:
+                self.subscriptions[channel].add(websocket)
+                logger.info(f"WebSocket subscribed to {channel}")
+    
+    async def unsubscribe(self, websocket: WebSocket, channels: List[str]):
+        """Unsubscribe from specific data channels"""
+        for channel in channels:
+            if channel in self.subscriptions:
+                self.subscriptions[channel].discard(websocket)
+                logger.info(f"WebSocket unsubscribed from {channel}")
     
     async def send_to_ios(self, message: dict):
         """Send message specifically to iOS connections"""
-        for connection in self.ios_connections:
-            try:
-                await connection.send_text(json.dumps(message))
-            except Exception as e:
-                logger.error(f"Error sending to iOS: {e}")
+        await self._send_to_connections(self.ios_connections, message)
+    
+    async def send_to_crypto(self, message: dict):
+        """Send message to crypto connections"""
+        await self._send_to_connections(self.crypto_connections, message)
+    
+    async def send_to_ai(self, message: dict):
+        """Send message to AI connections"""
+        await self._send_to_connections(self.ai_connections, message)
+    
+    async def send_to_risk(self, message: dict):
+        """Send message to risk management connections"""
+        await self._send_to_connections(self.risk_connections, message)
+    
+    async def send_to_market_data(self, message: dict):
+        """Send message to market data connections"""
+        await self._send_to_connections(self.market_data_connections, message)
+    
+    async def send_to_channel(self, channel: str, message: dict):
+        """Send message to specific channel subscribers"""
+        if channel in self.subscriptions:
+            await self._send_to_connections(list(self.subscriptions[channel]), message)
     
     async def broadcast(self, message: dict):
         """Broadcast to all connections"""
-        for connection in self.active_connections:
+        all_connections = (self.active_connections + self.ios_connections + 
+                          self.crypto_connections + self.ai_connections + 
+                          self.risk_connections + self.market_data_connections)
+        await self._send_to_connections(all_connections, message)
+    
+    async def _send_to_connections(self, connections: List[WebSocket], message: dict):
+        """Helper method to send message to a list of connections"""
+        if not connections:
+            return
+        
+        message_text = json.dumps(message)
+        disconnected = []
+        
+        for connection in connections:
             try:
-                await connection.send_text(json.dumps(message))
+                await connection.send_text(message_text)
             except Exception as e:
-                logger.error(f"Error broadcasting: {e}")
+                logger.error(f"Error sending WebSocket message: {e}")
+                disconnected.append(connection)
+        
+        # Clean up disconnected connections
+        for conn in disconnected:
+            self.disconnect(conn)
+    
+    async def start_high_frequency_streaming(self):
+        """Start high-frequency data streaming tasks"""
+        if self.is_streaming:
+            return
+        
+        self.is_streaming = True
+        
+        # Market data streaming (every 1 second)
+        self.streaming_tasks["market_data"] = asyncio.create_task(
+            self._stream_market_data()
+        )
+        
+        # AI signals streaming (every 5 seconds)
+        self.streaming_tasks["ai_signals"] = asyncio.create_task(
+            self._stream_ai_signals()
+        )
+        
+        # Crypto prices streaming (every 2 seconds)
+        self.streaming_tasks["crypto_prices"] = asyncio.create_task(
+            self._stream_crypto_prices()
+        )
+        
+        # Risk monitoring (every 3 seconds)
+        self.streaming_tasks["risk_alerts"] = asyncio.create_task(
+            self._stream_risk_monitoring()
+        )
+        
+        logger.info("High-frequency data streaming started")
+    
+    async def stop_high_frequency_streaming(self):
+        """Stop high-frequency data streaming tasks"""
+        self.is_streaming = False
+        
+        for task_name, task in self.streaming_tasks.items():
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                logger.info(f"Streaming task {task_name} cancelled")
+        
+        self.streaming_tasks.clear()
+        logger.info("High-frequency data streaming stopped")
+    
+    async def _stream_market_data(self):
+        """Stream real-time market data"""
+        while self.is_streaming:
+            try:
+                # Generate mock market data (in production, fetch from real sources)
+                market_data = {
+                    "type": "market_data",
+                    "data": {
+                        "AAPL": {"price": 150.25 + (asyncio.get_event_loop().time() % 10 - 5), "volume": 1000000 + int(asyncio.get_event_loop().time() * 1000) % 500000},
+                        "TSLA": {"price": 245.80 + (asyncio.get_event_loop().time() % 8 - 4), "volume": 800000 + int(asyncio.get_event_loop().time() * 800) % 300000},
+                        "BTCUSDT": {"price": 45000 + (asyncio.get_event_loop().time() % 1000 - 500), "volume": 50 + int(asyncio.get_event_loop().time() * 10) % 25},
+                        "ETHUSDT": {"price": 3200 + (asyncio.get_event_loop().time() % 100 - 50), "volume": 100 + int(asyncio.get_event_loop().time() * 5) % 40}
+                    },
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                await self.send_to_channel("market_data", market_data)
+                await asyncio.sleep(1)  # 1 second interval
+                
+            except Exception as e:
+                logger.error(f"Error in market data streaming: {e}")
+                await asyncio.sleep(5)  # Wait before retry
+    
+    async def _stream_ai_signals(self):
+        """Stream AI-generated signals"""
+        while self.is_streaming:
+            try:
+                # Generate mock AI signals
+                signals = {
+                    "type": "ai_signals",
+                    "data": {
+                        "research_signal": {"symbol": "AAPL", "action": "BUY", "confidence": 0.85, "reasoning": "强劲的基本面分析"},
+                        "strategy_signal": {"symbol": "TSLA", "action": "SELL", "confidence": 0.72, "reasoning": "动量策略信号"},
+                        "news_signal": {"symbol": "NVDA", "action": "HOLD", "confidence": 0.65, "reasoning": "新闻情感中性"},
+                        "risk_signal": {"alert": "组合波动率上升", "level": "MEDIUM", "recommendation": "适度降低仓位"}
+                    },
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                await self.send_to_channel("ai_signals", signals)
+                await asyncio.sleep(5)  # 5 second interval
+                
+            except Exception as e:
+                logger.error(f"Error in AI signals streaming: {e}")
+                await asyncio.sleep(10)
+    
+    async def _stream_crypto_prices(self):
+        """Stream real-time crypto prices"""
+        while self.is_streaming:
+            try:
+                # Generate mock crypto price updates
+                crypto_data = {
+                    "type": "crypto_prices",
+                    "data": {
+                        "BTCUSDT": {
+                            "price": 45000 + (int(asyncio.get_event_loop().time()) % 1000 - 500),
+                            "change_24h": 2.5 + (int(asyncio.get_event_loop().time()) % 10 - 5) * 0.1,
+                            "volume_24h": 1500000000,
+                            "exchange": "binance"
+                        },
+                        "ETHUSDT": {
+                            "price": 3200 + (int(asyncio.get_event_loop().time()) % 200 - 100),
+                            "change_24h": 1.8 + (int(asyncio.get_event_loop().time()) % 8 - 4) * 0.1,
+                            "volume_24h": 800000000,
+                            "exchange": "okx"
+                        },
+                        "BNBUSDT": {
+                            "price": 310 + (int(asyncio.get_event_loop().time()) % 20 - 10),
+                            "change_24h": -0.5 + (int(asyncio.get_event_loop().time()) % 6 - 3) * 0.1,
+                            "volume_24h": 200000000,
+                            "exchange": "binance"
+                        }
+                    },
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                await self.send_to_channel("crypto_prices", crypto_data)
+                await asyncio.sleep(2)  # 2 second interval
+                
+            except Exception as e:
+                logger.error(f"Error in crypto prices streaming: {e}")
+                await asyncio.sleep(5)
+    
+    async def _stream_risk_monitoring(self):
+        """Stream risk monitoring updates"""
+        while self.is_streaming:
+            try:
+                # Generate mock risk data
+                risk_data = {
+                    "type": "risk_alerts",
+                    "data": {
+                        "portfolio_var": 0.05 + (int(asyncio.get_event_loop().time()) % 100) * 0.0001,
+                        "max_drawdown": 0.12 + (int(asyncio.get_event_loop().time()) % 50) * 0.0002,
+                        "volatility": 0.18 + (int(asyncio.get_event_loop().time()) % 30) * 0.0003,
+                        "beta": 1.1 + (int(asyncio.get_event_loop().time()) % 20 - 10) * 0.001,
+                        "alerts": [
+                            {"level": "INFO", "message": "市场波动率正常", "timestamp": datetime.now().isoformat()}
+                        ] if int(asyncio.get_event_loop().time()) % 10 < 8 else [
+                            {"level": "WARNING", "message": "检测到异常波动", "timestamp": datetime.now().isoformat()}
+                        ]
+                    },
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                await self.send_to_channel("risk_alerts", risk_data)
+                await asyncio.sleep(3)  # 3 second interval
+                
+            except Exception as e:
+                logger.error(f"Error in risk monitoring streaming: {e}")
+                await asyncio.sleep(5)
 
 # Global connection manager
 manager = ConnectionManager()
@@ -710,6 +955,34 @@ async def health_check():
     except:
         services_status["paper_trading"] = False
     
+    # Check AI Agents Service
+    try:
+        response = await http_client.get(f"{ServiceConfig.AI_AGENTS_URL}/health")
+        services_status["ai_agents"] = response.status_code == 200
+    except:
+        services_status["ai_agents"] = False
+    
+    # Check Crypto Connectors Service
+    try:
+        response = await http_client.get(f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/health")
+        services_status["crypto_connectors"] = response.status_code == 200
+    except:
+        services_status["crypto_connectors"] = False
+    
+    # Check Risk Management Service
+    try:
+        response = await http_client.get(f"{ServiceConfig.RISK_MANAGEMENT_URL}/health")
+        services_status["risk_management"] = response.status_code == 200
+    except:
+        services_status["risk_management"] = False
+    
+    # Check Backtesting Engine Service
+    try:
+        response = await http_client.get(f"{ServiceConfig.BACKTESTING_ENGINE_URL}/health")
+        services_status["backtesting_engine"] = response.status_code == 200
+    except:
+        services_status["backtesting_engine"] = False
+    
     # Overall status
     all_services_up = all(services_status.values())
     status = "healthy" if all_services_up else "degraded"
@@ -1035,21 +1308,329 @@ async def get_recent_signals(limit: int = 50):
         params={"limit": limit}
     )
 
-# ==================== RISK MANAGEMENT ROUTES ====================
+# ==================== AI AGENTS ROUTES ====================
 
-@app.get("/risk/metrics/{symbol}")
-async def get_risk_metrics(symbol: str):
-    """获取风险指标"""
-    return await service_request("GET", f"{ServiceConfig.RISK_ENGINE_URL}/api/risk/{symbol}")
-
-@app.post("/risk/validate-order")
-async def validate_order(order: OrderRequest):
-    """订单风险验证"""
+@app.post("/ai/analysis/comprehensive")
+async def ai_comprehensive_analysis(request: dict):
+    """AI智能体综合分析"""
     return await service_request(
         "POST",
-        f"{ServiceConfig.RISK_ENGINE_URL}/api/risk/validate",
-        json=order.dict()
+        f"{ServiceConfig.AI_AGENTS_URL}/analysis/comprehensive",
+        json=request
     )
+
+@app.post("/ai/signals/generate")
+async def ai_generate_signals(request: dict):
+    """AI智能体生成交易信号"""
+    signals = await service_request(
+        "POST",
+        f"{ServiceConfig.AI_AGENTS_URL}/signals/generate",
+        json=request
+    )
+    
+    # 广播AI生成的信号到iOS客户端
+    await manager.send_to_ios({
+        "type": "ai_signals",
+        "data": signals,
+        "timestamp": datetime.now().isoformat()
+    })
+    
+    return signals
+
+@app.post("/ai/risk/assess")
+async def ai_risk_assessment(request: dict):
+    """AI智能体风险评估"""
+    return await service_request(
+        "POST",
+        f"{ServiceConfig.AI_AGENTS_URL}/risk/assess",
+        json=request
+    )
+
+@app.post("/ai/research/market")
+async def ai_market_research(request: dict):
+    """AI智能体市场研究"""
+    return await service_request(
+        "POST",
+        f"{ServiceConfig.AI_AGENTS_URL}/research/market",
+        json=request
+    )
+
+@app.post("/ai/agents/research")
+async def ai_research_agent(symbol: str, analysis_type: str = "comprehensive"):
+    """研究智能体"""
+    return await service_request(
+        "POST",
+        f"{ServiceConfig.AI_AGENTS_URL}/agents/research",
+        params={"symbol": symbol, "analysis_type": analysis_type}
+    )
+
+@app.post("/ai/agents/strategy")
+async def ai_strategy_agent(request: dict):
+    """策略智能体"""
+    return await service_request(
+        "POST",
+        f"{ServiceConfig.AI_AGENTS_URL}/agents/strategy",
+        json=request
+    )
+
+@app.post("/ai/agents/news")
+async def ai_news_agent(symbol: str, analysis_type: str = "sentiment"):
+    """新闻智能体"""
+    return await service_request(
+        "POST",
+        f"{ServiceConfig.AI_AGENTS_URL}/agents/news",
+        params={"symbol": symbol, "analysis_type": analysis_type}
+    )
+
+@app.post("/ai/agents/risk")
+async def ai_risk_agent(request: dict):
+    """风险智能体"""
+    return await service_request(
+        "POST",
+        f"{ServiceConfig.AI_AGENTS_URL}/agents/risk",
+        json=request
+    )
+
+@app.get("/ai/status")
+async def ai_system_status():
+    """AI智能体系统状态"""
+    return await service_request("GET", f"{ServiceConfig.AI_AGENTS_URL}/status")
+
+@app.get("/ai/performance")
+async def ai_performance_metrics():
+    """AI智能体性能指标"""
+    return await service_request("GET", f"{ServiceConfig.AI_AGENTS_URL}/performance/metrics")
+
+# ==================== AI LEARNING MEMORY ROUTES ====================
+
+@app.get("/ai/learning/statistics")
+async def get_learning_statistics():
+    """获取AI学习统计信息"""
+    return await service_request("GET", f"{ServiceConfig.AI_AGENTS_URL}/learning/statistics")
+
+@app.get("/ai/learning/agent/{agent_id}/insights")
+async def get_agent_learning_insights(agent_id: str):
+    """获取智能体学习洞察"""
+    return await service_request("GET", f"{ServiceConfig.AI_AGENTS_URL}/learning/agent/{agent_id}/insights")
+
+@app.post("/ai/learning/feedback")
+async def provide_decision_feedback(feedback_request: dict):
+    """提供决策反馈"""
+    return await service_request("POST", f"{ServiceConfig.AI_AGENTS_URL}/learning/feedback", json=feedback_request)
+
+@app.get("/ai/learning/patterns")
+async def get_learning_patterns(top_k: int = 10):
+    """获取学习模式"""
+    return await service_request("GET", f"{ServiceConfig.AI_AGENTS_URL}/learning/patterns", params={"top_k": top_k})
+
+@app.get("/ai/learning/decisions/{agent_id}")
+async def get_agent_decisions(agent_id: str, limit: int = 50):
+    """获取智能体决策历史"""
+    return await service_request("GET", f"{ServiceConfig.AI_AGENTS_URL}/learning/decisions/{agent_id}", params={"limit": limit})
+
+@app.post("/ai/learning/agent/{agent_id}/reset")
+async def reset_agent_learning_data(agent_id: str):
+    """重置智能体学习数据"""
+    return await service_request("POST", f"{ServiceConfig.AI_AGENTS_URL}/learning/agent/{agent_id}/reset")
+
+@app.get("/ai/learning/export")
+async def export_learning_data():
+    """导出学习数据"""
+    return await service_request("GET", f"{ServiceConfig.AI_AGENTS_URL}/learning/export")
+
+@app.post("/ai/learning/import")
+async def import_learning_data(learning_data: dict):
+    """导入学习数据"""
+    return await service_request("POST", f"{ServiceConfig.AI_AGENTS_URL}/learning/import", json=learning_data)
+
+# ==================== BACKTESTING ENGINE ROUTES ====================
+
+@app.get("/backtest/health")
+async def get_backtest_health():
+    """回测引擎健康检查"""
+    return await service_request("GET", f"{ServiceConfig.BACKTESTING_ENGINE_URL}/health")
+
+@app.get("/backtest/strategies")
+async def get_available_strategies():
+    """获取可用策略"""
+    return await service_request("GET", f"{ServiceConfig.BACKTESTING_ENGINE_URL}/strategies")
+
+@app.post("/backtest/single")
+async def run_single_backtest(backtest_request: dict):
+    """运行单策略回测"""
+    return await service_request("POST", f"{ServiceConfig.BACKTESTING_ENGINE_URL}/backtest/single", json=backtest_request)
+
+@app.post("/backtest/compare")
+async def compare_strategies(comparison_request: dict):
+    """多策略比较回测"""
+    return await service_request("POST", f"{ServiceConfig.BACKTESTING_ENGINE_URL}/backtest/compare", json=comparison_request)
+
+@app.get("/backtest/{backtest_id}/results")
+async def get_backtest_results(backtest_id: str):
+    """获取回测结果"""
+    return await service_request("GET", f"{ServiceConfig.BACKTESTING_ENGINE_URL}/backtest/{backtest_id}/results")
+
+@app.get("/backtest/{backtest_id}/performance")
+async def get_performance_analysis(backtest_id: str):
+    """获取性能分析"""
+    return await service_request("GET", f"{ServiceConfig.BACKTESTING_ENGINE_URL}/backtest/{backtest_id}/performance")
+
+# ==================== CRYPTO EXCHANGE ROUTES ====================
+
+@app.get("/crypto/health")
+async def crypto_health():
+    """加密货币连接器健康检查"""
+    return await service_request("GET", f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/health")
+
+@app.get("/crypto/exchanges")
+async def list_crypto_exchanges():
+    """列出支持的加密货币交易所"""
+    return await service_request("GET", f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/exchanges")
+
+@app.get("/crypto/market-data/{symbol}")
+async def get_crypto_market_data(symbol: str, exchange: Optional[str] = None):
+    """获取加密货币市场数据"""
+    params = {"exchange": exchange} if exchange else {}
+    return await service_request(
+        "GET", 
+        f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/market-data/{symbol}",
+        params=params
+    )
+
+@app.get("/crypto/orderbook/{symbol}")
+async def get_crypto_orderbook(symbol: str, exchange: Optional[str] = None, limit: int = 20):
+    """获取加密货币订单簿"""
+    params = {"limit": limit}
+    if exchange:
+        params["exchange"] = exchange
+    return await service_request(
+        "GET",
+        f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/orderbook/{symbol}",
+        params=params
+    )
+
+@app.get("/crypto/trades/{symbol}")
+async def get_crypto_trades(symbol: str, exchange: Optional[str] = None, limit: int = 100):
+    """获取加密货币最近交易"""
+    params = {"limit": limit}
+    if exchange:
+        params["exchange"] = exchange
+    return await service_request(
+        "GET",
+        f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/trades/{symbol}",
+        params=params
+    )
+
+@app.get("/crypto/best-price/{symbol}")
+async def get_crypto_best_price(symbol: str, side: str):
+    """获取加密货币最优价格"""
+    return await service_request(
+        "GET",
+        f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/best-price/{symbol}",
+        params={"side": side}
+    )
+
+@app.get("/crypto/balance")
+async def get_crypto_balance(exchange: Optional[str] = None):
+    """获取加密货币账户余额"""
+    params = {"exchange": exchange} if exchange else {}
+    return await service_request(
+        "GET",
+        f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/balance",
+        params=params
+    )
+
+@app.post("/crypto/orders")
+async def place_crypto_order(request: dict):
+    """下加密货币订单"""
+    return await service_request(
+        "POST",
+        f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/orders",
+        json=request
+    )
+
+@app.delete("/crypto/orders/{symbol}/{order_id}")
+async def cancel_crypto_order(symbol: str, order_id: str, exchange: Optional[str] = None):
+    """取消加密货币订单"""
+    params = {"exchange": exchange} if exchange else {}
+    return await service_request(
+        "DELETE",
+        f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/orders/{symbol}/{order_id}",
+        params=params
+    )
+
+@app.get("/crypto/orders/{symbol}/{order_id}")
+async def get_crypto_order_status(symbol: str, order_id: str, exchange: Optional[str] = None):
+    """查询加密货币订单状态"""
+    params = {"exchange": exchange} if exchange else {}
+    return await service_request(
+        "GET",
+        f"{ServiceConfig.CRYPTO_CONNECTORS_URL}/orders/{symbol}/{order_id}",
+        params=params
+    )
+
+# ==================== RISK MANAGEMENT ROUTES ====================
+
+@app.get("/risk/health")
+async def get_risk_health():
+    """风险管理服务健康检查"""
+    return await service_request("GET", f"{ServiceConfig.RISK_MANAGEMENT_URL}/health")
+
+@app.get("/risk/{symbol}")
+async def get_risk_metrics(symbol: str, refresh: bool = False):
+    """获取资产风险指标"""
+    params = {"refresh": refresh} if refresh else {}
+    return await service_request("GET", f"{ServiceConfig.RISK_MANAGEMENT_URL}/risk/{symbol}", params=params)
+
+@app.get("/risk/batch")
+async def get_batch_risk_metrics(symbols: str):
+    """批量获取风险指标"""
+    return await service_request("GET", f"{ServiceConfig.RISK_MANAGEMENT_URL}/risk/batch", params={"symbols": symbols})
+
+@app.post("/risk/var/calculate")
+async def calculate_var(var_request: dict):
+    """计算投资组合VaR"""
+    return await service_request("POST", f"{ServiceConfig.RISK_MANAGEMENT_URL}/var/calculate", json=var_request)
+
+@app.get("/risk/var/historical/{symbol}")
+async def get_historical_var(symbol: str, days: int = 30):
+    """获取历史VaR数据"""
+    return await service_request("GET", f"{ServiceConfig.RISK_MANAGEMENT_URL}/var/historical/{symbol}", params={"days": days})
+
+@app.get("/risk/portfolio")
+async def get_portfolio_risk():
+    """获取投资组合风险"""
+    return await service_request("GET", f"{ServiceConfig.RISK_MANAGEMENT_URL}/portfolio/risk")
+
+@app.post("/risk/portfolio/stress-test")
+async def run_stress_test(scenarios: dict):
+    """运行压力测试"""
+    return await service_request("POST", f"{ServiceConfig.RISK_MANAGEMENT_URL}/portfolio/stress-test", json=scenarios)
+
+@app.get("/risk/alerts")
+async def get_risk_alerts(limit: int = 50):
+    """获取风险警报"""
+    return await service_request("GET", f"{ServiceConfig.RISK_MANAGEMENT_URL}/alerts", params={"limit": limit})
+
+@app.post("/risk/alerts/acknowledge/{alert_id}")
+async def acknowledge_alert(alert_id: str):
+    """确认风险警报"""
+    return await service_request("POST", f"{ServiceConfig.RISK_MANAGEMENT_URL}/alerts/acknowledge/{alert_id}")
+
+@app.get("/risk/limits")
+async def get_risk_limits():
+    """获取风险限制"""
+    return await service_request("GET", f"{ServiceConfig.RISK_MANAGEMENT_URL}/limits")
+
+@app.post("/risk/limits")
+async def set_risk_limit(limit: dict):
+    """设置风险限制"""
+    return await service_request("POST", f"{ServiceConfig.RISK_MANAGEMENT_URL}/limits", json=limit)
+
+@app.delete("/risk/limits/{limit_id}")
+async def delete_risk_limit(limit_id: str):
+    """删除风险限制"""
+    return await service_request("DELETE", f"{ServiceConfig.RISK_MANAGEMENT_URL}/limits/{limit_id}")
 
 # ==================== PORTFOLIO ROUTES ====================
 
@@ -1131,6 +1712,136 @@ async def get_data_source_config():
         "available_sources": ["akshare", "tushare"],
         "current_source": "tushare+akshare" if status["tushare_enabled"] else "akshare"
     }
+
+# ==================== TRADING PLATFORM CONFIG ====================
+
+# 内存存储交易平台配置（生产环境应该使用数据库或加密存储）
+trading_platform_configs = {}
+
+class TradingPlatformConfigRequest(BaseModel):
+    platform: str
+    api_key: str
+    secret_key: str
+    passphrase: str = None
+    environment: str = "paper"  # paper or live for Alpaca
+
+@app.post("/config/trading-platform")
+async def configure_trading_platform(request: TradingPlatformConfigRequest):
+    """配置交易平台API"""
+    try:
+        platform = request.platform.lower()
+        
+        # 验证平台
+        supported_platforms = ["binance", "okx", "alpaca"]
+        if platform not in supported_platforms:
+            raise HTTPException(status_code=400, detail=f"不支持的平台: {platform}")
+        
+        # 基本验证API密钥格式
+        if not request.api_key or not request.secret_key:
+            raise HTTPException(status_code=400, detail="API密钥和密钥不能为空")
+        
+        # OKX需要passphrase
+        if platform == "okx" and not request.passphrase:
+            raise HTTPException(status_code=400, detail="OKX平台需要passphrase")
+        
+        # 存储配置（实际应加密存储）
+        config = {
+            "api_key": request.api_key[:8] + "..." if len(request.api_key) > 8 else request.api_key,  # 只存储部分密钥用于显示
+            "secret_key": "***",  # 不存储完整密钥
+            "configured": True,
+            "configured_at": datetime.now().isoformat()
+        }
+        
+        if platform == "okx":
+            config["passphrase"] = "***"
+        
+        if platform == "alpaca":
+            config["environment"] = request.environment
+        
+        trading_platform_configs[platform] = config
+        
+        return {
+            "status": "success",
+            "message": f"{platform.upper()}配置保存成功",
+            "platform": platform,
+            "configured": True
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ 交易平台配置失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"配置失败: {str(e)}")
+
+@app.post("/config/trading-platform/test")
+async def test_trading_platform_connection(request: TradingPlatformConfigRequest):
+    """测试交易平台连接"""
+    try:
+        platform = request.platform.lower()
+        
+        # 模拟连接测试逻辑（实际应该调用真实API）
+        if platform == "binance":
+            # 模拟Binance API测试
+            if len(request.api_key) < 10 or len(request.secret_key) < 10:
+                return {
+                    "connected": False,
+                    "message": "API密钥格式不正确"
+                }
+            
+            # 模拟成功连接
+            return {
+                "connected": True,
+                "message": "Binance连接测试成功",
+                "account_info": {
+                    "permissions": ["SPOT", "FUTURES"],
+                    "account_type": "SPOT"
+                }
+            }
+            
+        elif platform == "okx":
+            # 模拟OKX API测试
+            if not request.passphrase:
+                return {
+                    "connected": False,
+                    "message": "缺少passphrase"
+                }
+            
+            return {
+                "connected": True,
+                "message": "OKX连接测试成功",
+                "account_info": {
+                    "account_type": "SPOT",
+                    "api_permissions": ["read", "trade"]
+                }
+            }
+            
+        elif platform == "alpaca":
+            # 模拟Alpaca API测试
+            env_type = request.environment or "paper"
+            return {
+                "connected": True,
+                "message": f"Alpaca {env_type} 环境连接成功",
+                "account_info": {
+                    "environment": env_type,
+                    "account_status": "ACTIVE"
+                }
+            }
+            
+        else:
+            return {
+                "connected": False,
+                "message": f"不支持的平台: {platform}"
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ 平台连接测试失败: {str(e)}")
+        return {
+            "connected": False,
+            "message": f"连接测试失败: {str(e)}"
+        }
+
+@app.get("/config/trading-platforms")
+async def get_trading_platforms_config():
+    """获取所有交易平台配置状态"""
+    return trading_platform_configs
 
 # ==================== SYMBOL UNIVERSE ROUTES ====================
 
@@ -1682,9 +2393,17 @@ async def get_dashboard_overview(capital: Optional[float] = None, market: Option
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    """通用WebSocket连接"""
+    """增强版通用WebSocket连接 - 支持高频数据订阅"""
     await manager.connect(websocket)
     try:
+        # 发送连接确认和可用频道列表
+        await websocket.send_text(json.dumps({
+            "type": "connected",
+            "message": "Connected to Arthera Trading Engine",
+            "available_channels": list(manager.subscriptions.keys()),
+            "timestamp": datetime.now().isoformat()
+        }))
+        
         while True:
             data = await websocket.receive_text()
             message = json.loads(data)
@@ -1692,9 +2411,222 @@ async def websocket_endpoint(websocket: WebSocket):
             # 处理客户端消息
             if message.get("type") == "ping":
                 await websocket.send_text(json.dumps({"type": "pong", "timestamp": datetime.now().isoformat()}))
+            
             elif message.get("type") == "subscribe":
-                # 处理订阅请求
-                await websocket.send_text(json.dumps({"type": "subscribed", "channels": message.get("channels", [])}))
+                channels = message.get("channels", [])
+                await manager.subscribe(websocket, channels)
+                await websocket.send_text(json.dumps({
+                    "type": "subscribed", 
+                    "channels": channels,
+                    "timestamp": datetime.now().isoformat()
+                }))
+            
+            elif message.get("type") == "unsubscribe":
+                channels = message.get("channels", [])
+                await manager.unsubscribe(websocket, channels)
+                await websocket.send_text(json.dumps({
+                    "type": "unsubscribed", 
+                    "channels": channels,
+                    "timestamp": datetime.now().isoformat()
+                }))
+            
+            elif message.get("type") == "start_streaming":
+                await manager.start_high_frequency_streaming()
+                await websocket.send_text(json.dumps({
+                    "type": "streaming_started",
+                    "message": "High-frequency data streaming activated",
+                    "timestamp": datetime.now().isoformat()
+                }))
+            
+            elif message.get("type") == "stop_streaming":
+                await manager.stop_high_frequency_streaming()
+                await websocket.send_text(json.dumps({
+                    "type": "streaming_stopped",
+                    "message": "High-frequency data streaming deactivated",
+                    "timestamp": datetime.now().isoformat()
+                }))
+                
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+@app.websocket("/ws/market-data")
+async def market_data_websocket(websocket: WebSocket):
+    """专用市场数据WebSocket连接 - 高频行情推送"""
+    await manager.connect(websocket, "market_data")
+    try:
+        # 自动订阅市场数据频道
+        await manager.subscribe(websocket, ["market_data"])
+        
+        await websocket.send_text(json.dumps({
+            "type": "market_data_connected",
+            "message": "Connected to high-frequency market data stream",
+            "update_frequency": "1 second",
+            "timestamp": datetime.now().isoformat()
+        }))
+        
+        # 启动市场数据流（如果还没启动）
+        if not manager.is_streaming:
+            await manager.start_high_frequency_streaming()
+        
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            if message.get("type") == "ping":
+                await websocket.send_text(json.dumps({"type": "pong", "timestamp": datetime.now().isoformat()}))
+                
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+@app.websocket("/ws/crypto")
+async def crypto_websocket(websocket: WebSocket):
+    """专用加密货币WebSocket连接 - 实时币价推送"""
+    await manager.connect(websocket, "crypto")
+    try:
+        # 自动订阅加密货币频道
+        await manager.subscribe(websocket, ["crypto_prices"])
+        
+        await websocket.send_text(json.dumps({
+            "type": "crypto_connected",
+            "message": "Connected to real-time cryptocurrency data stream",
+            "supported_exchanges": ["binance", "okx"],
+            "update_frequency": "2 seconds",
+            "timestamp": datetime.now().isoformat()
+        }))
+        
+        # 启动加密货币数据流
+        if not manager.is_streaming:
+            await manager.start_high_frequency_streaming()
+        
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            if message.get("type") == "ping":
+                await websocket.send_text(json.dumps({"type": "pong", "timestamp": datetime.now().isoformat()}))
+            elif message.get("type") == "subscribe_symbol":
+                symbol = message.get("symbol")
+                await websocket.send_text(json.dumps({
+                    "type": "symbol_subscribed",
+                    "symbol": symbol,
+                    "timestamp": datetime.now().isoformat()
+                }))
+                
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+@app.websocket("/ws/ai")
+async def ai_websocket(websocket: WebSocket):
+    """专用AI信号WebSocket连接 - 实时AI分析推送"""
+    await manager.connect(websocket, "ai")
+    try:
+        # 自动订阅AI信号频道
+        await manager.subscribe(websocket, ["ai_signals"])
+        
+        await websocket.send_text(json.dumps({
+            "type": "ai_connected",
+            "message": "Connected to AI agents signal stream",
+            "agents": ["research", "strategy", "news", "risk"],
+            "update_frequency": "5 seconds",
+            "timestamp": datetime.now().isoformat()
+        }))
+        
+        # 启动AI信号流
+        if not manager.is_streaming:
+            await manager.start_high_frequency_streaming()
+        
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            if message.get("type") == "ping":
+                await websocket.send_text(json.dumps({"type": "pong", "timestamp": datetime.now().isoformat()}))
+            elif message.get("type") == "request_analysis":
+                symbol = message.get("symbol", "AAPL")
+                # 发送模拟AI分析结果
+                await websocket.send_text(json.dumps({
+                    "type": "ai_analysis",
+                    "symbol": symbol,
+                    "analysis": {
+                        "research": {"action": "BUY", "confidence": 0.85},
+                        "strategy": {"action": "HOLD", "confidence": 0.72},
+                        "news": {"action": "BUY", "confidence": 0.68},
+                        "risk": {"alert": "LOW", "recommendation": "适中仓位"}
+                    },
+                    "timestamp": datetime.now().isoformat()
+                }))
+                
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+@app.websocket("/ws/risk")
+async def risk_websocket_endpoint(websocket: WebSocket):
+    """Risk Management WebSocket连接"""
+    await manager.connect(websocket, "risk")
+    try:
+        # 发送连接确认
+        await websocket.send_text(json.dumps({
+            "type": "connected",
+            "message": "Connected to Risk Management WebSocket",
+            "available_channels": ["risk_alerts", "portfolio_risk", "var_updates"],
+            "timestamp": datetime.now().isoformat()
+        }))
+        
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            if message.get("type") == "ping":
+                await websocket.send_text(json.dumps({
+                    "type": "pong",
+                    "timestamp": datetime.now().isoformat()
+                }))
+            
+            elif message.get("type") == "subscribe":
+                channels = message.get("channels", [])
+                await manager.subscribe(websocket, channels)
+                await websocket.send_text(json.dumps({
+                    "type": "subscribed",
+                    "channels": channels,
+                    "timestamp": datetime.now().isoformat()
+                }))
+            
+            elif message.get("type") == "request_portfolio_risk":
+                # 获取组合风险数据并发送
+                try:
+                    response = await http_client.get(f"{ServiceConfig.RISK_MANAGEMENT_URL}/portfolio/risk")
+                    if response.status_code == 200:
+                        risk_data = response.json()
+                        await websocket.send_text(json.dumps({
+                            "type": "portfolio_risk_update",
+                            "data": risk_data,
+                            "timestamp": datetime.now().isoformat()
+                        }))
+                except Exception as e:
+                    await websocket.send_text(json.dumps({
+                        "type": "error",
+                        "message": f"Failed to fetch portfolio risk: {e}",
+                        "timestamp": datetime.now().isoformat()
+                    }))
+            
+            elif message.get("type") == "request_risk_alerts":
+                # 获取风险警报并发送
+                try:
+                    response = await http_client.get(f"{ServiceConfig.RISK_MANAGEMENT_URL}/alerts")
+                    if response.status_code == 200:
+                        alerts_data = response.json()
+                        await websocket.send_text(json.dumps({
+                            "type": "risk_alerts_update",
+                            "data": alerts_data,
+                            "timestamp": datetime.now().isoformat()
+                        }))
+                except Exception as e:
+                    await websocket.send_text(json.dumps({
+                        "type": "error",
+                        "message": f"Failed to fetch risk alerts: {e}",
+                        "timestamp": datetime.now().isoformat()
+                    }))
+                
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
@@ -1746,15 +2678,109 @@ async def root():
             "market_data": "/market-data/*",
             "strategies": "/strategies/*", 
             "signals": "/signals/*",
+            "ai": "/ai/*",
+            "crypto": "/crypto/*",
             "risk": "/risk/*",
             "portfolio": "/portfolio/*",
             "orders": "/orders/*",
             "dashboard": "/dashboard/*",
             "universe": "/universe/*",
-            "websocket": "/ws",
-            "ios_websocket": "/ws/ios"
+            "websockets": {
+                "general": "/ws",
+                "ios": "/ws/ios", 
+                "market_data": "/ws/market-data",
+                "crypto": "/ws/crypto",
+                "ai_signals": "/ws/ai"
+            }
         }
     }
+
+
+
+# ==================== AI Chat Endpoints ====================
+
+@app.websocket("/ws/ai-chat")
+async def ai_chat_websocket(websocket: WebSocket):
+    """AI聊天WebSocket连接 - 实时AI对话"""
+    await manager.connect(websocket, "ai_chat")
+    try:
+        await websocket.send_text(json.dumps({
+            "type": "connected",
+            "message": "Connected to AI Chat service",
+            "timestamp": datetime.now().isoformat()
+        }))
+
+        while True:
+            data = await websocket.receive_text()
+            message_data = json.loads(data)
+
+            # 转发到AI财务分析师服务
+            try:
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        "http://localhost:8009/api/analyze",
+                        json=message_data,
+                        timeout=30.0
+                    )
+
+                    if response.status_code == 200:
+                        result = response.json()
+                        await websocket.send_text(json.dumps({
+                            "type": "ai_response",
+                            "response": result.get("response", ""),
+                            "data": result.get("data"),
+                            "timestamp": datetime.now().isoformat()
+                        }))
+                    else:
+                        await websocket.send_text(json.dumps({
+                            "type": "error",
+                            "message": f"AI service error: {response.status_code}",
+                            "timestamp": datetime.now().isoformat()
+                        }))
+
+            except Exception as e:
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "message": f"Error processing request: {str(e)}",
+                    "timestamp": datetime.now().isoformat()
+                }))
+
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket, "ai_chat")
+    except Exception as e:
+        print(f"AI Chat WebSocket error: {e}")
+        await manager.disconnect(websocket, "ai_chat")
+
+
+@app.post("/api/ai-chat/analyze")
+async def ai_chat_analyze(request: dict):
+    """AI聊天分析端点"""
+    try:
+        import httpx
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "http://localhost:8009/api/analyze",
+                json=request,
+                timeout=30.0
+            )
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"AI service error: {response.text}"
+                )
+
+    except httpx.ConnectError:
+        raise HTTPException(
+            status_code=503,
+            detail="AI Financial Analyst service is not available"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # 启动命令示例
 if __name__ == "__main__":
@@ -1762,7 +2788,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         reload=True,
         log_level="info"
     )

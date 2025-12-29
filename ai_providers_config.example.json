@@ -1,0 +1,35 @@
+{
+  "providers": {
+    "deepseek": {
+      "api_key": "YOUR_DEEPSEEK_API_KEY_HERE",
+      "model": "deepseek-chat",
+      "temperature": 0.3,
+      "max_tokens": 8192,
+      "enabled": true,
+      "configured_at": "",
+      "test_results": null,
+      "api_base": "https://api.deepseek.com/v1/chat/completions"
+    },
+    "openai": {
+      "api_key": "YOUR_OPENAI_API_KEY_HERE",
+      "model": "gpt-4o-mini",
+      "temperature": 0.3,
+      "max_tokens": 16000,
+      "enabled": true,
+      "configured_at": "",
+      "test_results": null,
+      "api_base": "https://api.openai.com/v1/chat/completions"
+    },
+    "claude": {
+      "api_key": "YOUR_CLAUDE_API_KEY_HERE",
+      "model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.3,
+      "max_tokens": 8000,
+      "enabled": true,
+      "configured_at": "",
+      "test_results": null,
+      "api_base": "https://api.anthropic.com/v1/messages"
+    }
+  },
+  "updated_at": ""
+}
