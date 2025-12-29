@@ -233,6 +233,7 @@ After successful startup, the following services will be available:
 ## 📚 Documentation
 
 - **AI Configuration Guide**: [SETUP_INSTRUCTIONS.md](SETUP_INSTRUCTIONS.md)
+- **Strategies and Algorithms**: [STRATEGIES_AND_ALGORITHMS.md](STRATEGIES_AND_ALGORITHMS.md)
 - **Feature Documentation**: [ENHANCED_FEATURES.md](ENHANCED_FEATURES.md)
 - **Security Checklist**: [GITHUB_COMMIT_CHECKLIST.md](GITHUB_COMMIT_CHECKLIST.md)
 - **Quick Commit Guide**: [QUICK_COMMIT_GUIDE.md](QUICK_COMMIT_GUIDE.md)
