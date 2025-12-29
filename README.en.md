@@ -1,14 +1,5 @@
-<div align="center">
+# Arthera Unified Quantitative Trading System
 
-
-![Image](https://github.com/user-attachments/assets/bc40f0ad-476c-413e-8cbd-ccb70ee6ec3d)
-
-
-<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
- 
-</div>
-
-  
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![Discord](https://img.shields.io/discord/123456789?color=7289da&logo=discord&logoColor=white)](https://discord.gg/arthera)
@@ -17,455 +8,342 @@
 
 [English](README.en.md) | [中文 (简体)](README.md) | [中文 (繁體)](README.zh.md)
 
-</div>
+---
 
-## Arthera Trading Engine
+## Project Overview
 
-Arthera Trading Engine is a community-driven, multi-agent platform for quantitative trading applications. Our mission is to build the world's largest decentralized quantitative trading community.
+Arthera Unified Quantitative Trading System is a **community-driven multi-agent quantitative trading platform**. Our mission is to build the world's largest decentralized quantitative trading community.
 
-It provides a team of TOP quantitative strategies to help you with stock selection, research, tracking, and even trading.
+It provides a top-tier quantitative strategy team to help you select, research, track, and even trade stocks. The system stores all your sensitive information locally on your device, ensuring core data security.
 
-The system keeps all your sensitive information stored locally on your device, ensuring core data security.
+Join our Discord community to share feedback, ask questions, and invite more developers to contribute 🔥🔥🔥
 
-Welcome to join our Discord community to share feedback and issues you encounter, and invite more developers to contribute 🔥🔥🔥
+> **Note:** Arthera team members will never actively contact community participants. This project is for educational and research purposes only.
 
-> **Note:** Arthera team members will never proactively contact community participants. This project is for educational and research purposes.
+---
 
-## Preview
+## 🎯 Core Features
 
-<img width="1185" height="771" alt="Screenshot 2025-12-18 at 7 20 33 pm" src="https://github.com/user-attachments/assets/97d14be4-bc02-41a3-a25d-a98175214bfe" />
+### 🤖 AI-Powered Trading System
+- **Multi-AI Provider Support**: Integrated with DeepSeek, OpenAI, and Claude AI models
+- **Intelligent Signal Generation**: AI batch generates trading signals with auto-refresh and smart fallback
+- **Real-time AI Chat**: Built-in AI chat assistant for market analysis and trading advice
+- **Smart Signal Acquisition**: Automatically selects the best signal source for quality trading decisions
 
-<img width="1183" height="768" alt="Screenshot 2025-12-18 at 7 20 40 pm" src="https://github.com/user-attachments/assets/404e8617-9f93-44a3-beb5-73a2329eea23" />
+### 📊 Professional Quantitative Strategies
+- **Multi-Strategy Support**: Bayesian momentum, Kelly optimization, risk parity, and more
+- **Strategy Backtesting**: Complete backtesting engine with historical data validation
+- **Real-time Execution**: Real-time strategy execution and monitoring with automated trading workflows
 
-<img width="1195" height="775" alt="Screenshot 2025-12-18 at 7 20 47 pm" src="https://github.com/user-attachments/assets/f4a4645b-11b6-4186-b9af-01a2b6db5585" />
+### 💼 Enterprise-Grade Trading Interface
+- **Bloomberg-Style Interface**: Professional dark-themed trading terminal
+- **Real-time Data Display**: Live updates for positions, P&L, risk metrics, and trading signals
+- **Smart Position Management**: Position Manager with real-time monitoring, one-click liquidation, and data export
+- **Full Internationalization**: Seamless Chinese-English switching with key-value text management
 
+### 🔄 Multi-Source Data Integration
+- **Smart Data Aggregation**: Yahoo Finance, AkShare, Tushare Pro, Binance, Kraken, and more
+- **Automatic Failover**: Intelligent data source switching for stable data acquisition
+- **Real-time Market Data**: Live quotes for stocks, futures, and cryptocurrencies
 
-<img width="1189" height="766" alt="Screenshot 2025-12-18 at 7 21 04 pm" src="https://github.com/user-attachments/assets/938ae751-7989-4e1c-9385-ce0dbecc4ec4" />
+### 🛡️ Security and Monitoring
+- **Platform-wide Service Monitoring**: Real-time health checks for 25+ external APIs and data sources
+- **Enterprise-Level Security**: Localized sensitive data with multi-platform API key management
+- **Real-time Risk Monitoring**: VaR calculation, Sharpe ratio, maximum drawdown, and other professional metrics
 
+### 📱 Cross-Platform Support
+- **iOS Mobile**: Swift SDK support with WebSocket real-time push
+- **Web Interface**: Responsive design supporting desktop and mobile browsers
+- **API Interface**: Complete RESTful API for easy third-party integration
 
+---
 
+## 🏗️ System Architecture
 
-
-## Key Features
-- **AI-Powered Quantitative Strategies** – Integrated DeepSeek AI models for intelligent trading signal generation, supporting multiple quant strategies (Bayesian Momentum, Kelly Optimization, Risk Parity)
-- **Professional Trading Interface** – Bloomberg-style dark theme UI with real-time position display, P&L tracking, risk metrics, and trading signals
-- **Complete Internationalization Support** – Perfect Chinese/English interface switching with all service and interface text fully managed using key-value pairs, no hardcoded strings
-- **Smart Position Management** – Position Manager provides real-time portfolio monitoring, P&L analysis, one-click portfolio clearing, and data export capabilities
-- **Comprehensive Platform Service Monitoring** – Integrated service health monitoring system with real-time tracking of 25+ external APIs and data source connection status
-- **Multi-Source Intelligent Data Aggregation** – Support for Yahoo Finance, AkShare, Tushare Pro, Binance, Kraken and other data sources with intelligent switching and failover
-- **Intelligent Stock Search** – Fuzzy search for CN/US stocks with real-time pricing, sector filtering, and market cap categorization
-- **Full Strategy Pipeline** – Integrated QuantEngine, risk engine, and portfolio services supporting strategy backtesting and live execution
-- **iOS Mobile Integration** – Swift SDK support with WebSocket real-time data streaming for seamless mobile trading experience
-- **Machine Learning Models** – LightGBM trained models for price prediction supporting both A-share and US markets with real-time model health checking
-- **Enterprise-Grade Secure Configuration Management** – 24+ platform API key security configuration, local data protection for sensitive information, professional credential management
-- **Real-time Risk Monitoring** – Professional risk metrics including VaR calculations, Sharpe ratio, and maximum drawdown tracking
-- **Comprehensive Service Connection Testing** – Support for connection status detection and fault diagnosis of data sources, trading platforms, AI services, and machine learning models
-
-## Architecture
 ```
-UI → FastAPI Gateway (8000)
-                     ├─ YahooMarketProvider (global)
-                     ├─ ChinaAStockProvider (AkShare + Tushare)
-                     ├─ QuantEngine / Quant Lab / Paper OMS / Portfolio
-                     └─ iOS Connector (8002 REST + WS)
+iOS App (Existing Complete Quant Services)
+    ↓ HTTP/WebSocket
+iOS Connector (Port 8002) → API Gateway (Port 8001)
+    ↓                           ↓
+Existing Backend Services       New Unified Routing Layer
+├── QuantEngine                 ├── Market Data Routing
+├── Arthera_Quant_Lab          ├── Strategy Execution Routing
+├── qlib Framework             ├── Signal Generation Routing
+├── ML Model Training Tools     ├── AI Service Routing
+└── AI Agents (DeepSeek/       └── Portfolio Routing
+    OpenAI/Claude)
 ```
 
-## System Requirements
+---
+
+## 💻 System Requirements
 
 ### Required Environment
 - **Python 3.8+**
 - **Docker Desktop 20.10+**
 - **Docker Compose 1.27+**
 - **4GB+ RAM** (8GB recommended)
-- **5GB+ available disk space**
+- **5GB+ Available Disk Space**
 
 ### Supported Operating Systems
 - macOS 10.15+ (Intel/Apple Silicon)
 - Windows 10+ (WSL2)
 - Linux Ubuntu 18.04+/CentOS 7+
 
-## Quick Start
+---
 
-### Option 1: One-Click Launch (Recommended)
+## 🚀 Quick Start
+
+### Method 1: One-Click Start (Recommended)
+
 ```bash
 # 1. Clone the project
 git clone https://github.com/Cinsoul/Arthera-Quant-Lab.git
 cd TradingEngine
 
 # 2. Initialize environment
-./scripts/bootstrap.sh      # create virtual environment and install dependencies
+./scripts/bootstrap.sh      # Create virtual environment and install dependencies
 
-# 3. (Optional) Configure API keys
-vim .env                    # edit environment variables
+# 3. Configure API Keys (Optional but recommended)
+cp ai_providers_config.example.json ai_providers_config.json
+# Edit ai_providers_config.json and fill in your API keys
 
-# 4. Start complete system
-./start-demo.sh             # launch all Docker containers
+# 4. Start the complete system
+./start-demo.sh             # Start all Docker containers
 ```
 
-### Option 2: Simple Launch
+### Method 2: Simplified Start
+
 ```bash
-# For quick demos without complex configuration
+# For quick demo without complex configuration
 ./start-simple-demo.sh
 ```
 
-### Option 3: Local Python Run
+### Method 3: Local Python Run
+
 ```bash
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Start demo server
+# 2. Configure AI Providers (Recommended)
+cp ai_providers_config.example.json ai_providers_config.json
+# Edit the file and fill in API keys
+
+# 3. Start demo server
 python demo_server.py
 
-# 3. Access interface
-# Open browser: http://localhost:8001
+# 4. Access the interface
+# Open in browser: http://localhost:8001
 ```
 
-Then open `http://localhost:8001` to explore the live dashboard (or `docker-compose up -d` for manual control).
+---
 
-## 🔧 Local Configuration Guide
+## 🔑 AI Configuration Guide
 
-### Security Configuration
+This system supports three major AI Providers and requires API key configuration to use AI features.
 
-⚠️ **Important Security Reminders**:
-- **Never** hardcode API keys or sensitive information in your code
-- Use `.env` files to store sensitive configurations and ensure they are added to `.gitignore`
-- Use strong passwords and encryption keys in production environments
-- Regularly rotate API keys and database passwords
+### Getting API Keys
 
-### Environment Variables Setup
+#### 1. DeepSeek API (Recommended)
+- Visit: https://platform.deepseek.com
+- Register and create an API key
+- Format: `sk-xxxxxxxx`
 
-Create a `.env` file (automatically created if using bootstrap script):
+#### 2. OpenAI API
+- Visit: https://platform.openai.com
+- Create an API key
+- Format: `sk-proj-xxxxxxxx`
 
+#### 3. Claude API (Anthropic)
+- Visit: https://console.anthropic.com
+- Create an API key
+- Format: `sk-ant-xxxxxxxx`
+
+### Configuration Steps
+
+1. **Copy Configuration Example**
 ```bash
-# Data Source Configuration
-TUSHARE_TOKEN=your_tushare_token_here          # Optional: Tushare Pro Token
-UNIVERSE_SERVICE_URL=                          # Optional: External data service URL
-UNIVERSE_API_KEY=                              # Optional: External data API key
-
-# Database Configuration
-POSTGRES_URL=postgresql://arthera:arthera123@localhost:5432/trading_engine
-REDIS_URL=redis://localhost:6379
-
-# System Configuration
-REQUEST_TIMEOUT=30                             # API request timeout (seconds)
-POOLS_CONFIG_PATH=config/pools.json           # Stock pool configuration path
-DEMO_MODE=true                                 # Demo mode toggle
-
-# iOS Integration Configuration
-IOS_WEBSOCKET_PORT=8005                        # iOS WebSocket port
+cp ai_providers_config.example.json ai_providers_config.json
 ```
 
-### Data Source Configuration
+2. **Edit Configuration File**
+```json
+{
+  "providers": {
+    "deepseek": {
+      "api_key": "YOUR_DEEPSEEK_API_KEY",
+      "model": "deepseek-chat",
+      "enabled": true
+    },
+    "openai": {
+      "api_key": "YOUR_OPENAI_API_KEY",
+      "model": "gpt-4o-mini",
+      "enabled": true
+    },
+    "claude": {
+      "api_key": "YOUR_CLAUDE_API_KEY",
+      "model": "claude-3-5-sonnet-20241022",
+      "enabled": true
+    }
+  }
+}
+```
 
-#### 1. Free Data Sources (Default)
-System works out of the box with these free data sources:
-- **Yahoo Finance**: Global stock real-time quotes
-- **AkShare**: China A-share free data
-
-#### 2. Tushare Pro (Recommended)
-Get higher quality China market data:
-
-1. Visit [Tushare website](https://tushare.pro) to register
-2. Obtain API Token
-3. Set in `.env` file:
-   ```bash
-   TUSHARE_TOKEN=your_tushare_token_here
-   ```
-
-#### 3. Custom Data Sources
-If you have your own data service:
+3. **Start Service**
 ```bash
-UNIVERSE_SERVICE_URL=https://your-api.com
-UNIVERSE_API_KEY=your_api_key
+python demo_server.py
 ```
 
-### Docker Configuration
+4. **Verify Configuration**
+- Visit http://localhost:8001
+- Go to `CONFIG → AI Configuration` page
+- Confirm all Providers show as "CONNECTED"
 
-#### Check Docker Environment
-```bash
-# Check Docker versions
-docker --version
-docker-compose --version
+For detailed configuration guide, see [SETUP_INSTRUCTIONS.md](SETUP_INSTRUCTIONS.md)
 
-# Ensure Docker Desktop is running
-docker info
-```
+---
 
-#### Port Configuration
-Ensure these ports are not in use:
-- `8001` - Demo Server (demo_server.py)
-- `8000` - API Gateway (Docker mode)
-- `8002` - iOS Connector
-- `5432` - PostgreSQL
-- `6379` - Redis
+## 🌐 Service Access
 
-#### Memory Configuration
-Recommend allocating at least 4GB memory to Docker Desktop:
-1. Open Docker Desktop
-2. Settings → Resources → Memory
-3. Set to 4GB or higher
+After successful startup, the following services will be available:
 
-### Troubleshooting
+### Core API Endpoints
+- **API Gateway**: http://localhost:8001
+- **iOS Connector**: http://localhost:8002
+- **System Health Check**: http://localhost:8001/health
+- **AI Status**: http://localhost:8001/api/ai/status
 
-#### Common Issues
-1. **Port Conflict Error**
-   ```bash
-   # Check port usage
-   netstat -an | grep 8001
-   lsof -i :8001
-   
-   # Kill process using port
-   kill -9 <PID>
-   ```
+### Demo Panels
+- **Main Interface**: http://localhost:8001/
+- **System Status**: http://localhost:8001/dashboard/system-status
+- **Trading Statistics**: http://localhost:8001/dashboard/trading-stats
 
-2. **Docker Startup Failure**
-   ```bash
-   # Clean Docker cache
-   docker system prune -a
-   
-   # Rebuild images
-   docker-compose build --no-cache
-   ```
+### AI Function Endpoints
+- **AI Chat**: http://localhost:8001/api/ai-chat/analyze
+- **Batch Signal Generation**: http://localhost:8001/api/ai/batch-generate-signals
+- **Recent Signals**: http://localhost:8001/signals/recent
 
-3. **Memory Issues**
-   ```bash
-   # Check Docker memory usage
-   docker stats
-   
-   # Increase Docker Desktop memory allocation
-   # Settings → Resources → Memory → Adjust to 8GB
-   ```
+### iOS Connection
+- **API Base URL**: `http://localhost:8001`
+- **iOS Dedicated Endpoint**: `http://localhost:8002`
+- **WebSocket**: `ws://localhost:8002/ios/ws`
 
-4. **API Connection Timeout**
-   - Check network connection
-   - Adjust `REQUEST_TIMEOUT` environment variable
-   - Ensure firewall allows relevant ports
+---
 
-#### Log Viewing
-```bash
-# View all service logs
-docker-compose logs -f
+## 📚 Documentation
 
-# View specific service logs
-docker-compose logs -f api-gateway
-docker-compose logs -f ios-connector
+- **AI Configuration Guide**: [SETUP_INSTRUCTIONS.md](SETUP_INSTRUCTIONS.md)
+- **Feature Documentation**: [ENHANCED_FEATURES.md](ENHANCED_FEATURES.md)
+- **Security Checklist**: [GITHUB_COMMIT_CHECKLIST.md](GITHUB_COMMIT_CHECKLIST.md)
+- **Quick Commit Guide**: [QUICK_COMMIT_GUIDE.md](QUICK_COMMIT_GUIDE.md)
 
-# View recent 100 lines
-docker-compose logs --tail=100 api-gateway
-```
+---
 
-## Environment Variables Reference
-| Variable | Description | Default |
-| --- | --- | --- |
-| `UNIVERSE_SERVICE_URL` / `UNIVERSE_API_KEY` | Proxy to your own market-data platform (optional) | - |
-| `TUSHARE_TOKEN` | Enables Tushare Pro enrichment for China searches; AkShare-only when blank | - |
-| `POOLS_CONFIG_PATH` | Custom stock-pool configuration | `config/pools.json` |
-| `REQUEST_TIMEOUT` | API request timeout (seconds) | `30` |
-| `POSTGRES_URL` | PostgreSQL database connection string | `postgresql://arthera:arthera123@localhost:5432/trading_engine` |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
-| `DEMO_MODE` | Demo mode toggle | `true` |
+## 🔐 Security Reminder
 
-## New Features
+⚠️ **Important Security Tips**:
 
-### 🌐 Complete Internationalization System
-- **Chinese/English Interface Switching**: Support for real-time language switching with no interface delay
-- **Service Text Internationalization**: All service statuses, error messages, and API responses fully multilingual
-- **No Hardcoded Text**: Removed all hardcoded strings, using key-value pairs to manage all display text
+1. **Never** hardcode API keys in code
+2. **Never** commit `ai_providers_config.json` to Git
+3. **Never** commit `.env` files to Git
+4. **Never** share configuration files containing real keys
 
-### 🔍 Enterprise-Level Service Monitoring
-- **Comprehensive Health Checks**: Real-time monitoring of 25+ external service connection statuses
-- **Intelligent Failover**: Multi-source automatic switching and error recovery
-- **Performance Monitoring**: Average response time, health percentage, and service category statistics
-- **Connection Testing**: Support for API, WebSocket, and database connection testing
+✅ **Best Practices**:
 
-### 🔐 Professional Configuration Management
-- **Secure Credential Management**: Support for 24+ trading platforms and data source configurations
-- **Layered Configuration System**: Complete configuration for data sources, trading platforms, AI services, and notification services
-- **Encrypted Key Protection**: Sensitive information locally encrypted storage, secure production environment deployment
+1. Use `ai_providers_config.example.json` as a template
+2. Create `ai_providers_config.json` locally and fill in keys
+3. Rotate API keys regularly
+4. Use pre-commit check script: `./PRE_COMMIT_CHECK.sh`
 
-## Core APIs
+---
 
-### Core Endpoints
-| Path | Method | Purpose | Parameters |
-| --- | --- | --- | --- |
-| `/market-data/search/{query}` | GET | Smart stock search with CN/US auto-detection | `market`, `limit` |
-| `/market-data/popular` | GET | Popular stocks with average price/change stats | - |
-| `/config/data-source` | POST/GET | Tushare token management | `tushare_token` |
-| `/signals/*` | POST/GET | Strategy signal generation and history | `symbols`, `timeframe` |
-| `/orders/*` | POST/GET | Paper OMS submission + history | `symbol`, `side`, `quantity` |
-| `/dashboard/*` | GET | System status, performance, risk reports | - |
-| `/ios/*` | POST/WS | DeepSeek, Bayesian, Kelly, backtest, WebSocket for iOS | Various iOS endpoints |
-
-### API Usage Examples
-
-#### 1. Stock Search
-```bash
-# Search Apple stock
-curl "http://localhost:8001/market-data/search/AAPL?market=US"
-
-# Search Chinese stocks
-curl "http://localhost:8001/market-data/search/平安?market=CN"
-
-# Global search
-curl "http://localhost:8001/market-data/search/tesla?market=ALL"
-```
-
-#### 2. Generate Trading Signals
-```bash
-curl -X POST "http://localhost:8001/signals/generate" \
-     -H "Content-Type: application/json" \
-     -d '{"symbols": ["AAPL", "TSLA"], "timeframe": "1D"}'
-```
-
-#### 3. Submit Orders
-```bash
-curl -X POST "http://localhost:8001/orders/submit" \
-     -H "Content-Type: application/json" \
-     -d '{"symbol": "AAPL", "side": "BUY", "quantity": 100, "order_type": "MARKET"}'
-```
-
-#### 4. Get Market Data
-```bash
-# Get single stock data
-curl "http://localhost:8001/market-data/stock/AAPL?market=US"
-
-# Get market indices
-curl "http://localhost:8001/market-data/indices"
-
-# Get popular stocks
-curl "http://localhost:8001/market-data/popular"
-```
-
-#### 5. Configure Data Sources
-```bash
-# Get current configuration
-curl "http://localhost:8001/config/data-source"
-
-# Set Tushare Token
-curl -X POST "http://localhost:8001/config/data-source" \
-     -H "Content-Type: application/json" \
-     -d '{"tushare_token": "your_token_here"}'
-```
-
-## Front-end Experience
-
-### Interface Features
-- **Design**: Dark theme, professional financial interface
-- **Real-time Data Display**: Live stock prices, changes, volume updates
-- **Smart Search**: Support for Chinese/English stock names and symbols
-- **Stock Pool Management**: Visual add/remove stocks to investment pools
-- **Strategy Monitoring**: Real-time strategy status and performance display
-
-### User Guide
-1. **Stock Search Usage**:
-   - Select market (US/CN/GLOBAL) in `TARGET STOCK POOL` panel
-   - Enter stock symbol or company name to search
-   - Click search result cards to add to stock pool
-
-2. **Data Source Configuration**:
-   - Click CONFIG button in top-right corner to open settings
-   - Input Tushare Token in DATA SOURCE CONFIG section
-   - Click SAVE to save configuration
-
-3. **Trading Signal Generation**:
-   - Select stocks from the stock pool
-   - Click generate signals button
-   - View signal confidence and suggested actions
-
-4. **Order Management**:
-   - Execute buy/sell operations based on signal suggestions
-   - View order history and execution status
-
-## iOS Integration
-
-### Swift SDK Usage
-```swift
-let adapter = QuantitativeServiceAdapter.shared
-
-// Generate trading signals
-let signal = try await adapter.generateDeepSeekSignal(symbol: "AAPL", marketData: feed)
-
-// Connect WebSocket for real-time updates
-await adapter.connectWebSocket() // subscribe to real-time pushes
-
-// Submit orders
-let order = try await adapter.submitOrder(symbol: "AAPL", side: "BUY", quantity: 100)
-
-// Run backtests
-let backtest = try await adapter.runBacktest(strategy: "momentum", symbols: ["AAPL", "TSLA"])
-```
-
-### iOS Connector Endpoints
-- `POST /ios/signals/deepseek/generate` - Generate AI-powered trading signals
-- `POST /ios/bayesian/update-posterior` - Update Bayesian model parameters
-- `WS /ios/ws` - Real-time WebSocket connection for live updates
-- `POST /ios/backtest` - Run historical strategy backtests
-
-## Deployment Options
-
-### Production Deployment
-For production deployment, consider:
-1. **Docker Compose**: Use provided docker-compose.yml
-2. **Kubernetes**: Deploy with Kubernetes manifests
-3. **Cloud Services**: AWS ECS, Google Cloud Run, Azure Container Instances
-
-### Performance Optimization
-- **Caching**: Redis for market data caching
-- **Database**: PostgreSQL for persistent storage
-- **Load Balancing**: Nginx reverse proxy for multiple instances
-- **Monitoring**: Built-in health checks and metrics
-
-## 🛠 Development
+## 🛠️ Development Guide
 
 ### Project Structure
+
 ```
 TradingEngine/
-├── demo_server.py              # Standalone demo server
-├── index.html                  # Main Bloomberg-style interface
+├── demo_server.py              # Main server
+├── index.html                  # Frontend interface
+├── ai_providers_config.json    # AI config (not committed)
+├── .env                        # Environment variables (not committed)
 ├── services/
-│   ├── api-gateway/           # FastAPI gateway service
-│   └── ios-connector/         # iOS integration service
+│   ├── api-gateway/           # API Gateway
+│   ├── ios-connector/         # iOS Connector
+│   ├── quant-engine/          # Quant Engine
+│   └── ai-agents/             # AI Agents
 ├── config/
-│   └── pools.json            # Stock pool configurations
-├── scripts/
-│   └── bootstrap.sh          # Environment setup script
-├── docker-compose.yml        # Full Docker deployment
-└── docker-compose-simple.yml # Simplified Docker setup
+│   └── pools.json             # Stock pool configuration
+└── static/
+    ├── ai-chat-widget.html    # AI chat component
+    └── ai-chat-loader.js      # AI chat loader
 ```
 
-### Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Implement your changes
-4. Add tests for new functionality
-5. Submit a pull request
+### Before Committing Code
 
-### Testing
 ```bash
-# Run unit tests
-python -m pytest tests/
+# Run security check
+./PRE_COMMIT_CHECK.sh
 
-# Test API endpoints
-curl http://localhost:8001/health
-
-# Run integration tests
-docker-compose -f docker-compose-test.yml up
+# If check passes, commit code
+git add <files>
+git commit -m "your message"
+git push origin main
 ```
 
-## 📄 License
+---
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 🤝 Contributing
 
-## 🤝 Connect
-- X: [@xindi_w](https://x.com/xindi_w)
-- LinkedIn: [https://www.linkedin.com/in/xindi-wang19990526/](https://www.linkedin.com/in/xindi-wang19990526/)
+We welcome all forms of contributions!
 
-Open to collaborations on data integration, strategy co-development, and multi-device demos.
+1. Fork this project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+Please ensure:
+- Code follows project standards
+- `./PRE_COMMIT_CHECK.sh` check passes
+- Related documentation is updated
+- No sensitive information is included
+
+---
+
+## 📜 License
+
+This project is open-sourced under the MIT License - see the [LICENSE](LICENSE) file for details
+
+---
+
+## 📞 Contact
+
+- **Discord**: https://discord.gg/arthera
+- **LinkedIn**: https://www.linkedin.com/in/xindi-wang19990526/
+- **X (Twitter)**: https://x.com/xindi_w
+- **GitHub Issues**: https://github.com/Cinsoul/Arthera-Quant-Lab/issues
+
+---
 
 ## 🙏 Acknowledgments
 
-- Yahoo Finance for global market data
-- AkShare for China A-share data
-- Tushare for enhanced China market data
-- FastAPI community for excellent framework
-- Docker community for containerization support
+Thanks to all developers and community members who contributed to this project!
+
+Special thanks to:
+- DeepSeek, OpenAI, Anthropic for AI services
+- Yahoo Finance, AkShare, Tushare for data support
+- Open source community for various excellent tools and libraries
+
+---
+
+## ⚠️ Disclaimer
+
+This project is for educational and research purposes only. Use this system for actual trading at your own risk. The development team is not responsible for any trading losses.
+
+Please comply with local laws and regulations and trade carefully.
+
+---
+
+**Last Updated**: 2025-12-29
+**Version**: 2.0.0
